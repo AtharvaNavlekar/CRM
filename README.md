@@ -1,32 +1,48 @@
-# DIALPULSE CRM
+<p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:6366F1,100:22D3EE&height=180&section=header&text=DialPulse%20CRM&fontSize=48&fontColor=ffffff&animation=fadeIn&desc=Telecalling%20%2B%20WhatsApp-first%20Sales%20CRM&descAlignY=75" />
+</p>
 
-DialPulse CRM is a modern, high-performance Customer Relationship Management application designed for sales teams. Built with React and Node.js, it offers a comprehensive suite of tools to manage leads, track interactions, monitor compliance, and drive sales performance through intuitive dashboards and real-time communication features.
+<p align="center">
+  <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=20&pause=1000&color=6366F1&center=true&vCenter=true&width=600&lines=Lead+Management+%2B+Calling+%2B+WhatsApp+in+one+place;Built+with+React+19%2C+TypeScript%2C+and+Vite;Prototype+%E2%80%94+generated+via+Google+AI+Studio" />
+</p>
 
-## Table of Contents
-- [Features](#features)
-- [Prerequisites](#prerequisites)
-- [Installation Instructions](#installation-instructions)
-- [Usage Instructions](#usage-instructions)
-- [Contributing Guidelines](#contributing-guidelines)
-- [License Information](#license-information)
-- [Contact Information](#contact-information)
+<p align="center">
+  <img src="https://skillicons.dev/icons?i=react,ts,vite,tailwind,nodejs,express" />
+</p>
 
-## Features
-- **Interactive Dashboard:** Get a bird's-eye view of your sales metrics, active tasks, and team performance.
-- **Lead Management & Pipeline:** Track leads through customizable Kanban boards.
-- **Integrated Calling Console:** Make and log calls directly from the CRM with built-in dialer capabilities.
-- **Trust & Compliance Center:** Ensure all interactions meet regulatory standards with automated audit logging.
-- **WhatsApp Integration:** Communicate with leads seamlessly via WhatsApp.
-- **Gamified Leaderboards:** Motivate your sales team with performance tracking and rankings.
-- **Detailed Reports:** Generate insights on sales conversions, call metrics, and compliance adherence.
-- **Role-Based Access Control:** Secure authentication and authorization for different user roles.
+<!-- TODO: replace with an actual screen-recording GIF or MP4 of the live dashboard/calling console, e.g. via a tool like ScreenToGif or a Spline scene export. Do not leave a fake/placeholder image URL in the committed file. -->
+
+# DialPulse CRM
+
+A telecalling- and WhatsApp-first sales CRM prototype built to unify lead management and active outreach in one interface.
+
+> **Note:** This is a prototype and work-in-progress generated via Google AI Studio. It is not currently production-ready.
+
+## Key Features
+
+*   **Lead Management & Pipeline:** Interactive Kanban board for tracking leads across custom stages.
+*   **Integrated Calling Console:** Make calls directly from the CRM (audio and transcripts are currently simulated if an AI key is not provided).
+*   **WhatsApp Messaging:** Send predefined templates and track delivery statuses seamlessly.
+*   **Dashboard & Reporting:** Live metrics, conversion rates, and call stats visualization.
+*   **Leaderboard:** Gamified ranking of sales reps based on conversions and call volume.
+*   **Trust & Compliance Center:** Automated, server-enforced guardrails for quiet hours and daily contact frequency caps.
+*   **Support Tickets:** Basic integrated issue tracking functionality.
+
+## Tech Stack
+
+*   **Frontend:** React 19.0.1, Vite 6.2.3, ESBuild
+*   **Styling:** Tailwind CSS 4.1.14
+*   **Backend:** Node.js, Express 4.21.2
+*   **Data Layer:** Local file-backed JSON (`data/db.json`)
+
+For an in-depth architectural deep-dive, see the [BRAIN.md](BRAIN.md) document.
 
 ## Prerequisites
-Before you begin, ensure you have the following installed on your machine:
-- Node.js (v18 or higher recommended)
-- npm (Node Package Manager)
 
-## Installation Instructions
+*   **Node.js:** v18+ (required for native `fetch` support and Vite compatibility)
+*   **Package Manager:** Bun is the expected package manager (a `bun.lock` file is included in this repository), though npm/yarn can also be used.
+
+## Setup and Installation
 
 1. **Clone the repository:**
    ```bash
@@ -36,49 +52,63 @@ Before you begin, ensure you have the following installed on your machine:
 
 2. **Install dependencies:**
    ```bash
-   npm install
+   bun install
    ```
 
 3. **Configure Environment Variables:**
-   - Create a `.env` file in the root directory.
-   - Copy the contents from `.env.example` into `.env`.
-   - Update the variables (like `JWT_SECRET`, database connections, or API keys) as needed for your environment.
+   Copy the example environment file:
+   ```bash
+   cp .env.example .env
+   ```
+   Fill in the variables in your new `.env` file. *(Note: If hosting via AI Studio, these are automatically injected from your Secrets panel. For local runs, they must be set manually.)*
+   *   `GEMINI_API_KEY`: Required for Gemini AI API calls (transcript generation).
+   *   `APP_URL`: The URL where this applet is hosted (used for self-referential links).
+   *   `JWT_SECRET`: Secret key for signing session JWT tokens.
+   *   `JWT_EXPIRY`: Token lifespan (e.g., `24h`).
 
 4. **Start the development server:**
    ```bash
-   npm run dev
+   bun run dev
    ```
-   This command starts both the backend API and the Vite frontend development server concurrently. The application will be accessible at `http://localhost:3000`.
+   This command starts the full stack (backend API and Vite frontend server concurrently) via `tsx`.
 
-## Usage Instructions
+## Available Scripts
 
-- **Login:** Access the CRM by logging in with your designated user credentials. By default, the seed data provides initial access if configured.
-- **Managing Leads:** Navigate to the 'Leads' or 'Pipeline' section to add new prospects, drag and drop them across different pipeline stages, and update their statuses.
-- **Making Calls:** Open the Call Console to dial leads directly. Call durations and notes are automatically logged for compliance and tracking.
-- **Viewing Reports:** Head over to the Reports section to visualize sales trends, team performance, and compliance metrics.
+The following scripts are defined in `package.json`:
 
-## Contributing Guidelines
-We welcome contributions from the community! If you'd like to improve DialPulse CRM, please follow these steps:
+| Script | Description |
+| :--- | :--- |
+| `dev` | Runs the backend and frontend development server concurrently using `tsx`. |
+| `build` | Builds the frontend with Vite and bundles the backend via ESBuild. |
+| `start` | Starts the production server using the built `dist/server.cjs` file. |
+| `preview` | Previews the built Vite frontend production bundle locally. |
+| `clean` | Removes the `dist` directory and any compiled server files. |
+| `lint` | Runs TypeScript type checking without emitting files. |
+| `test` | Runs the primary authentication and compliance tests. |
+| `test:security` | Runs the comprehensive security test suite. |
 
-1. **Fork the repository** on GitHub.
-2. **Create a new branch** for your feature or bug fix:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-3. **Commit your changes** with clear and descriptive commit messages:
-   ```bash
-   git commit -m "Add some feature"
-   ```
-4. **Push to the branch**:
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-5. **Open a Pull Request** against the `main` branch. Provide a detailed description of the changes you've made.
+## Project Structure
 
-## License Information
-This project is licensed under the MIT License. You are free to use, modify, and distribute this software in compliance with the license terms.
+*   `src/components/` - React frontend components (grouped by feature/domain)
+*   `src/context/` - Global React state management (e.g., ThemeContext)
+*   `src/lib/` - Shared frontend utilities
+*   `server/` - Node.js Express backend logic (`auth.ts`, `db.ts`, `compliance.ts`)
+*   `security-tests/` - Automated security and compliance verification scripts
+*   `tests/` - Application logic unit and integration tests
+*   `data/` - Contains the `db.json` file used for application state persistence
 
-## Contact Information
-If you have any questions, encounter issues, or need support, please feel free to reach out:
-- **GitHub Issues:** [Open an issue in this repository](https://github.com/AtharvaNavlekar/CRM/issues)
-- **Email Support:** Provide your contact email here (e.g., support@dialpulsecrm.com)
+## Current Status & Limitations
+
+This repository is a prototype generated via Google AI Studio. While the foundational features work, several limitations exist:
+*   Data persistence is handled via a naive, synchronous local JSON file, meaning it lacks genuine concurrency controls.
+*   Authentication, authorization, and compliance-related guardrails may require further hardening for a production environment. 
+
+Please refer to [BRAIN.md](BRAIN.md) for an honest, up-to-date assessment of the codebase's current state and implementation gaps.
+
+## Contributing
+
+To propose a change, please fork the repository, create a new feature branch, and submit a Pull Request against the `main` branch. 
+
+## License
+
+No license file is currently present — usage terms are undefined.
