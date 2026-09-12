@@ -1,0 +1,479 @@
+{
+  "metadata": {
+    "id": "backup-1789232860340",
+    "timestamp": "2026-09-12T17:07:40.340Z",
+    "name": "Hourly Auto-Snapshot",
+    "autoCreated": true,
+    "version": "2.0.0"
+  },
+  "data": {
+    "users": [
+      {
+        "id": "usr-1",
+        "name": "Rahul Sharma",
+        "email": "rahul@telecrm.in",
+        "role": "owner",
+        "passwordHash": "$2b$10$d4MkxGXK9mxAe78c/ROV.e2Zj5IeaZ00Vmo6c9ok8lXi7lrkgCiN2",
+        "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+        "title": "Owner & Managing Director",
+        "phone": "+91 98112 34567"
+      },
+      {
+        "id": "usr-2",
+        "name": "Priya Iyer",
+        "email": "priya@telecrm.in",
+        "role": "tl",
+        "teamId": "team-mumbai",
+        "passwordHash": "$2b$10$d4MkxGXK9mxAe78c/ROV.e2Zj5IeaZ00Vmo6c9ok8lXi7lrkgCiN2",
+        "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
+        "title": "Team Lead - Mumbai",
+        "phone": "+91 98220 45678"
+      },
+      {
+        "id": "usr-3",
+        "name": "Amit Verma",
+        "email": "amit@telecrm.in",
+        "role": "owner",
+        "teamId": "team-mumbai",
+        "passwordHash": "$2b$10$d4MkxGXK9mxAe78c/ROV.e2Zj5IeaZ00Vmo6c9ok8lXi7lrkgCiN2",
+        "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+        "title": "Outbound Telecaller (Mumbai)",
+        "phone": "+91 98333 56789"
+      },
+      {
+        "id": "usr-4",
+        "name": "Sneha Kulkarni",
+        "email": "sneha@telecrm.in",
+        "role": "telecaller",
+        "teamId": "team-delhi",
+        "passwordHash": "$2b$10$d4MkxGXK9mxAe78c/ROV.e2Zj5IeaZ00Vmo6c9ok8lXi7lrkgCiN2",
+        "avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
+        "title": "Inside Sales Telecaller (Delhi)",
+        "phone": "+91 98444 67890"
+      },
+      {
+        "id": "usr-5",
+        "name": "Vikas Nair",
+        "email": "vikas@telecrm.in",
+        "role": "cto",
+        "passwordHash": "$2b$10$d4MkxGXK9mxAe78c/ROV.e2Zj5IeaZ00Vmo6c9ok8lXi7lrkgCiN2",
+        "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
+        "title": "Chief Technology Officer",
+        "phone": "+91 98555 12345"
+      },
+      {
+        "id": "usr-6",
+        "name": "Karan Patel",
+        "email": "karan@telecrm.in",
+        "role": "it",
+        "passwordHash": "$2b$10$d4MkxGXK9mxAe78c/ROV.e2Zj5IeaZ00Vmo6c9ok8lXi7lrkgCiN2",
+        "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80",
+        "title": "IT Systems Administrator",
+        "phone": "+91 98666 23456"
+      },
+      {
+        "id": "usr-7",
+        "name": "Ananya Roy",
+        "email": "ananya@telecrm.in",
+        "role": "tl_head",
+        "managesTeamIds": [
+          "team-mumbai",
+          "team-delhi"
+        ],
+        "passwordHash": "$2b$10$d4MkxGXK9mxAe78c/ROV.e2Zj5IeaZ00Vmo6c9ok8lXi7lrkgCiN2",
+        "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80",
+        "title": "Head of Telecalling Operations",
+        "phone": "+91 98777 34567"
+      }
+    ],
+    "leads": [
+      {
+        "id": "lead-1789067087984",
+        "name": "WhatsApp Only Customer",
+        "phone": "'+91 98222 33445",
+        "source": "Manual",
+        "stage": "New",
+        "teamId": "team-delhi",
+        "assignedRepId": "usr-4",
+        "assignedRepName": "Sneha Kulkarni",
+        "createdDate": "2026-09-10T19:04:47.984Z",
+        "updatedAt": "2026-09-10T19:04:47.984Z",
+        "version": 1,
+        "notes": "Customer prefers WhatsApp only",
+        "industry": "Real Estate",
+        "value": 500000,
+        "callbackReminder": null,
+        "contactAttempts7d": {
+          "calls": 0,
+          "whatsapp": 0,
+          "sms": 0
+        }
+      },
+      {
+        "id": "lead-1789067087968",
+        "name": "Abusive Contact",
+        "phone": "'+91 98777 54321",
+        "source": "Manual",
+        "stage": "New",
+        "teamId": "team-delhi",
+        "assignedRepId": "usr-4",
+        "assignedRepName": "Sneha Kulkarni",
+        "createdDate": "2026-09-10T19:04:47.968Z",
+        "updatedAt": "2026-09-10T19:04:47.968Z",
+        "version": 1,
+        "notes": "Customer flagged for abuse",
+        "industry": "Real Estate",
+        "value": 500000,
+        "callbackReminder": null,
+        "contactAttempts7d": {
+          "calls": 0,
+          "whatsapp": 0,
+          "sms": 0
+        }
+      },
+      {
+        "id": "lead-1789067087947",
+        "name": "Opted Out Customer",
+        "phone": "'+91 98999 12345",
+        "source": "Manual",
+        "stage": "New",
+        "teamId": "team-delhi",
+        "assignedRepId": "usr-4",
+        "assignedRepName": "Sneha Kulkarni",
+        "createdDate": "2026-09-10T19:04:47.947Z",
+        "updatedAt": "2026-09-10T19:04:47.947Z",
+        "version": 1,
+        "notes": "Customer explicitly requested DND",
+        "industry": "Real Estate",
+        "value": 500000,
+        "callbackReminder": null,
+        "contactAttempts7d": {
+          "calls": 0,
+          "whatsapp": 0,
+          "sms": 0
+        }
+      },
+      {
+        "id": "lead-101",
+        "name": "Vikram Malhotra",
+        "phone": "+91 98201 12345",
+        "source": "IndiaMART",
+        "stage": "New",
+        "assignedRepId": "usr-3",
+        "assignedRepName": "Amit Verma",
+        "teamId": "team-mumbai",
+        "createdDate": "2026-09-10T13:02:48.486Z",
+        "notes": "Inquired about 3 BHK luxury apartment in Gurgaon Sector 65. Budget 2.5 Cr.",
+        "industry": "Real Estate",
+        "value": 25000000,
+        "callbackReminder": "2026-09-10T18:02:48.486Z",
+        "version": 1,
+        "updatedAt": "2026-09-10T13:02:48.486Z"
+      },
+      {
+        "id": "lead-102",
+        "name": "Ananya Deshmukh",
+        "phone": "+91 98199 87654",
+        "source": "Website",
+        "stage": "Contacted",
+        "assignedRepId": "usr-3",
+        "assignedRepName": "Amit Verma",
+        "teamId": "team-mumbai",
+        "createdDate": "2026-09-09T22:02:48.486Z",
+        "notes": "Looking for full-stack data science executive certification. Needs syllabus and EMI options.",
+        "industry": "Education",
+        "value": 125000,
+        "callbackReminder": "2026-09-10T20:02:48.486Z",
+        "version": 1,
+        "updatedAt": "2026-09-09T22:02:48.486Z"
+      },
+      {
+        "id": "lead-103",
+        "name": "Rajesh K. Singhania",
+        "phone": "+91 98310 99887",
+        "source": "WhatsApp",
+        "stage": "Follow-up",
+        "assignedRepId": "usr-4",
+        "assignedRepName": "Sneha Kulkarni",
+        "teamId": "team-delhi",
+        "createdDate": "2026-09-09T04:02:48.486Z",
+        "notes": "SME business loan requirement of 45 Lakhs for textile machinery expansion in Surat.",
+        "industry": "Lending",
+        "value": 4500000,
+        "callbackReminder": "2026-09-10T17:02:48.486Z",
+        "version": 1,
+        "updatedAt": "2026-09-09T04:02:48.486Z"
+      },
+      {
+        "id": "lead-104",
+        "name": "Pooja Bhattacharya",
+        "phone": "+91 98450 11223",
+        "source": "Google Ads",
+        "stage": "Negotiation",
+        "assignedRepId": "usr-4",
+        "assignedRepName": "Sneha Kulkarni",
+        "teamId": "team-delhi",
+        "createdDate": "2026-09-08T04:02:48.486Z",
+        "notes": "Family health insurance floater policy for 4 members (1 Cr cover). Sent plan comparisons.",
+        "industry": "Insurance",
+        "value": 48000,
+        "callbackReminder": null,
+        "version": 1,
+        "updatedAt": "2026-09-08T04:02:48.486Z"
+      },
+      {
+        "id": "lead-105",
+        "name": "Karan Mehra",
+        "phone": "+91 98100 44556",
+        "source": "Facebook",
+        "stage": "Won",
+        "assignedRepId": "usr-3",
+        "assignedRepName": "Amit Verma",
+        "teamId": "team-mumbai",
+        "createdDate": "2026-09-06T22:02:48.486Z",
+        "notes": "Commercial office space in Whitefield Bangalore. Token amount received via RTGS!",
+        "industry": "Real Estate",
+        "value": 8500000,
+        "callbackReminder": null,
+        "version": 1,
+        "updatedAt": "2026-09-06T22:02:48.486Z"
+      },
+      {
+        "id": "lead-106",
+        "name": "Deepak Agrawal",
+        "phone": "+91 97200 66778",
+        "source": "Manual",
+        "stage": "Lost",
+        "assignedRepId": "usr-4",
+        "assignedRepName": "Sneha Kulkarni",
+        "teamId": "team-delhi",
+        "createdDate": "2026-09-05T16:02:48.486Z",
+        "notes": "Decided to postpone business term loan until next fiscal quarter.",
+        "industry": "Lending",
+        "value": 2000000,
+        "callbackReminder": null,
+        "version": 1,
+        "updatedAt": "2026-09-05T16:02:48.486Z"
+      },
+      {
+        "id": "lead-107",
+        "name": "Dr. Sunita Nambiar",
+        "phone": "+91 98840 77889",
+        "source": "Website",
+        "stage": "New",
+        "assignedRepId": "usr-3",
+        "assignedRepName": "Amit Verma",
+        "teamId": "team-mumbai",
+        "createdDate": "2026-09-10T11:02:48.486Z",
+        "notes": "Doctor clinic equipment loan request. Needs instant sanction letter.",
+        "industry": "Lending",
+        "value": 1500000,
+        "callbackReminder": "2026-09-10T22:02:48.486Z",
+        "version": 1,
+        "updatedAt": "2026-09-10T11:02:48.486Z"
+      },
+      {
+        "id": "lead-108",
+        "name": "Rohan Joshi",
+        "phone": "+91 99230 33445",
+        "source": "WhatsApp",
+        "stage": "Follow-up",
+        "assignedRepId": "usr-4",
+        "assignedRepName": "Sneha Kulkarni",
+        "teamId": "team-delhi",
+        "createdDate": "2026-09-08T16:02:48.486Z",
+        "notes": "2 BHK in Pune Wakad. Visited site last Saturday, awaiting spouse feedback.",
+        "industry": "Real Estate",
+        "value": 6800000,
+        "callbackReminder": "2026-09-10T19:02:48.486Z",
+        "version": 1,
+        "updatedAt": "2026-09-08T16:02:48.486Z"
+      }
+    ],
+    "calls": [
+      {
+        "id": "call-201",
+        "leadId": "lead-103",
+        "leadName": "Rajesh K. Singhania",
+        "leadPhone": "+91 98310 99887",
+        "repId": "usr-4",
+        "repName": "Sneha Kulkarni",
+        "timestamp": "2026-09-10T12:02:48.486Z",
+        "duration": 185,
+        "outcome": "Follow-up",
+        "notes": "Discussed GST filings and 2 years ITR requirements. Client will email documents by 4 PM.",
+        "recordingSimulated": true
+      },
+      {
+        "id": "call-202",
+        "leadId": "lead-102",
+        "leadName": "Ananya Deshmukh",
+        "leadPhone": "+91 98199 87654",
+        "repId": "usr-3",
+        "repName": "Amit Verma",
+        "timestamp": "2026-09-10T10:02:48.486Z",
+        "duration": 310,
+        "outcome": "Interested",
+        "notes": "Clarified placement assistance and batch timings (weekend). Agreed for scholarship test.",
+        "recordingSimulated": true
+      },
+      {
+        "id": "call-203",
+        "leadId": "lead-104",
+        "leadName": "Pooja Bhattacharya",
+        "leadPhone": "+91 98450 11223",
+        "repId": "usr-4",
+        "repName": "Sneha Kulkarni",
+        "timestamp": "2026-09-10T04:02:48.486Z",
+        "duration": 420,
+        "outcome": "Follow-up",
+        "notes": "Negotiating cashless hospital network riders. Requested 5% festive discount waiver.",
+        "recordingSimulated": true
+      },
+      {
+        "id": "call-204",
+        "leadId": "lead-105",
+        "leadName": "Karan Mehra",
+        "leadPhone": "+91 98100 44556",
+        "repId": "usr-3",
+        "repName": "Amit Verma",
+        "timestamp": "2026-09-09T16:02:48.486Z",
+        "duration": 540,
+        "outcome": "Converted",
+        "notes": "Finalized builder agreement terms. Payment confirmed.",
+        "recordingSimulated": true
+      },
+      {
+        "id": "call-205",
+        "leadId": "lead-106",
+        "leadName": "Deepak Agrawal",
+        "leadPhone": "+91 97200 66778",
+        "repId": "usr-4",
+        "repName": "Sneha Kulkarni",
+        "timestamp": "2026-09-09T10:02:48.486Z",
+        "duration": 95,
+        "outcome": "Not interested",
+        "notes": "Client stated interest rates higher than private bank offer.",
+        "recordingSimulated": true
+      }
+    ],
+    "messages": [
+      {
+        "id": "msg-301",
+        "leadId": "lead-103",
+        "direction": "outbound",
+        "text": "Namaste Rajesh ji, this is Sneha from TeleCRM lending desk. Here is the checklist of documents needed for your 45L business loan.",
+        "timestamp": "2026-09-10T11:02:48.486Z",
+        "deliveryStatus": "Delivered"
+      },
+      {
+        "id": "msg-302",
+        "leadId": "lead-103",
+        "direction": "inbound",
+        "text": "Ji Sneha ji, I have the 2-year ITR ready. Can we discuss processing fee waivers on the call?",
+        "timestamp": "2026-09-10T11:32:48.486Z",
+        "deliveryStatus": "Delivered"
+      },
+      {
+        "id": "msg-303",
+        "leadId": "lead-103",
+        "direction": "outbound",
+        "text": "Sure sir, I have marked a callback reminder for today at 3:30 PM. We will get you the best subvention rates!",
+        "timestamp": "2026-09-10T12:02:48.486Z",
+        "deliveryStatus": "Delivered"
+      },
+      {
+        "id": "msg-304",
+        "leadId": "lead-101",
+        "direction": "outbound",
+        "text": "Hello Vikram ji, thank you for your inquiry on IndiaMART for Sector 65 luxury towers. Would you prefer a digital brochure over WhatsApp?",
+        "timestamp": "2026-09-10T14:02:48.486Z",
+        "deliveryStatus": "Delivered"
+      },
+      {
+        "id": "msg-305",
+        "leadId": "lead-102",
+        "direction": "outbound",
+        "text": "Hi Ananya! Thanks for your interest in our Executive AI & Data Science Program. Here is the curriculum link: https://telecrm.in/curriculum",
+        "timestamp": "2026-09-09T23:02:48.486Z",
+        "deliveryStatus": "Delivered"
+      }
+    ],
+    "tickets": [
+      {
+        "id": "tkt-401",
+        "subject": "Urgent: Sanction letter draft pending verification for Surat client",
+        "status": "In Progress",
+        "createdDate": "2026-09-10T14:32:48.486Z",
+        "slaDueTime": "2026-09-10T18:32:48.486Z",
+        "priority": "High",
+        "leadId": "lead-103",
+        "leadName": "Rajesh K. Singhania",
+        "assignedRepId": "usr-4",
+        "replies": [
+          {
+            "id": "rep-1",
+            "sender": "Sneha Kulkarni",
+            "senderRole": "Rep",
+            "text": "Client submitted GST returns. Credit team please expedite pre-approval letter.",
+            "timestamp": "2026-09-10T14:50:48.486Z"
+          },
+          {
+            "id": "rep-2",
+            "sender": "Priya Iyer",
+            "senderRole": "Team Lead",
+            "text": "Reviewing collateral now. Target dispatch within 1 hour.",
+            "timestamp": "2026-09-10T15:14:48.486Z"
+          }
+        ]
+      },
+      {
+        "id": "tkt-402",
+        "subject": "IndiaMART API webhook lead duplication issue reported",
+        "status": "Open",
+        "createdDate": "2026-09-10T15:14:48.486Z",
+        "slaDueTime": "2026-09-10T19:14:48.486Z",
+        "priority": "Medium",
+        "leadId": "lead-101",
+        "leadName": "Vikram Malhotra",
+        "assignedRepId": "usr-3",
+        "replies": [
+          {
+            "id": "rep-3",
+            "sender": "Amit Verma",
+            "senderRole": "Rep",
+            "text": "Noticed same mobile number received twice with 2-minute gap.",
+            "timestamp": "2026-09-10T15:32:48.486Z"
+          }
+        ]
+      },
+      {
+        "id": "tkt-403",
+        "subject": "Refund request for cancelled property site visit pass",
+        "status": "Resolved",
+        "createdDate": "2026-09-10T06:02:48.486Z",
+        "slaDueTime": "2026-09-10T10:02:48.486Z",
+        "priority": "Low",
+        "leadId": "lead-106",
+        "leadName": "Deepak Agrawal",
+        "assignedRepId": "usr-4",
+        "replies": [
+          {
+            "id": "rep-4",
+            "sender": "Sneha Kulkarni",
+            "senderRole": "Rep",
+            "text": "Customer requested cancellation due to personal travel.",
+            "timestamp": "2026-09-10T06:32:48.486Z"
+          },
+          {
+            "id": "rep-5",
+            "sender": "Rahul Sharma",
+            "senderRole": "Admin",
+            "text": "Refund of ₹999 processed to source UPI ID. Ticket closed.",
+            "timestamp": "2026-09-10T09:02:48.486Z"
+          }
+        ]
+      }
+    ]
+  }
+}

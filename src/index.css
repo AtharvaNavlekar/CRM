@@ -1,0 +1,376 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    /* Material Design 3 (Material You) Palette - Teal / Emerald Tone Mapping */
+    --md-sys-color-primary: #00695C;
+    --md-sys-color-on-primary: #FFFFFF;
+    --md-sys-color-primary-container: #CCE8E1;
+    --md-sys-color-on-primary-container: #00201B;
+
+    --md-sys-color-secondary: #4A635D;
+    --md-sys-color-on-secondary: #FFFFFF;
+    --md-sys-color-secondary-container: #CCE8E0;
+    --md-sys-color-on-secondary-container: #05201A;
+
+    --md-sys-color-tertiary: #1F3A5F;
+    --md-sys-color-on-tertiary: #FFFFFF;
+    --md-sys-color-tertiary-container: #D6E3FF;
+    --md-sys-color-on-tertiary-container: #001B3E;
+
+    --md-sys-color-error: #BA1A1A;
+    --md-sys-color-on-error: #FFFFFF;
+    --md-sys-color-error-container: #FFDAD6;
+    --md-sys-color-on-error-container: #410002;
+
+    /* M3 Surface Tonal Palette - Light */
+    --md-sys-color-surface: #F8FAF8;
+    --md-sys-color-on-surface: #191C1B;
+    --md-sys-color-surface-variant: #DAE5E1;
+    --md-sys-color-on-surface-variant: #3F4946;
+    --md-sys-color-outline: #6F7976;
+    --md-sys-color-outline-variant: #BEC9C5;
+
+    --md-sys-color-surface-container-lowest: #FFFFFF;
+    --md-sys-color-surface-container-low: #F2F5F2;
+    --md-sys-color-surface-container: #ECEFEC;
+    --md-sys-color-surface-container-high: #E6EAE6;
+    --md-sys-color-surface-container-highest: #E0E4E0;
+
+    /* Legacy compatibility mappings */
+    --primary: #00695C;
+    --accent: #2E6E5C;
+  }
+
+  .dark {
+    /* Material Design 3 (Material You) Palette - Dark */
+    --md-sys-color-primary: #80D5C4;
+    --md-sys-color-on-primary: #003830;
+    --md-sys-color-primary-container: #005046;
+    --md-sys-color-on-primary-container: #9DF2E0;
+
+    --md-sys-color-secondary: #B0CCC4;
+    --md-sys-color-on-secondary: #1B352F;
+    --md-sys-color-secondary-container: #324B45;
+    --md-sys-color-on-secondary-container: #CCE8E0;
+
+    --md-sys-color-tertiary: #A6C8FF;
+    --md-sys-color-on-tertiary: #003062;
+    --md-sys-color-tertiary-container: #004689;
+    --md-sys-color-on-tertiary-container: #D6E3FF;
+
+    --md-sys-color-error: #FFB4AB;
+    --md-sys-color-on-error: #690005;
+    --md-sys-color-error-container: #93000A;
+    --md-sys-color-on-error-container: #FFDAD6;
+
+    /* M3 Surface Tonal Palette - Dark */
+    --md-sys-color-surface: #111413;
+    --md-sys-color-on-surface: #E1E3E0;
+    --md-sys-color-surface-variant: #3F4946;
+    --md-sys-color-on-surface-variant: #BEC9C5;
+    --md-sys-color-outline: #89938F;
+    --md-sys-color-outline-variant: #3F4946;
+
+    --md-sys-color-surface-container-lowest: #0C0F0E;
+    --md-sys-color-surface-container-low: #191C1B;
+    --md-sys-color-surface-container: #1D201F;
+    --md-sys-color-surface-container-high: #272B2A;
+    --md-sys-color-surface-container-highest: #323634;
+  }
+
+  body {
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    letter-spacing: 0.01em;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: var(--md-sys-color-surface);
+    color: var(--md-sys-color-on-surface);
+  }
+}
+
+@layer components {
+  .m3-select {
+    @apply appearance-none bg-[var(--md-sys-color-surface-container)] text-[var(--md-sys-color-on-surface)] border border-[var(--md-sys-color-outline-variant)]/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--md-sys-color-primary)] transition-colors cursor-pointer;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236F7976' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.75rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25em 1.25em;
+    padding-right: 2.25rem;
+  }
+  
+  .m3-select-bare {
+    @apply appearance-none bg-transparent outline-none border-transparent focus:ring-0 focus:border-transparent focus:outline-none cursor-pointer;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236F7976' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+    background-position: right 0.25rem center;
+    background-repeat: no-repeat;
+    background-size: 1.25em 1.25em;
+    padding-right: 1.5rem;
+  }
+
+  .dark .m3-select, .dark .m3-select-bare {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%2389938F' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  }
+}
+
+/* Material Design 3 Typography System */
+.m3-display-large {
+  font-family: 'Roboto', sans-serif;
+  font-size: 57px;
+  line-height: 64px;
+  letter-spacing: -0.25px;
+  font-weight: 400;
+}
+.m3-display-medium {
+  font-family: 'Roboto', sans-serif;
+  font-size: 45px;
+  line-height: 52px;
+  font-weight: 400;
+}
+.m3-display-small {
+  font-family: 'Roboto', sans-serif;
+  font-size: 36px;
+  line-height: 44px;
+  font-weight: 400;
+}
+
+.m3-headline-large {
+  font-family: 'Roboto', sans-serif;
+  font-size: 32px;
+  line-height: 40px;
+  font-weight: 400;
+}
+.m3-headline-medium {
+  font-family: 'Roboto', sans-serif;
+  font-size: 28px;
+  line-height: 36px;
+  font-weight: 400;
+}
+.m3-headline-small {
+  font-family: 'Roboto', sans-serif;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 400;
+}
+
+.m3-title-large {
+  font-family: 'Roboto', sans-serif;
+  font-size: 22px;
+  line-height: 28px;
+  font-weight: 500;
+}
+.m3-title-medium {
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0.15px;
+  font-weight: 500;
+}
+.m3-title-small {
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0.1px;
+  font-weight: 500;
+}
+
+.m3-label-large {
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0.1px;
+  font-weight: 500;
+}
+.m3-label-medium {
+  font-family: 'Roboto', sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+.m3-label-small {
+  font-family: 'Roboto', sans-serif;
+  font-size: 11px;
+  line-height: 16px;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.m3-body-large {
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  line-height: 24px;
+  letter-spacing: 0.5px;
+  font-weight: 400;
+}
+.m3-body-medium {
+  font-family: 'Roboto', sans-serif;
+  font-size: 14px;
+  line-height: 20px;
+  letter-spacing: 0.25px;
+  font-weight: 400;
+}
+.m3-body-small {
+  font-family: 'Roboto', sans-serif;
+  font-size: 12px;
+  line-height: 16px;
+  letter-spacing: 0.4px;
+  font-weight: 400;
+}
+
+/* Material Design 3 Tonal Elevation Levels (Ambient subtle glow rather than harsh dark drop-shadows) */
+.m3-elevation-0 {
+  box-shadow: none;
+}
+.m3-elevation-1 {
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.06), 0px 1px 3px 1px rgba(0, 0, 0, 0.04);
+}
+.m3-elevation-2 {
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.06), 0px 2px 6px 2px rgba(0, 0, 0, 0.06);
+}
+.m3-elevation-3 {
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.08), 0px 4px 8px 3px rgba(0, 0, 0, 0.07);
+}
+.m3-elevation-4 {
+  box-shadow: 0px 2px 3px rgba(0, 0, 0, 0.08), 0px 6px 10px 4px rgba(0, 0, 0, 0.08);
+}
+.m3-elevation-5 {
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.1), 0px 8px 12px 6px rgba(0, 0, 0, 0.09);
+}
+
+/* M3 Card Types: Elevated, Filled, and Outlined */
+.m3-card-elevated {
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: 1.25rem; /* 20px */
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.06), 0px 2px 6px 2px rgba(0, 0, 0, 0.04);
+  transition: box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1), background-color 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+.m3-card-elevated:hover {
+  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.08), 0px 4px 8px 3px rgba(0, 0, 0, 0.06);
+}
+
+.m3-card-filled {
+  background-color: var(--md-sys-color-surface-container-highest);
+  border-radius: 1.25rem; /* 20px */
+  border: none;
+  transition: background-color 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+.m3-card-outlined {
+  background-color: var(--md-sys-color-surface);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 1.25rem; /* 20px */
+  transition: border-color 0.2s cubic-bezier(0.2, 0, 0, 1), background-color 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
+/* Legacy sleek-card upgraded to M3 specifications */
+.sleek-card {
+  background: var(--md-sys-color-surface-container-lowest);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 1.25rem; /* 20px */
+  box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.03);
+  transition: border-color 0.2s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.2s cubic-bezier(0.2, 0, 0, 1);
+  position: relative;
+}
+
+.sleek-card:hover {
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0px 2px 6px 2px rgba(0, 0, 0, 0.06);
+}
+
+.dark .sleek-card {
+  background: var(--md-sys-color-surface-container-low);
+  border-color: var(--md-sys-color-outline-variant);
+  box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.3);
+}
+
+.dark .sleek-card:hover {
+  border-color: var(--md-sys-color-primary);
+  box-shadow: 0px 2px 8px 2px rgba(0, 0, 0, 0.4);
+}
+
+/* Touch Target Minimum (48x48dp standard for M3 Accessibility) */
+.touch-target-48 {
+  min-height: 48px;
+  min-width: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Tabular figures for dense financial and numeric alignment */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Material 3 Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(111, 121, 118, 0.3);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(137, 147, 143, 0.35);
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(111, 121, 118, 0.55);
+}
+
+/* Focus indicator standard for M3 */
+:focus-visible {
+  outline: 2px solid var(--md-sys-color-primary);
+  outline-offset: 2px;
+}
+
+/* Simulated Phone Ringing animation */
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 105, 92, 0.6);
+  }
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 16px rgba(0, 105, 92, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(0, 105, 92, 0);
+  }
+}
+
+.animate-pulse-ring {
+  animation: pulse-ring 2s cubic-bezier(0.2, 0, 0, 1) infinite;
+}
+
+/* Prefers-reduced-motion accessibility safeguard */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-pulse-ring {
+    animation: none !important;
+    box-shadow: 0 0 0 4px rgba(0, 105, 92, 0.8) !important;
+  }
+}

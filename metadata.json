@@ -1,0 +1,6 @@
+{
+  "name": "DialPulse CRM",
+  "description": "High-density telecalling and WhatsApp-first sales CRM for modern sales teams across real estate, education, lending, and telesales.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
