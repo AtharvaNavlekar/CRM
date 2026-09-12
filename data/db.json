@@ -5,7 +5,7 @@
       "name": "Rahul Sharma",
       "email": "rahul@telecrm.in",
       "role": "owner",
-      "passwordHash": "$2b$10$d4MkxGXK9mxAe78c/ROV.e2Zj5IeaZ00Vmo6c9ok8lXi7lrkgCiN2",
+      "passwordHash": "$2b$10$n2qbDQvvrkqT/M4su1acGOvSR1Os0NaADPCFLoet3RtpX9Hks.Nn6",
       "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
       "title": "Owner & Managing Director",
       "phone": "+91 98112 34567"
@@ -16,7 +16,7 @@
       "email": "priya@telecrm.in",
       "role": "tl",
       "teamId": "team-mumbai",
-      "passwordHash": "$2b$10$d4MkxGXK9mxAe78c/ROV.e2Zj5IeaZ00Vmo6c9ok8lXi7lrkgCiN2",
+      "passwordHash": "$2b$10$n2qbDQvvrkqT/M4su1acGOvSR1Os0NaADPCFLoet3RtpX9Hks.Nn6",
       "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
       "title": "Team Lead - Mumbai",
       "phone": "+91 98220 45678"
@@ -25,9 +25,9 @@
       "id": "usr-3",
       "name": "Amit Verma",
       "email": "amit@telecrm.in",
-      "role": "owner",
+      "role": "telecaller",
       "teamId": "team-mumbai",
-      "passwordHash": "$2b$10$d4MkxGXK9mxAe78c/ROV.e2Zj5IeaZ00Vmo6c9ok8lXi7lrkgCiN2",
+      "passwordHash": "$2b$10$n2qbDQvvrkqT/M4su1acGOvSR1Os0NaADPCFLoet3RtpX9Hks.Nn6",
       "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
       "title": "Outbound Telecaller (Mumbai)",
       "phone": "+91 98333 56789"
@@ -38,7 +38,7 @@
       "email": "sneha@telecrm.in",
       "role": "telecaller",
       "teamId": "team-delhi",
-      "passwordHash": "$2b$10$d4MkxGXK9mxAe78c/ROV.e2Zj5IeaZ00Vmo6c9ok8lXi7lrkgCiN2",
+      "passwordHash": "$2b$10$n2qbDQvvrkqT/M4su1acGOvSR1Os0NaADPCFLoet3RtpX9Hks.Nn6",
       "avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
       "title": "Inside Sales Telecaller (Delhi)",
       "phone": "+91 98444 67890"
@@ -48,7 +48,7 @@
       "name": "Vikas Nair",
       "email": "vikas@telecrm.in",
       "role": "cto",
-      "passwordHash": "$2b$10$d4MkxGXK9mxAe78c/ROV.e2Zj5IeaZ00Vmo6c9ok8lXi7lrkgCiN2",
+      "passwordHash": "$2b$10$n2qbDQvvrkqT/M4su1acGOvSR1Os0NaADPCFLoet3RtpX9Hks.Nn6",
       "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
       "title": "Chief Technology Officer",
       "phone": "+91 98555 12345"
@@ -58,7 +58,7 @@
       "name": "Karan Patel",
       "email": "karan@telecrm.in",
       "role": "it",
-      "passwordHash": "$2b$10$d4MkxGXK9mxAe78c/ROV.e2Zj5IeaZ00Vmo6c9ok8lXi7lrkgCiN2",
+      "passwordHash": "$2b$10$n2qbDQvvrkqT/M4su1acGOvSR1Os0NaADPCFLoet3RtpX9Hks.Nn6",
       "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80",
       "title": "IT Systems Administrator",
       "phone": "+91 98666 23456"
@@ -72,24 +72,546 @@
         "team-mumbai",
         "team-delhi"
       ],
-      "passwordHash": "$2b$10$d4MkxGXK9mxAe78c/ROV.e2Zj5IeaZ00Vmo6c9ok8lXi7lrkgCiN2",
+      "passwordHash": "$2b$10$n2qbDQvvrkqT/M4su1acGOvSR1Os0NaADPCFLoet3RtpX9Hks.Nn6",
       "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80",
       "title": "Head of Telecalling Operations",
       "phone": "+91 98777 34567"
+    },
+    {
+      "id": "usr-1789237985082",
+      "name": "Invited User 1581",
+      "email": "invited_user_1581@telecrm.in",
+      "role": "telecaller",
+      "teamId": "team-mumbai",
+      "passwordHash": "$2b$10$weyGrYeHxf02JcevmcS72uY8PzzAOlyNMRz9kGh9X9wsrj0mqpzeq",
+      "title": "Telecaller",
+      "phone": "+91 9875139245"
+    },
+    {
+      "id": "usr-1789238170327",
+      "name": "Invited User 3021",
+      "email": "invited_user_3021@telecrm.in",
+      "role": "telecaller",
+      "teamId": "team-mumbai",
+      "passwordHash": "$2b$10$3E7w4sFZtPD1hxRuB1Sv4.o3rnnjQh4SWibC6GiTJRWo44AtqL5uS",
+      "title": "Telecaller",
+      "phone": "+91 9852081321"
+    },
+    {
+      "id": "usr-1789238656587",
+      "name": "Invited User 8129",
+      "email": "invited_user_8129@telecrm.in",
+      "role": "telecaller",
+      "teamId": "team-mumbai",
+      "passwordHash": "$2b$10$2Lp3Qnl3KBqWaDc837atE.ZSUmFId6Smp8DaAAtyDkY2UMvXYx21O",
+      "title": "Telecaller",
+      "phone": "+91 9838351326"
     }
   ],
   "leads": [
     {
-      "id": "lead-1789067087984",
+      "id": "lead-1789238688966",
+      "name": "Ananya Deshmukh (High Fatigue)",
+      "phone": "'+91 98888 22222",
+      "source": "Website",
+      "stage": "Contacted",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-3",
+      "assignedRepName": "Amit Verma",
+      "createdDate": "2026-09-12T18:44:48.966Z",
+      "updatedAt": "2026-09-12T18:44:48.966Z",
+      "version": 1,
+      "notes": "",
+      "industry": "Real Estate",
+      "value": 500000,
+      "callbackReminder": null,
+      "preferences": {
+        "preferredChannel": "Any",
+        "preferredTimeWindow": "Anytime",
+        "allowedTopics": [
+          "Product"
+        ],
+        "isPaused30Days": false,
+        "isOptedOut": false,
+        "updatedAt": "2026-09-12T18:44:48.965Z"
+      },
+      "fatigueStatus": "capped",
+      "contactAttempts7d": {
+        "calls": 5,
+        "whatsapp": 5,
+        "sms": 2
+      }
+    },
+    {
+      "id": "lead-1789238688957",
+      "name": "Rohan Verma (DND)",
+      "phone": "'+91 99999 11111",
+      "source": "Website",
+      "stage": "New",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-3",
+      "assignedRepName": "Amit Verma",
+      "createdDate": "2026-09-12T18:44:48.957Z",
+      "updatedAt": "2026-09-12T18:44:48.957Z",
+      "version": 1,
+      "notes": "",
+      "industry": "Real Estate",
+      "value": 500000,
+      "callbackReminder": null,
+      "preferences": {
+        "preferredChannel": "Any",
+        "preferredTimeWindow": "Anytime",
+        "allowedTopics": [
+          "General"
+        ],
+        "isPaused30Days": false,
+        "isOptedOut": true,
+        "optOutReason": "Customer explicitly requested Do Not Disturb.",
+        "updatedAt": "2026-09-12T18:44:48.955Z"
+      },
+      "contactAttempts7d": {
+        "calls": 0,
+        "whatsapp": 0,
+        "sms": 0
+      }
+    },
+    {
+      "id": "lead-1789238656933",
       "name": "WhatsApp Only Customer",
       "phone": "'+91 98222 33445",
       "source": "Manual",
       "stage": "New",
-      "teamId": "team-delhi",
-      "assignedRepId": "usr-4",
-      "assignedRepName": "Sneha Kulkarni",
-      "createdDate": "2026-09-10T19:04:47.984Z",
-      "updatedAt": "2026-09-10T19:04:47.984Z",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-3",
+      "assignedRepName": "Amit Verma",
+      "createdDate": "2026-09-12T18:44:16.933Z",
+      "updatedAt": "2026-09-12T18:44:16.942Z",
+      "version": 2,
+      "notes": "Customer prefers WhatsApp only",
+      "industry": "Real Estate",
+      "value": 500000,
+      "callbackReminder": null,
+      "preferences": {
+        "preferredChannel": "WhatsApp"
+      },
+      "contactAttempts7d": {
+        "calls": 0,
+        "whatsapp": 0,
+        "sms": 0
+      }
+    },
+    {
+      "id": "lead-1789238656915",
+      "name": "Abusive Contact",
+      "phone": "'+91 98777 54321",
+      "source": "Manual",
+      "stage": "New",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-3",
+      "assignedRepName": "Amit Verma",
+      "createdDate": "2026-09-12T18:44:16.915Z",
+      "updatedAt": "2026-09-12T18:44:16.921Z",
+      "version": 2,
+      "notes": "Customer flagged for abuse",
+      "industry": "Real Estate",
+      "value": 500000,
+      "callbackReminder": null,
+      "preferences": {
+        "blockedReason": "Abusive language towards sales rep"
+      },
+      "contactAttempts7d": {
+        "calls": 0,
+        "whatsapp": 0,
+        "sms": 0
+      }
+    },
+    {
+      "id": "lead-1789238656891",
+      "name": "Opted Out Customer",
+      "phone": "'+91 98999 12345",
+      "source": "Manual",
+      "stage": "New",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-3",
+      "assignedRepName": "Amit Verma",
+      "createdDate": "2026-09-12T18:44:16.891Z",
+      "updatedAt": "2026-09-12T18:44:16.898Z",
+      "version": 2,
+      "notes": "Customer explicitly requested DND",
+      "industry": "Real Estate",
+      "value": 500000,
+      "callbackReminder": null,
+      "preferences": {
+        "isOptedOut": true
+      },
+      "contactAttempts7d": {
+        "calls": 0,
+        "whatsapp": 0,
+        "sms": 0
+      }
+    },
+    {
+      "id": "lead-1789238656144-0",
+      "name": "'=cmd|'/C calc'!A0",
+      "phone": "'+91 98000 11111",
+      "source": "Manual",
+      "stage": "New",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-2",
+      "assignedRepName": "Priya Iyer",
+      "createdDate": "2026-09-12T18:44:16.144Z",
+      "updatedAt": "2026-09-12T18:44:16.144Z",
+      "version": 1,
+      "notes": "'@SUM(1+1)*cmd|",
+      "industry": "Real Estate",
+      "value": 1000000,
+      "callbackReminder": null
+    },
+    {
+      "id": "lead-1789238656138",
+      "name": "Proto Test",
+      "phone": "'+919811234567",
+      "source": "Manual",
+      "stage": "New",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-3",
+      "assignedRepName": "Amit Verma",
+      "createdDate": "2026-09-12T18:44:16.138Z",
+      "updatedAt": "2026-09-12T18:44:16.138Z",
+      "version": 1,
+      "notes": "",
+      "industry": "Real Estate",
+      "value": 500000,
+      "callbackReminder": null,
+      "contactAttempts7d": {
+        "calls": 0,
+        "whatsapp": 0,
+        "sms": 0
+      }
+    },
+    {
+      "id": "lead-1789238648893",
+      "name": "Ananya Deshmukh (High Fatigue)",
+      "phone": "'+91 98888 22222",
+      "source": "Website",
+      "stage": "Contacted",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-3",
+      "assignedRepName": "Amit Verma",
+      "createdDate": "2026-09-12T18:44:08.893Z",
+      "updatedAt": "2026-09-12T18:44:08.893Z",
+      "version": 1,
+      "notes": "",
+      "industry": "Real Estate",
+      "value": 500000,
+      "callbackReminder": null,
+      "preferences": {
+        "preferredChannel": "Any",
+        "preferredTimeWindow": "Anytime",
+        "allowedTopics": [
+          "Product"
+        ],
+        "isPaused30Days": false,
+        "isOptedOut": false,
+        "updatedAt": "2026-09-12T18:44:08.891Z"
+      },
+      "fatigueStatus": "capped",
+      "contactAttempts7d": {
+        "calls": 5,
+        "whatsapp": 5,
+        "sms": 2
+      }
+    },
+    {
+      "id": "lead-1789238648882",
+      "name": "Rohan Verma (DND)",
+      "phone": "'+91 99999 11111",
+      "source": "Website",
+      "stage": "New",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-3",
+      "assignedRepName": "Amit Verma",
+      "createdDate": "2026-09-12T18:44:08.882Z",
+      "updatedAt": "2026-09-12T18:44:08.882Z",
+      "version": 1,
+      "notes": "",
+      "industry": "Real Estate",
+      "value": 500000,
+      "callbackReminder": null,
+      "preferences": {
+        "preferredChannel": "Any",
+        "preferredTimeWindow": "Anytime",
+        "allowedTopics": [
+          "General"
+        ],
+        "isPaused30Days": false,
+        "isOptedOut": true,
+        "optOutReason": "Customer explicitly requested Do Not Disturb.",
+        "updatedAt": "2026-09-12T18:44:08.880Z"
+      },
+      "contactAttempts7d": {
+        "calls": 0,
+        "whatsapp": 0,
+        "sms": 0
+      }
+    },
+    {
+      "id": "lead-1789238170668",
+      "name": "WhatsApp Only Customer",
+      "phone": "'+91 98222 33445",
+      "source": "Manual",
+      "stage": "New",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-3",
+      "assignedRepName": "Amit Verma",
+      "createdDate": "2026-09-12T18:36:10.668Z",
+      "updatedAt": "2026-09-12T18:36:10.676Z",
+      "version": 2,
+      "notes": "Customer prefers WhatsApp only",
+      "industry": "Real Estate",
+      "value": 500000,
+      "callbackReminder": null,
+      "preferences": {
+        "preferredChannel": "WhatsApp"
+      },
+      "contactAttempts7d": {
+        "calls": 0,
+        "whatsapp": 0,
+        "sms": 0
+      }
+    },
+    {
+      "id": "lead-1789238170648",
+      "name": "Abusive Contact",
+      "phone": "'+91 98777 54321",
+      "source": "Manual",
+      "stage": "New",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-3",
+      "assignedRepName": "Amit Verma",
+      "createdDate": "2026-09-12T18:36:10.648Z",
+      "updatedAt": "2026-09-12T18:36:10.654Z",
+      "version": 2,
+      "notes": "Customer flagged for abuse",
+      "industry": "Real Estate",
+      "value": 500000,
+      "callbackReminder": null,
+      "preferences": {
+        "blockedReason": "Abusive language towards sales rep"
+      },
+      "contactAttempts7d": {
+        "calls": 0,
+        "whatsapp": 0,
+        "sms": 0
+      }
+    },
+    {
+      "id": "lead-1789238170621",
+      "name": "Opted Out Customer",
+      "phone": "'+91 98999 12345",
+      "source": "Manual",
+      "stage": "New",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-3",
+      "assignedRepName": "Amit Verma",
+      "createdDate": "2026-09-12T18:36:10.621Z",
+      "updatedAt": "2026-09-12T18:36:10.628Z",
+      "version": 2,
+      "notes": "Customer explicitly requested DND",
+      "industry": "Real Estate",
+      "value": 500000,
+      "callbackReminder": null,
+      "preferences": {
+        "isOptedOut": true
+      },
+      "contactAttempts7d": {
+        "calls": 0,
+        "whatsapp": 0,
+        "sms": 0
+      }
+    },
+    {
+      "id": "lead-1789238169920-0",
+      "name": "'=cmd|'/C calc'!A0",
+      "phone": "'+91 98000 11111",
+      "source": "Manual",
+      "stage": "New",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-2",
+      "assignedRepName": "Priya Iyer",
+      "createdDate": "2026-09-12T18:36:09.920Z",
+      "updatedAt": "2026-09-12T18:36:09.920Z",
+      "version": 1,
+      "notes": "'@SUM(1+1)*cmd|",
+      "industry": "Real Estate",
+      "value": 1000000,
+      "callbackReminder": null
+    },
+    {
+      "id": "lead-1789238169914",
+      "name": "Proto Test",
+      "phone": "'+919811234567",
+      "source": "Manual",
+      "stage": "New",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-3",
+      "assignedRepName": "Amit Verma",
+      "createdDate": "2026-09-12T18:36:09.914Z",
+      "updatedAt": "2026-09-12T18:36:09.914Z",
+      "version": 1,
+      "notes": "",
+      "industry": "Real Estate",
+      "value": 500000,
+      "callbackReminder": null,
+      "contactAttempts7d": {
+        "calls": 0,
+        "whatsapp": 0,
+        "sms": 0
+      }
+    },
+    {
+      "id": "lead-1789238165046",
+      "name": "Ananya Deshmukh (High Fatigue)",
+      "phone": "'+91 98888 22222",
+      "source": "Website",
+      "stage": "Contacted",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-3",
+      "assignedRepName": "Amit Verma",
+      "createdDate": "2026-09-12T18:36:05.046Z",
+      "updatedAt": "2026-09-12T18:36:05.046Z",
+      "version": 1,
+      "notes": "",
+      "industry": "Real Estate",
+      "value": 500000,
+      "callbackReminder": null,
+      "preferences": {
+        "preferredChannel": "Any",
+        "preferredTimeWindow": "Anytime",
+        "allowedTopics": [
+          "Product"
+        ],
+        "isPaused30Days": false,
+        "isOptedOut": false,
+        "updatedAt": "2026-09-12T18:36:05.045Z"
+      },
+      "fatigueStatus": "capped",
+      "contactAttempts7d": {
+        "calls": 5,
+        "whatsapp": 5,
+        "sms": 2
+      }
+    },
+    {
+      "id": "lead-1789238165036",
+      "name": "Rohan Verma (DND)",
+      "phone": "'+91 99999 11111",
+      "source": "Website",
+      "stage": "New",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-3",
+      "assignedRepName": "Amit Verma",
+      "createdDate": "2026-09-12T18:36:05.036Z",
+      "updatedAt": "2026-09-12T18:36:05.036Z",
+      "version": 1,
+      "notes": "",
+      "industry": "Real Estate",
+      "value": 500000,
+      "callbackReminder": null,
+      "preferences": {
+        "preferredChannel": "Any",
+        "preferredTimeWindow": "Anytime",
+        "allowedTopics": [
+          "General"
+        ],
+        "isPaused30Days": false,
+        "isOptedOut": true,
+        "optOutReason": "Customer explicitly requested Do Not Disturb.",
+        "updatedAt": "2026-09-12T18:36:05.034Z"
+      },
+      "contactAttempts7d": {
+        "calls": 0,
+        "whatsapp": 0,
+        "sms": 0
+      }
+    },
+    {
+      "id": "lead-1789238009110",
+      "name": "Ananya Deshmukh (High Fatigue)",
+      "phone": "'+91 98888 22222",
+      "source": "Website",
+      "stage": "Contacted",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-3",
+      "assignedRepName": "Amit Verma",
+      "createdDate": "2026-09-12T18:33:29.110Z",
+      "updatedAt": "2026-09-12T18:33:29.110Z",
+      "version": 1,
+      "notes": "",
+      "industry": "Real Estate",
+      "value": 500000,
+      "callbackReminder": null,
+      "preferences": {
+        "preferredChannel": "Any",
+        "preferredTimeWindow": "Anytime",
+        "allowedTopics": [
+          "Product"
+        ],
+        "isPaused30Days": false,
+        "isOptedOut": false,
+        "updatedAt": "2026-09-12T18:33:29.108Z"
+      },
+      "fatigueStatus": "capped",
+      "contactAttempts7d": {
+        "calls": 5,
+        "whatsapp": 5,
+        "sms": 2
+      }
+    },
+    {
+      "id": "lead-1789238009101",
+      "name": "Rohan Verma (DND)",
+      "phone": "'+91 99999 11111",
+      "source": "Website",
+      "stage": "New",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-3",
+      "assignedRepName": "Amit Verma",
+      "createdDate": "2026-09-12T18:33:29.101Z",
+      "updatedAt": "2026-09-12T18:33:29.101Z",
+      "version": 1,
+      "notes": "",
+      "industry": "Real Estate",
+      "value": 500000,
+      "callbackReminder": null,
+      "preferences": {
+        "preferredChannel": "Any",
+        "preferredTimeWindow": "Anytime",
+        "allowedTopics": [
+          "General"
+        ],
+        "isPaused30Days": false,
+        "isOptedOut": true,
+        "optOutReason": "Customer explicitly requested Do Not Disturb.",
+        "updatedAt": "2026-09-12T18:33:29.100Z"
+      },
+      "contactAttempts7d": {
+        "calls": 0,
+        "whatsapp": 0,
+        "sms": 0
+      }
+    },
+    {
+      "id": "lead-1789237985428",
+      "name": "WhatsApp Only Customer",
+      "phone": "'+91 98222 33445",
+      "source": "Manual",
+      "stage": "New",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-3",
+      "assignedRepName": "Amit Verma",
+      "createdDate": "2026-09-12T18:33:05.428Z",
+      "updatedAt": "2026-09-12T18:33:05.428Z",
       "version": 1,
       "notes": "Customer prefers WhatsApp only",
       "industry": "Real Estate",
@@ -102,16 +624,16 @@
       }
     },
     {
-      "id": "lead-1789067087968",
+      "id": "lead-1789237985411",
       "name": "Abusive Contact",
       "phone": "'+91 98777 54321",
       "source": "Manual",
       "stage": "New",
-      "teamId": "team-delhi",
-      "assignedRepId": "usr-4",
-      "assignedRepName": "Sneha Kulkarni",
-      "createdDate": "2026-09-10T19:04:47.968Z",
-      "updatedAt": "2026-09-10T19:04:47.968Z",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-3",
+      "assignedRepName": "Amit Verma",
+      "createdDate": "2026-09-12T18:33:05.411Z",
+      "updatedAt": "2026-09-12T18:33:05.411Z",
       "version": 1,
       "notes": "Customer flagged for abuse",
       "industry": "Real Estate",
@@ -124,16 +646,16 @@
       }
     },
     {
-      "id": "lead-1789067087947",
+      "id": "lead-1789237985369",
       "name": "Opted Out Customer",
       "phone": "'+91 98999 12345",
       "source": "Manual",
       "stage": "New",
-      "teamId": "team-delhi",
-      "assignedRepId": "usr-4",
-      "assignedRepName": "Sneha Kulkarni",
-      "createdDate": "2026-09-10T19:04:47.947Z",
-      "updatedAt": "2026-09-10T19:04:47.947Z",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-3",
+      "assignedRepName": "Amit Verma",
+      "createdDate": "2026-09-12T18:33:05.369Z",
+      "updatedAt": "2026-09-12T18:33:05.369Z",
       "version": 1,
       "notes": "Customer explicitly requested DND",
       "industry": "Real Estate",
@@ -146,21 +668,126 @@
       }
     },
     {
+      "id": "lead-1789237984697-0",
+      "name": "'=cmd|'/C calc'!A0",
+      "phone": "'+91 98000 11111",
+      "source": "Manual",
+      "stage": "New",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-2",
+      "assignedRepName": "Priya Iyer",
+      "createdDate": "2026-09-12T18:33:04.697Z",
+      "updatedAt": "2026-09-12T18:33:04.697Z",
+      "version": 1,
+      "notes": "'@SUM(1+1)*cmd|",
+      "industry": "Real Estate",
+      "value": 1000000,
+      "callbackReminder": null
+    },
+    {
+      "id": "lead-1789237984692",
+      "name": "Proto Test",
+      "phone": "'+919811234567",
+      "source": "Manual",
+      "stage": "New",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-3",
+      "assignedRepName": "Amit Verma",
+      "createdDate": "2026-09-12T18:33:04.692Z",
+      "updatedAt": "2026-09-12T18:33:04.692Z",
+      "version": 1,
+      "notes": "",
+      "industry": "Real Estate",
+      "value": 500000,
+      "callbackReminder": null,
+      "contactAttempts7d": {
+        "calls": 0,
+        "whatsapp": 0,
+        "sms": 0
+      }
+    },
+    {
+      "id": "lead-1789237946835",
+      "name": "Ananya Deshmukh (High Fatigue)",
+      "phone": "'+91 98888 22222",
+      "source": "Website",
+      "stage": "Contacted",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-3",
+      "assignedRepName": "Amit Verma",
+      "createdDate": "2026-09-12T18:32:26.835Z",
+      "updatedAt": "2026-09-12T18:32:26.835Z",
+      "version": 1,
+      "notes": "",
+      "industry": "Real Estate",
+      "value": 500000,
+      "callbackReminder": null,
+      "preferences": {
+        "preferredChannel": "Any",
+        "preferredTimeWindow": "Anytime",
+        "allowedTopics": [
+          "Product"
+        ],
+        "isPaused30Days": false,
+        "isOptedOut": false,
+        "updatedAt": "2026-09-12T18:32:26.831Z"
+      },
+      "fatigueStatus": "capped",
+      "contactAttempts7d": {
+        "calls": 5,
+        "whatsapp": 5,
+        "sms": 2
+      }
+    },
+    {
+      "id": "lead-1789237946819",
+      "name": "Rohan Verma (DND)",
+      "phone": "'+91 99999 11111",
+      "source": "Website",
+      "stage": "New",
+      "teamId": "team-mumbai",
+      "assignedRepId": "usr-3",
+      "assignedRepName": "Amit Verma",
+      "createdDate": "2026-09-12T18:32:26.819Z",
+      "updatedAt": "2026-09-12T18:32:26.819Z",
+      "version": 1,
+      "notes": "",
+      "industry": "Real Estate",
+      "value": 500000,
+      "callbackReminder": null,
+      "preferences": {
+        "preferredChannel": "Any",
+        "preferredTimeWindow": "Anytime",
+        "allowedTopics": [
+          "General"
+        ],
+        "isPaused30Days": false,
+        "isOptedOut": true,
+        "optOutReason": "Customer explicitly requested Do Not Disturb.",
+        "updatedAt": "2026-09-12T18:32:26.816Z"
+      },
+      "contactAttempts7d": {
+        "calls": 0,
+        "whatsapp": 0,
+        "sms": 0
+      }
+    },
+    {
       "id": "lead-101",
       "name": "Vikram Malhotra",
       "phone": "+91 98201 12345",
       "source": "IndiaMART",
-      "stage": "New",
+      "stage": "Won",
       "assignedRepId": "usr-3",
       "assignedRepName": "Amit Verma",
       "teamId": "team-mumbai",
-      "createdDate": "2026-09-10T13:02:48.486Z",
+      "createdDate": "2026-09-12T15:32:01.397Z",
       "notes": "Inquired about 3 BHK luxury apartment in Gurgaon Sector 65. Budget 2.5 Cr.",
       "industry": "Real Estate",
       "value": 25000000,
-      "callbackReminder": "2026-09-10T18:02:48.486Z",
-      "version": 1,
-      "updatedAt": "2026-09-10T13:02:48.486Z"
+      "callbackReminder": "2026-09-12T20:32:01.397Z",
+      "version": 2,
+      "updatedAt": "2026-09-12T18:33:04.378Z"
     },
     {
       "id": "lead-102",
@@ -171,13 +798,13 @@
       "assignedRepId": "usr-3",
       "assignedRepName": "Amit Verma",
       "teamId": "team-mumbai",
-      "createdDate": "2026-09-09T22:02:48.486Z",
+      "createdDate": "2026-09-12T00:32:01.397Z",
       "notes": "Looking for full-stack data science executive certification. Needs syllabus and EMI options.",
       "industry": "Education",
       "value": 125000,
-      "callbackReminder": "2026-09-10T20:02:48.486Z",
+      "callbackReminder": "2026-09-12T22:32:01.397Z",
       "version": 1,
-      "updatedAt": "2026-09-09T22:02:48.486Z"
+      "updatedAt": "2026-09-12T00:32:01.397Z"
     },
     {
       "id": "lead-103",
@@ -188,13 +815,13 @@
       "assignedRepId": "usr-4",
       "assignedRepName": "Sneha Kulkarni",
       "teamId": "team-delhi",
-      "createdDate": "2026-09-09T04:02:48.486Z",
+      "createdDate": "2026-09-11T06:32:01.397Z",
       "notes": "SME business loan requirement of 45 Lakhs for textile machinery expansion in Surat.",
       "industry": "Lending",
       "value": 4500000,
-      "callbackReminder": "2026-09-10T17:02:48.486Z",
+      "callbackReminder": "2026-09-12T19:32:01.397Z",
       "version": 1,
-      "updatedAt": "2026-09-09T04:02:48.486Z"
+      "updatedAt": "2026-09-11T06:32:01.397Z"
     },
     {
       "id": "lead-104",
@@ -205,13 +832,13 @@
       "assignedRepId": "usr-4",
       "assignedRepName": "Sneha Kulkarni",
       "teamId": "team-delhi",
-      "createdDate": "2026-09-08T04:02:48.486Z",
+      "createdDate": "2026-09-10T06:32:01.397Z",
       "notes": "Family health insurance floater policy for 4 members (1 Cr cover). Sent plan comparisons.",
       "industry": "Insurance",
       "value": 48000,
       "callbackReminder": null,
       "version": 1,
-      "updatedAt": "2026-09-08T04:02:48.486Z"
+      "updatedAt": "2026-09-10T06:32:01.397Z"
     },
     {
       "id": "lead-105",
@@ -222,13 +849,13 @@
       "assignedRepId": "usr-3",
       "assignedRepName": "Amit Verma",
       "teamId": "team-mumbai",
-      "createdDate": "2026-09-06T22:02:48.486Z",
+      "createdDate": "2026-09-09T00:32:01.397Z",
       "notes": "Commercial office space in Whitefield Bangalore. Token amount received via RTGS!",
       "industry": "Real Estate",
       "value": 8500000,
       "callbackReminder": null,
       "version": 1,
-      "updatedAt": "2026-09-06T22:02:48.486Z"
+      "updatedAt": "2026-09-09T00:32:01.397Z"
     },
     {
       "id": "lead-106",
@@ -239,13 +866,13 @@
       "assignedRepId": "usr-4",
       "assignedRepName": "Sneha Kulkarni",
       "teamId": "team-delhi",
-      "createdDate": "2026-09-05T16:02:48.486Z",
+      "createdDate": "2026-09-07T18:32:01.397Z",
       "notes": "Decided to postpone business term loan until next fiscal quarter.",
       "industry": "Lending",
       "value": 2000000,
       "callbackReminder": null,
       "version": 1,
-      "updatedAt": "2026-09-05T16:02:48.486Z"
+      "updatedAt": "2026-09-07T18:32:01.397Z"
     },
     {
       "id": "lead-107",
@@ -256,13 +883,13 @@
       "assignedRepId": "usr-3",
       "assignedRepName": "Amit Verma",
       "teamId": "team-mumbai",
-      "createdDate": "2026-09-10T11:02:48.486Z",
+      "createdDate": "2026-09-12T13:32:01.397Z",
       "notes": "Doctor clinic equipment loan request. Needs instant sanction letter.",
       "industry": "Lending",
       "value": 1500000,
-      "callbackReminder": "2026-09-10T22:02:48.486Z",
+      "callbackReminder": "2026-09-13T00:32:01.397Z",
       "version": 1,
-      "updatedAt": "2026-09-10T11:02:48.486Z"
+      "updatedAt": "2026-09-12T13:32:01.397Z"
     },
     {
       "id": "lead-108",
@@ -273,13 +900,13 @@
       "assignedRepId": "usr-4",
       "assignedRepName": "Sneha Kulkarni",
       "teamId": "team-delhi",
-      "createdDate": "2026-09-08T16:02:48.486Z",
+      "createdDate": "2026-09-10T18:32:01.397Z",
       "notes": "2 BHK in Pune Wakad. Visited site last Saturday, awaiting spouse feedback.",
       "industry": "Real Estate",
       "value": 6800000,
-      "callbackReminder": "2026-09-10T19:02:48.486Z",
+      "callbackReminder": "2026-09-12T21:32:01.397Z",
       "version": 1,
-      "updatedAt": "2026-09-08T16:02:48.486Z"
+      "updatedAt": "2026-09-10T18:32:01.397Z"
     }
   ],
   "calls": [
@@ -290,7 +917,7 @@
       "leadPhone": "+91 98310 99887",
       "repId": "usr-4",
       "repName": "Sneha Kulkarni",
-      "timestamp": "2026-09-10T12:02:48.486Z",
+      "timestamp": "2026-09-12T14:32:01.397Z",
       "duration": 185,
       "outcome": "Follow-up",
       "notes": "Discussed GST filings and 2 years ITR requirements. Client will email documents by 4 PM.",
@@ -303,7 +930,7 @@
       "leadPhone": "+91 98199 87654",
       "repId": "usr-3",
       "repName": "Amit Verma",
-      "timestamp": "2026-09-10T10:02:48.486Z",
+      "timestamp": "2026-09-12T12:32:01.397Z",
       "duration": 310,
       "outcome": "Interested",
       "notes": "Clarified placement assistance and batch timings (weekend). Agreed for scholarship test.",
@@ -316,7 +943,7 @@
       "leadPhone": "+91 98450 11223",
       "repId": "usr-4",
       "repName": "Sneha Kulkarni",
-      "timestamp": "2026-09-10T04:02:48.486Z",
+      "timestamp": "2026-09-12T06:32:01.397Z",
       "duration": 420,
       "outcome": "Follow-up",
       "notes": "Negotiating cashless hospital network riders. Requested 5% festive discount waiver.",
@@ -329,7 +956,7 @@
       "leadPhone": "+91 98100 44556",
       "repId": "usr-3",
       "repName": "Amit Verma",
-      "timestamp": "2026-09-09T16:02:48.486Z",
+      "timestamp": "2026-09-11T18:32:01.397Z",
       "duration": 540,
       "outcome": "Converted",
       "notes": "Finalized builder agreement terms. Payment confirmed.",
@@ -342,7 +969,7 @@
       "leadPhone": "+91 97200 66778",
       "repId": "usr-4",
       "repName": "Sneha Kulkarni",
-      "timestamp": "2026-09-09T10:02:48.486Z",
+      "timestamp": "2026-09-11T12:32:01.397Z",
       "duration": 95,
       "outcome": "Not interested",
       "notes": "Client stated interest rates higher than private bank offer.",
@@ -355,7 +982,7 @@
       "leadId": "lead-103",
       "direction": "outbound",
       "text": "Namaste Rajesh ji, this is Sneha from TeleCRM lending desk. Here is the checklist of documents needed for your 45L business loan.",
-      "timestamp": "2026-09-10T11:02:48.486Z",
+      "timestamp": "2026-09-12T13:32:01.397Z",
       "deliveryStatus": "Delivered"
     },
     {
@@ -363,7 +990,7 @@
       "leadId": "lead-103",
       "direction": "inbound",
       "text": "Ji Sneha ji, I have the 2-year ITR ready. Can we discuss processing fee waivers on the call?",
-      "timestamp": "2026-09-10T11:32:48.486Z",
+      "timestamp": "2026-09-12T14:02:01.397Z",
       "deliveryStatus": "Delivered"
     },
     {
@@ -371,7 +998,7 @@
       "leadId": "lead-103",
       "direction": "outbound",
       "text": "Sure sir, I have marked a callback reminder for today at 3:30 PM. We will get you the best subvention rates!",
-      "timestamp": "2026-09-10T12:02:48.486Z",
+      "timestamp": "2026-09-12T14:32:01.397Z",
       "deliveryStatus": "Delivered"
     },
     {
@@ -379,7 +1006,7 @@
       "leadId": "lead-101",
       "direction": "outbound",
       "text": "Hello Vikram ji, thank you for your inquiry on IndiaMART for Sector 65 luxury towers. Would you prefer a digital brochure over WhatsApp?",
-      "timestamp": "2026-09-10T14:02:48.486Z",
+      "timestamp": "2026-09-12T16:32:01.397Z",
       "deliveryStatus": "Delivered"
     },
     {
@@ -387,7 +1014,7 @@
       "leadId": "lead-102",
       "direction": "outbound",
       "text": "Hi Ananya! Thanks for your interest in our Executive AI & Data Science Program. Here is the curriculum link: https://telecrm.in/curriculum",
-      "timestamp": "2026-09-09T23:02:48.486Z",
+      "timestamp": "2026-09-12T01:32:01.397Z",
       "deliveryStatus": "Delivered"
     }
   ],
@@ -396,8 +1023,8 @@
       "id": "tkt-401",
       "subject": "Urgent: Sanction letter draft pending verification for Surat client",
       "status": "In Progress",
-      "createdDate": "2026-09-10T14:32:48.486Z",
-      "slaDueTime": "2026-09-10T18:32:48.486Z",
+      "createdDate": "2026-09-12T17:02:01.397Z",
+      "slaDueTime": "2026-09-12T21:02:01.397Z",
       "priority": "High",
       "leadId": "lead-103",
       "leadName": "Rajesh K. Singhania",
@@ -406,16 +1033,16 @@
         {
           "id": "rep-1",
           "sender": "Sneha Kulkarni",
-          "senderRole": "Rep",
+          "senderRole": "telecaller",
           "text": "Client submitted GST returns. Credit team please expedite pre-approval letter.",
-          "timestamp": "2026-09-10T14:50:48.486Z"
+          "timestamp": "2026-09-12T17:20:01.397Z"
         },
         {
           "id": "rep-2",
           "sender": "Priya Iyer",
-          "senderRole": "Team Lead",
+          "senderRole": "tl",
           "text": "Reviewing collateral now. Target dispatch within 1 hour.",
-          "timestamp": "2026-09-10T15:14:48.486Z"
+          "timestamp": "2026-09-12T17:44:01.397Z"
         }
       ]
     },
@@ -423,8 +1050,8 @@
       "id": "tkt-402",
       "subject": "IndiaMART API webhook lead duplication issue reported",
       "status": "Open",
-      "createdDate": "2026-09-10T15:14:48.486Z",
-      "slaDueTime": "2026-09-10T19:14:48.486Z",
+      "createdDate": "2026-09-12T17:44:01.397Z",
+      "slaDueTime": "2026-09-12T21:44:01.397Z",
       "priority": "Medium",
       "leadId": "lead-101",
       "leadName": "Vikram Malhotra",
@@ -433,9 +1060,9 @@
         {
           "id": "rep-3",
           "sender": "Amit Verma",
-          "senderRole": "Rep",
+          "senderRole": "telecaller",
           "text": "Noticed same mobile number received twice with 2-minute gap.",
-          "timestamp": "2026-09-10T15:32:48.486Z"
+          "timestamp": "2026-09-12T18:02:01.397Z"
         }
       ]
     },
@@ -443,8 +1070,8 @@
       "id": "tkt-403",
       "subject": "Refund request for cancelled property site visit pass",
       "status": "Resolved",
-      "createdDate": "2026-09-10T06:02:48.486Z",
-      "slaDueTime": "2026-09-10T10:02:48.486Z",
+      "createdDate": "2026-09-12T08:32:01.397Z",
+      "slaDueTime": "2026-09-12T12:32:01.397Z",
       "priority": "Low",
       "leadId": "lead-106",
       "leadName": "Deepak Agrawal",
@@ -453,34 +1080,393 @@
         {
           "id": "rep-4",
           "sender": "Sneha Kulkarni",
-          "senderRole": "Rep",
+          "senderRole": "telecaller",
           "text": "Customer requested cancellation due to personal travel.",
-          "timestamp": "2026-09-10T06:32:48.486Z"
+          "timestamp": "2026-09-12T09:02:01.397Z"
         },
         {
           "id": "rep-5",
           "sender": "Rahul Sharma",
-          "senderRole": "Admin",
+          "senderRole": "owner",
           "text": "Refund of ₹999 processed to source UPI ID. Ticket closed.",
-          "timestamp": "2026-09-10T09:02:48.486Z"
+          "timestamp": "2026-09-12T11:32:01.397Z"
         }
       ]
     }
   ],
   "auditLogs": [
     {
-      "id": "aud-1789232860344-138",
-      "timestamp": "2026-09-12T17:07:40.344Z",
-      "userId": "system",
-      "userName": "System Auto",
+      "id": "aud-1789238688968-541",
+      "timestamp": "2026-09-12T18:44:48.968Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
       "userRole": "owner",
-      "action": "AUTO_BACKUP_CREATED",
-      "details": "Snapshot created: \"Hourly Auto-Snapshot\" with 11 leads.",
+      "action": "LEAD_CREATED",
+      "details": "Added new lead: Ananya Deshmukh (High Fatigue) (Website) assigned to Amit Verma [team-mumbai]",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789238688958-692",
+      "timestamp": "2026-09-12T18:44:48.958Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "LEAD_CREATED",
+      "details": "Added new lead: Rohan Verma (DND) (Website) assigned to Amit Verma [team-mumbai]",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789238688951-181",
+      "timestamp": "2026-09-12T18:44:48.951Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "CUSTOM_FIELDS_UPDATED",
+      "details": "Updated 1 custom lead fields.",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_POLICY"
+    },
+    {
+      "id": "aud-1789238688943-462",
+      "timestamp": "2026-09-12T18:44:48.943Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied custom field update to Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_POLICY"
+    },
+    {
+      "id": "aud-1789238688940-890",
+      "timestamp": "2026-09-12T18:44:48.940Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied MANAGE_POLICY to Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_POLICY"
+    },
+    {
+      "id": "aud-1789238688935-959",
+      "timestamp": "2026-09-12T18:44:48.935Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied MANAGE_USERS to Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_USERS"
+    },
+    {
+      "id": "aud-1789238688925-8",
+      "timestamp": "2026-09-12T18:44:48.925Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "USER_LOGOUT",
+      "details": "Rahul Sharma signed out",
       "ip": "127.0.0.1"
     },
     {
-      "id": "aud-1789231307804-989",
-      "timestamp": "2026-09-12T16:41:47.804Z",
+      "id": "aud-1789238688920-828",
+      "timestamp": "2026-09-12T18:44:48.920Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "USER_LOGIN",
+      "details": "Rahul Sharma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238688780-270",
+      "timestamp": "2026-09-12T18:44:48.780Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "USER_LOGIN",
+      "details": "Amit Verma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238688655-348",
+      "timestamp": "2026-09-12T18:44:48.655Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "USER_LOGIN",
+      "details": "Rahul Sharma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238656960-876",
+      "timestamp": "2026-09-12T18:44:16.960Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "COMPLIANCE_RULES_UPDATED",
+      "details": "Updated compliance frequency & quiet hours rules",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_COMPLIANCE_RULES",
+      "requiredApproval": false
+    },
+    {
+      "id": "aud-1789238656953-443",
+      "timestamp": "2026-09-12T18:44:16.953Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied MANAGE_COMPLIANCE_RULES to Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_COMPLIANCE_RULES"
+    },
+    {
+      "id": "aud-1789238656943-328",
+      "timestamp": "2026-09-12T18:44:16.943Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "LEAD_UPDATED",
+      "details": "Lead WhatsApp Only Customer updated",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT",
+      "requiredApproval": false
+    },
+    {
+      "id": "aud-1789238656934-311",
+      "timestamp": "2026-09-12T18:44:16.934Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "LEAD_CREATED",
+      "details": "Added new lead: WhatsApp Only Customer (Manual) assigned to Amit Verma [team-mumbai]",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789238656922-213",
+      "timestamp": "2026-09-12T18:44:16.922Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "LEAD_UPDATED",
+      "details": "Lead Abusive Contact updated",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT",
+      "requiredApproval": false
+    },
+    {
+      "id": "aud-1789238656916-586",
+      "timestamp": "2026-09-12T18:44:16.916Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "LEAD_CREATED",
+      "details": "Added new lead: Abusive Contact (Manual) assigned to Amit Verma [team-mumbai]",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789238656900-930",
+      "timestamp": "2026-09-12T18:44:16.900Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "LEAD_UPDATED",
+      "details": "Lead Opted Out Customer updated",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT",
+      "requiredApproval": false
+    },
+    {
+      "id": "aud-1789238656892-710",
+      "timestamp": "2026-09-12T18:44:16.892Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "LEAD_CREATED",
+      "details": "Added new lead: Opted Out Customer (Manual) assigned to Amit Verma [team-mumbai]",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789238656588-137",
+      "timestamp": "2026-09-12T18:44:16.588Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "USER_INVITED",
+      "details": "Rahul Sharma created user Invited User 8129 with role telecaller",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_USERS"
+    },
+    {
+      "id": "aud-1789238656418-298",
+      "timestamp": "2026-09-12T18:44:16.418Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "USER_LOGIN",
+      "details": "Amit Verma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238656290-184",
+      "timestamp": "2026-09-12T18:44:16.290Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "USER_LOGIN",
+      "details": "Rahul Sharma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238656145-571",
+      "timestamp": "2026-09-12T18:44:16.145Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "CSV_BULK_IMPORT",
+      "details": "Imported 1 leads via CSV batch upload.",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789238656139-755",
+      "timestamp": "2026-09-12T18:44:16.139Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "LEAD_CREATED",
+      "details": "Added new lead: Proto Test (Manual) assigned to Amit Verma [team-mumbai]",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789238656115-69",
+      "timestamp": "2026-09-12T18:44:16.115Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "USER_LOGOUT",
+      "details": "Amit Verma signed out",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238656108-813",
+      "timestamp": "2026-09-12T18:44:16.108Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "USER_LOGIN",
+      "details": "Amit Verma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238655813-858",
+      "timestamp": "2026-09-12T18:44:15.813Z",
+      "userId": "usr-2",
+      "userName": "Priya Iyer",
+      "userRole": "tl",
+      "action": "ACCESS_DENIED",
+      "details": "Denied MANAGE_POLICY to Priya Iyer",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_POLICY"
+    },
+    {
+      "id": "aud-1789238655806-967",
+      "timestamp": "2026-09-12T18:44:15.806Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied MANAGE_POLICY to Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_POLICY"
+    },
+    {
+      "id": "aud-1789238655781-314",
+      "timestamp": "2026-09-12T18:44:15.781Z",
+      "userId": "usr-2",
+      "userName": "Priya Iyer",
+      "userRole": "tl",
+      "action": "ACCESS_DENIED",
+      "details": "Denied MANAGE_USERS to Priya Iyer",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_USERS"
+    },
+    {
+      "id": "aud-1789238655756-117",
+      "timestamp": "2026-09-12T18:44:15.756Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied MANAGE_USERS to Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_USERS"
+    },
+    {
+      "id": "aud-1789238655751-450",
+      "timestamp": "2026-09-12T18:44:15.751Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied bulk-update for Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789238655734-581",
+      "timestamp": "2026-09-12T18:44:15.734Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied lead CSV import for Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789238655727-14",
+      "timestamp": "2026-09-12T18:44:15.727Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied DELETE on lead for Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "DELETE"
+    },
+    {
+      "id": "aud-1789238655721-555",
+      "timestamp": "2026-09-12T18:44:15.721Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "USER_LOGIN",
+      "details": "Amit Verma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238655576-16",
+      "timestamp": "2026-09-12T18:44:15.576Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied EDIT on lead lead-103 for Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789238655564-967",
+      "timestamp": "2026-09-12T18:44:15.564Z",
       "userId": "usr-4",
       "userName": "Sneha Kulkarni",
       "userRole": "telecaller",
@@ -489,22 +1475,146 @@
       "ip": "127.0.0.1"
     },
     {
-      "id": "aud-1789067088008-15",
-      "timestamp": "2026-09-10T19:04:48.008Z",
-      "userId": "usr-1",
-      "userName": "Rahul Sharma",
-      "userRole": "owner",
-      "action": "COMPLIANCE_RULES_UPDATED",
-      "details": "Updated compliance frequency & quiet hours rules",
-      "ip": "127.0.0.1",
-      "actionType": "MANAGE_COMPLIANCE_RULES",
-      "requiredApproval": false
-    },
-    {
-      "id": "aud-1789067087999-861",
-      "timestamp": "2026-09-10T19:04:47.999Z",
+      "id": "aud-1789238655441-909",
+      "timestamp": "2026-09-12T18:44:15.441Z",
       "userId": "usr-3",
       "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "USER_LOGIN",
+      "details": "Amit Verma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238655319-618",
+      "timestamp": "2026-09-12T18:44:15.319Z",
+      "userId": "usr-2",
+      "userName": "Priya Iyer",
+      "userRole": "tl",
+      "action": "USER_LOGIN",
+      "details": "Priya Iyer logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238655178-752",
+      "timestamp": "2026-09-12T18:44:15.178Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "USER_LOGIN",
+      "details": "Rahul Sharma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238648894-324",
+      "timestamp": "2026-09-12T18:44:08.894Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "LEAD_CREATED",
+      "details": "Added new lead: Ananya Deshmukh (High Fatigue) (Website) assigned to Amit Verma [team-mumbai]",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789238648883-31",
+      "timestamp": "2026-09-12T18:44:08.883Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "LEAD_CREATED",
+      "details": "Added new lead: Rohan Verma (DND) (Website) assigned to Amit Verma [team-mumbai]",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789238648875-343",
+      "timestamp": "2026-09-12T18:44:08.875Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "CUSTOM_FIELDS_UPDATED",
+      "details": "Updated 1 custom lead fields.",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_POLICY"
+    },
+    {
+      "id": "aud-1789238648867-57",
+      "timestamp": "2026-09-12T18:44:08.867Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied custom field update to Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_POLICY"
+    },
+    {
+      "id": "aud-1789238648860-880",
+      "timestamp": "2026-09-12T18:44:08.860Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied MANAGE_POLICY to Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_POLICY"
+    },
+    {
+      "id": "aud-1789238648853-336",
+      "timestamp": "2026-09-12T18:44:08.853Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied MANAGE_USERS to Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_USERS"
+    },
+    {
+      "id": "aud-1789238648841-787",
+      "timestamp": "2026-09-12T18:44:08.841Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "USER_LOGOUT",
+      "details": "Rahul Sharma signed out",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238648835-885",
+      "timestamp": "2026-09-12T18:44:08.835Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "USER_LOGIN",
+      "details": "Rahul Sharma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238648707-44",
+      "timestamp": "2026-09-12T18:44:08.707Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "USER_LOGIN",
+      "details": "Amit Verma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238648575-464",
+      "timestamp": "2026-09-12T18:44:08.575Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "USER_LOGIN",
+      "details": "Rahul Sharma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238170693-333",
+      "timestamp": "2026-09-12T18:36:10.693Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
       "userRole": "owner",
       "action": "COMPLIANCE_RULES_UPDATED",
       "details": "Updated compliance frequency & quiet hours rules",
@@ -513,41 +1623,821 @@
       "requiredApproval": false
     },
     {
-      "id": "aud-1789067087986-764",
-      "timestamp": "2026-09-10T19:04:47.986Z",
+      "id": "aud-1789238170687-678",
+      "timestamp": "2026-09-12T18:36:10.687Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied MANAGE_COMPLIANCE_RULES to Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_COMPLIANCE_RULES"
+    },
+    {
+      "id": "aud-1789238170677-432",
+      "timestamp": "2026-09-12T18:36:10.677Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "LEAD_UPDATED",
+      "details": "Lead WhatsApp Only Customer updated",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT",
+      "requiredApproval": false
+    },
+    {
+      "id": "aud-1789238170668-517",
+      "timestamp": "2026-09-12T18:36:10.668Z",
       "userId": "usr-1",
       "userName": "Rahul Sharma",
       "userRole": "owner",
       "action": "LEAD_CREATED",
-      "details": "Added new lead: WhatsApp Only Customer (Manual) assigned to Sneha Kulkarni [team-delhi]",
+      "details": "Added new lead: WhatsApp Only Customer (Manual) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
       "actionType": "EDIT"
     },
     {
-      "id": "aud-1789067087969-456",
-      "timestamp": "2026-09-10T19:04:47.969Z",
+      "id": "aud-1789238170655-549",
+      "timestamp": "2026-09-12T18:36:10.655Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "LEAD_UPDATED",
+      "details": "Lead Abusive Contact updated",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT",
+      "requiredApproval": false
+    },
+    {
+      "id": "aud-1789238170649-346",
+      "timestamp": "2026-09-12T18:36:10.649Z",
       "userId": "usr-1",
       "userName": "Rahul Sharma",
       "userRole": "owner",
       "action": "LEAD_CREATED",
-      "details": "Added new lead: Abusive Contact (Manual) assigned to Sneha Kulkarni [team-delhi]",
+      "details": "Added new lead: Abusive Contact (Manual) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
       "actionType": "EDIT"
     },
     {
-      "id": "aud-1789067087948-748",
-      "timestamp": "2026-09-10T19:04:47.948Z",
+      "id": "aud-1789238170628-631",
+      "timestamp": "2026-09-12T18:36:10.628Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "LEAD_UPDATED",
+      "details": "Lead Opted Out Customer updated",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT",
+      "requiredApproval": false
+    },
+    {
+      "id": "aud-1789238170622-262",
+      "timestamp": "2026-09-12T18:36:10.622Z",
       "userId": "usr-1",
       "userName": "Rahul Sharma",
       "userRole": "owner",
       "action": "LEAD_CREATED",
-      "details": "Added new lead: Opted Out Customer (Manual) assigned to Sneha Kulkarni [team-delhi]",
+      "details": "Added new lead: Opted Out Customer (Manual) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
       "actionType": "EDIT"
     },
     {
-      "id": "aud-1789067087769-815",
-      "timestamp": "2026-09-10T19:04:47.769Z",
+      "id": "aud-1789238170327-643",
+      "timestamp": "2026-09-12T18:36:10.327Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "USER_INVITED",
+      "details": "Rahul Sharma created user Invited User 3021 with role telecaller",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_USERS"
+    },
+    {
+      "id": "aud-1789238170200-666",
+      "timestamp": "2026-09-12T18:36:10.200Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "USER_LOGIN",
+      "details": "Amit Verma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238170070-699",
+      "timestamp": "2026-09-12T18:36:10.070Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "USER_LOGIN",
+      "details": "Rahul Sharma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238169920-954",
+      "timestamp": "2026-09-12T18:36:09.920Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "CSV_BULK_IMPORT",
+      "details": "Imported 1 leads via CSV batch upload.",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789238169915-291",
+      "timestamp": "2026-09-12T18:36:09.915Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "LEAD_CREATED",
+      "details": "Added new lead: Proto Test (Manual) assigned to Amit Verma [team-mumbai]",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789238169892-75",
+      "timestamp": "2026-09-12T18:36:09.892Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "USER_LOGOUT",
+      "details": "Amit Verma signed out",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238169886-616",
+      "timestamp": "2026-09-12T18:36:09.886Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "USER_LOGIN",
+      "details": "Amit Verma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238169603-92",
+      "timestamp": "2026-09-12T18:36:09.603Z",
+      "userId": "usr-2",
+      "userName": "Priya Iyer",
+      "userRole": "tl",
+      "action": "ACCESS_DENIED",
+      "details": "Denied MANAGE_POLICY to Priya Iyer",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_POLICY"
+    },
+    {
+      "id": "aud-1789238169598-467",
+      "timestamp": "2026-09-12T18:36:09.598Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied MANAGE_POLICY to Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_POLICY"
+    },
+    {
+      "id": "aud-1789238169577-541",
+      "timestamp": "2026-09-12T18:36:09.577Z",
+      "userId": "usr-2",
+      "userName": "Priya Iyer",
+      "userRole": "tl",
+      "action": "ACCESS_DENIED",
+      "details": "Denied MANAGE_USERS to Priya Iyer",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_USERS"
+    },
+    {
+      "id": "aud-1789238169572-539",
+      "timestamp": "2026-09-12T18:36:09.572Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied MANAGE_USERS to Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_USERS"
+    },
+    {
+      "id": "aud-1789238169567-417",
+      "timestamp": "2026-09-12T18:36:09.567Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied bulk-update for Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789238169561-380",
+      "timestamp": "2026-09-12T18:36:09.561Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied lead CSV import for Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789238169555-687",
+      "timestamp": "2026-09-12T18:36:09.555Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied DELETE on lead for Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "DELETE"
+    },
+    {
+      "id": "aud-1789238169550-329",
+      "timestamp": "2026-09-12T18:36:09.550Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "USER_LOGIN",
+      "details": "Amit Verma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238169402-704",
+      "timestamp": "2026-09-12T18:36:09.402Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied EDIT on lead lead-103 for Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789238169387-230",
+      "timestamp": "2026-09-12T18:36:09.387Z",
+      "userId": "usr-4",
+      "userName": "Sneha Kulkarni",
+      "userRole": "telecaller",
+      "action": "USER_LOGIN",
+      "details": "Sneha Kulkarni logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238169263-959",
+      "timestamp": "2026-09-12T18:36:09.263Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "USER_LOGIN",
+      "details": "Amit Verma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238169139-364",
+      "timestamp": "2026-09-12T18:36:09.139Z",
+      "userId": "usr-2",
+      "userName": "Priya Iyer",
+      "userRole": "tl",
+      "action": "USER_LOGIN",
+      "details": "Priya Iyer logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238168996-300",
+      "timestamp": "2026-09-12T18:36:08.996Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "USER_LOGIN",
+      "details": "Rahul Sharma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238165047-160",
+      "timestamp": "2026-09-12T18:36:05.047Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "LEAD_CREATED",
+      "details": "Added new lead: Ananya Deshmukh (High Fatigue) (Website) assigned to Amit Verma [team-mumbai]",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789238165037-610",
+      "timestamp": "2026-09-12T18:36:05.037Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "LEAD_CREATED",
+      "details": "Added new lead: Rohan Verma (DND) (Website) assigned to Amit Verma [team-mumbai]",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789238165030-445",
+      "timestamp": "2026-09-12T18:36:05.030Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "CUSTOM_FIELDS_UPDATED",
+      "details": "Updated 1 custom lead fields.",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_POLICY"
+    },
+    {
+      "id": "aud-1789238165021-769",
+      "timestamp": "2026-09-12T18:36:05.021Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied custom field update to Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_POLICY"
+    },
+    {
+      "id": "aud-1789238165016-212",
+      "timestamp": "2026-09-12T18:36:05.016Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied MANAGE_POLICY to Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_POLICY"
+    },
+    {
+      "id": "aud-1789238165011-625",
+      "timestamp": "2026-09-12T18:36:05.011Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied MANAGE_USERS to Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_USERS"
+    },
+    {
+      "id": "aud-1789238165002-895",
+      "timestamp": "2026-09-12T18:36:05.002Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "USER_LOGOUT",
+      "details": "Rahul Sharma signed out",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238164996-72",
+      "timestamp": "2026-09-12T18:36:04.996Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "USER_LOGIN",
+      "details": "Rahul Sharma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238164872-510",
+      "timestamp": "2026-09-12T18:36:04.872Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "USER_LOGIN",
+      "details": "Amit Verma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238164760-347",
+      "timestamp": "2026-09-12T18:36:04.760Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "USER_LOGIN",
+      "details": "Rahul Sharma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238009110-193",
+      "timestamp": "2026-09-12T18:33:29.110Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "LEAD_CREATED",
+      "details": "Added new lead: Ananya Deshmukh (High Fatigue) (Website) assigned to Amit Verma [team-mumbai]",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789238009102-171",
+      "timestamp": "2026-09-12T18:33:29.102Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "LEAD_CREATED",
+      "details": "Added new lead: Rohan Verma (DND) (Website) assigned to Amit Verma [team-mumbai]",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789238009096-698",
+      "timestamp": "2026-09-12T18:33:29.096Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "CUSTOM_FIELDS_UPDATED",
+      "details": "Updated 1 custom lead fields.",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_POLICY"
+    },
+    {
+      "id": "aud-1789238009088-335",
+      "timestamp": "2026-09-12T18:33:29.088Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied custom field update to Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_POLICY"
+    },
+    {
+      "id": "aud-1789238009085-412",
+      "timestamp": "2026-09-12T18:33:29.085Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied MANAGE_POLICY to Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_POLICY"
+    },
+    {
+      "id": "aud-1789238009081-748",
+      "timestamp": "2026-09-12T18:33:29.081Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied MANAGE_USERS to Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_USERS"
+    },
+    {
+      "id": "aud-1789238009074-143",
+      "timestamp": "2026-09-12T18:33:29.074Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "USER_LOGOUT",
+      "details": "Rahul Sharma signed out",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238009070-320",
+      "timestamp": "2026-09-12T18:33:29.070Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "USER_LOGIN",
+      "details": "Rahul Sharma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238008937-618",
+      "timestamp": "2026-09-12T18:33:28.937Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "USER_LOGIN",
+      "details": "Amit Verma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238008813-478",
+      "timestamp": "2026-09-12T18:33:28.813Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "USER_LOGIN",
+      "details": "Rahul Sharma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789238003456-449",
+      "timestamp": "2026-09-12T18:33:23.456Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied MANAGE_USERS to Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_USERS"
+    },
+    {
+      "id": "aud-1789237998249-943",
+      "timestamp": "2026-09-12T18:33:18.249Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "USER_LOGIN",
+      "details": "Amit Verma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789237985447-147",
+      "timestamp": "2026-09-12T18:33:05.447Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "COMPLIANCE_RULES_UPDATED",
+      "details": "Updated compliance frequency & quiet hours rules",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_COMPLIANCE_RULES",
+      "requiredApproval": false
+    },
+    {
+      "id": "aud-1789237985442-14",
+      "timestamp": "2026-09-12T18:33:05.442Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied MANAGE_COMPLIANCE_RULES to Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_COMPLIANCE_RULES"
+    },
+    {
+      "id": "aud-1789237985429-41",
+      "timestamp": "2026-09-12T18:33:05.429Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "LEAD_CREATED",
+      "details": "Added new lead: WhatsApp Only Customer (Manual) assigned to Amit Verma [team-mumbai]",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789237985412-320",
+      "timestamp": "2026-09-12T18:33:05.412Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "LEAD_CREATED",
+      "details": "Added new lead: Abusive Contact (Manual) assigned to Amit Verma [team-mumbai]",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789237985370-237",
+      "timestamp": "2026-09-12T18:33:05.370Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "LEAD_CREATED",
+      "details": "Added new lead: Opted Out Customer (Manual) assigned to Amit Verma [team-mumbai]",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789237985082-393",
+      "timestamp": "2026-09-12T18:33:05.082Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "USER_INVITED",
+      "details": "Rahul Sharma created user Invited User 1581 with role telecaller",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_USERS"
+    },
+    {
+      "id": "aud-1789237984962-402",
+      "timestamp": "2026-09-12T18:33:04.962Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "USER_LOGIN",
+      "details": "Amit Verma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789237984842-383",
+      "timestamp": "2026-09-12T18:33:04.842Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "USER_LOGIN",
+      "details": "Rahul Sharma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789237984697-502",
+      "timestamp": "2026-09-12T18:33:04.697Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "CSV_BULK_IMPORT",
+      "details": "Imported 1 leads via CSV batch upload.",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789237984692-552",
+      "timestamp": "2026-09-12T18:33:04.692Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "LEAD_CREATED",
+      "details": "Added new lead: Proto Test (Manual) assigned to Amit Verma [team-mumbai]",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789237984671-822",
+      "timestamp": "2026-09-12T18:33:04.671Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "USER_LOGOUT",
+      "details": "Amit Verma signed out",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789237984667-522",
+      "timestamp": "2026-09-12T18:33:04.667Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "USER_LOGIN",
+      "details": "Amit Verma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789237984415-161",
+      "timestamp": "2026-09-12T18:33:04.415Z",
+      "userId": "usr-2",
+      "userName": "Priya Iyer",
+      "userRole": "tl",
+      "action": "ACCESS_DENIED",
+      "details": "Denied MANAGE_POLICY to Priya Iyer",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_POLICY"
+    },
+    {
+      "id": "aud-1789237984410-989",
+      "timestamp": "2026-09-12T18:33:04.410Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied MANAGE_POLICY to Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_POLICY"
+    },
+    {
+      "id": "aud-1789237984388-440",
+      "timestamp": "2026-09-12T18:33:04.388Z",
+      "userId": "usr-2",
+      "userName": "Priya Iyer",
+      "userRole": "tl",
+      "action": "ACCESS_DENIED",
+      "details": "Denied MANAGE_USERS to Priya Iyer",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_USERS"
+    },
+    {
+      "id": "aud-1789237984383-379",
+      "timestamp": "2026-09-12T18:33:04.383Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied MANAGE_USERS to Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_USERS"
+    },
+    {
+      "id": "aud-1789237984379-932",
+      "timestamp": "2026-09-12T18:33:04.379Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "BULK_LEAD_UPDATE",
+      "details": "Bulk updated 1 leads -> Won",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789237984374-773",
+      "timestamp": "2026-09-12T18:33:04.374Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied lead CSV import for Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789237984363-776",
+      "timestamp": "2026-09-12T18:33:04.363Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "USER_LOGIN",
+      "details": "Amit Verma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789237984213-692",
+      "timestamp": "2026-09-12T18:33:04.213Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "ACCESS_DENIED",
+      "details": "Denied EDIT on lead lead-103 for Amit Verma",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789237984203-356",
+      "timestamp": "2026-09-12T18:33:04.203Z",
+      "userId": "usr-4",
+      "userName": "Sneha Kulkarni",
+      "userRole": "telecaller",
+      "action": "USER_LOGIN",
+      "details": "Sneha Kulkarni logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789237984083-222",
+      "timestamp": "2026-09-12T18:33:04.083Z",
+      "userId": "usr-3",
+      "userName": "Amit Verma",
+      "userRole": "telecaller",
+      "action": "USER_LOGIN",
+      "details": "Amit Verma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789237983961-284",
+      "timestamp": "2026-09-12T18:33:03.961Z",
+      "userId": "usr-2",
+      "userName": "Priya Iyer",
+      "userRole": "tl",
+      "action": "USER_LOGIN",
+      "details": "Priya Iyer logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789237983822-164",
+      "timestamp": "2026-09-12T18:33:03.822Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "USER_LOGIN",
+      "details": "Rahul Sharma logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789237946835-328",
+      "timestamp": "2026-09-12T18:32:26.835Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "LEAD_CREATED",
+      "details": "Added new lead: Ananya Deshmukh (High Fatigue) (Website) assigned to Amit Verma [team-mumbai]",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789237946819-203",
+      "timestamp": "2026-09-12T18:32:26.819Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "LEAD_CREATED",
+      "details": "Added new lead: Rohan Verma (DND) (Website) assigned to Amit Verma [team-mumbai]",
+      "ip": "127.0.0.1",
+      "actionType": "EDIT"
+    },
+    {
+      "id": "aud-1789237946811-742",
+      "timestamp": "2026-09-12T18:32:26.811Z",
+      "userId": "usr-1",
+      "userName": "Rahul Sharma",
+      "userRole": "owner",
+      "action": "CUSTOM_FIELDS_UPDATED",
+      "details": "Updated 1 custom lead fields.",
+      "ip": "127.0.0.1",
+      "actionType": "MANAGE_POLICY"
+    },
+    {
+      "id": "aud-1789237946806-254",
+      "timestamp": "2026-09-12T18:32:26.806Z",
       "userId": "usr-3",
       "userName": "Amit Verma",
       "userRole": "owner",
@@ -557,30 +2447,30 @@
     },
     {
       "id": "aud-1",
-      "timestamp": "2026-09-10T14:02:48.486Z",
+      "timestamp": "2026-09-12T16:32:01.397Z",
       "userId": "usr-1",
       "userName": "Rahul Sharma",
-      "userRole": "Admin",
+      "userRole": "owner",
       "action": "SYSTEM_INITIALIZED",
       "details": "TeleCRM 2.0 database initialized with 8 sample leads and role assignments.",
       "ip": "103.21.124.50"
     },
     {
       "id": "aud-2",
-      "timestamp": "2026-09-10T14:32:48.486Z",
+      "timestamp": "2026-09-12T17:02:01.397Z",
       "userId": "usr-3",
       "userName": "Amit Verma",
-      "userRole": "Rep",
+      "userRole": "telecaller",
       "action": "LEAD_STAGE_CHANGED",
       "details": "Changed Vikram Malhotra stage from New to Contacted.",
       "ip": "103.21.124.52"
     },
     {
       "id": "aud-3",
-      "timestamp": "2026-09-10T15:02:48.486Z",
+      "timestamp": "2026-09-12T17:32:01.397Z",
       "userId": "usr-4",
       "userName": "Sneha Kulkarni",
-      "userRole": "Rep",
+      "userRole": "telecaller",
       "action": "CALL_LOGGED",
       "details": "Logged 3m 5s follow-up call with Rajesh K. Singhania.",
       "ip": "103.21.124.88"
@@ -714,7 +2604,6 @@
         "MANAGE_COMPLIANCE_RULES"
       ],
       "requiresApproval": [
-        "EDIT",
         "DELETE"
       ]
     },
@@ -731,7 +2620,6 @@
         "MANAGE_COMPLIANCE_RULES"
       ],
       "requiresApproval": [
-        "EDIT",
         "DELETE",
         "MANAGE_COMPLIANCE_RULES"
       ]

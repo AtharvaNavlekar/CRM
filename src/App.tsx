@@ -23,9 +23,29 @@ import { useAuth, AuthProvider, AuthContext } from './context/AuthContext';
 import { ThemeProvider, ThemeContext } from './context/ThemeContext';
 import { MOCK_LEADS, MockLead } from './data/mockSeedData';
 import { useIsMobile } from './utils/useBreakpoint';
+import { useDevToolsDeterrence } from './utils/deterrence';
+import { useAutomationDetection } from './utils/automationDetection';
+import {
+  DevToolsWarningOverlay,
+  AutomationWarningBanner
+} from './components/common/SecurityDeterrenceComponents';
+
+// ============================================================================
+// SECURITY & UX DETERRENCE FEATURE FLAGS
+// Easily disable either layer via these flags if accessibility/QA needs arise.
+// ============================================================================
+// Feature 1: Right-click & DevTools deterrence layer
+export const ENABLE_DEVTOOLS_DETERRENCE = true;
+
+// Feature 2: Client-side browser automation detection warning banner
+export const ENABLE_AUTOMATION_DETECTION = true;
 
 const AppContent: React.FC = () => {
   const { currentUser, users, isLoading } = useAuth();
+
+  // Feature 1 & 2 Security Deterrence Hooks
+  const { isDevToolsOpen, dismissWarning: dismissDevToolsWarning } = useDevToolsDeterrence(ENABLE_DEVTOOLS_DETERRENCE);
+  const { isAutomated: isAutomatedBrowser, detectionReasons, dismissWarning: dismissAutomationWarning } = useAutomationDetection(ENABLE_AUTOMATION_DETECTION);
 
   // Navigation state: defaults to 'leads' or 'dashboard'
   const [currentView, setCurrentView] = useState<string>('leads');
@@ -140,11 +160,30 @@ const AppContent: React.FC = () => {
   }
 
   if (!currentUser) {
-    return <LoginModal />;
+    return (
+      <>
+        <AutomationWarningBanner
+          isVisible={isAutomatedBrowser}
+          onDismiss={dismissAutomationWarning}
+          reasons={detectionReasons}
+        />
+        <DevToolsWarningOverlay
+          isOpen={isDevToolsOpen}
+          onDismiss={dismissDevToolsWarning}
+        />
+        <LoginModal />
+      </>
+    );
   }
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#F8FAF8] dark:bg-[#111413] font-sans text-[#191C1B] dark:text-[#E1E3E0] antialiased selection:bg-[#00695C] selection:text-white">
+      {/* DevTools Deterrence Full-Screen Warning Overlay */}
+      <DevToolsWarningOverlay
+        isOpen={isDevToolsOpen}
+        onDismiss={dismissDevToolsWarning}
+      />
+
       {/* Icon-only Collapsible Left Sidebar */}
       <Sidebar
         currentView={currentView}
@@ -157,6 +196,13 @@ const AppContent: React.FC = () => {
 
       {/* Main Content Viewport */}
       <div className="flex flex-col flex-1 h-full min-w-0 overflow-hidden">
+        {/* Client-Side Automation Heuristic Warning Banner */}
+        <AutomationWarningBanner
+          isVisible={isAutomatedBrowser}
+          onDismiss={dismissAutomationWarning}
+          reasons={detectionReasons}
+        />
+
         {/* Fixed Top Bar */}
         <TopBar
           searchQuery={searchQuery}

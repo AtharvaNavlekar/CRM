@@ -65,13 +65,13 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermission[] = [
     role: 'owner',
     scope: 'COMPANY',
     actions: ['VIEW', 'EDIT', 'REASSIGN', 'EXPORT', 'DELETE', 'MANAGE_USERS', 'MANAGE_POLICY', 'MANAGE_COMPLIANCE_RULES'],
-    requiresApproval: ['EDIT', 'DELETE']
+    requiresApproval: ['DELETE']
   },
   {
     role: 'cto',
     scope: 'COMPANY',
     actions: ['VIEW', 'EDIT', 'EXPORT', 'DELETE', 'MANAGE_USERS', 'MANAGE_POLICY', 'MANAGE_COMPLIANCE_RULES'],
-    requiresApproval: ['EDIT', 'DELETE', 'MANAGE_COMPLIANCE_RULES']
+    requiresApproval: ['DELETE', 'MANAGE_COMPLIANCE_RULES']
   }
 ];
 

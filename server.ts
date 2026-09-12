@@ -57,6 +57,14 @@ import {
   Team
 } from './src/types';
 import { TEAMS } from './server/seedData';
+import {
+  AI_CRAWLER_USER_AGENTS,
+  isAiCrawler,
+  logBlockedCrawlerAttempt,
+  getRecentCrawlerBlocks,
+  generateRobotsTxtContent,
+  getAiCrawlerBlockHtml
+} from './server/crawlerAgents';
 
 // ============================================================================
 // GEMINI API & SECRETS CONFIGURATION NOTICE (Priority 6)
@@ -172,6 +180,43 @@ async function startServer() {
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
     exposedHeaders: ['Content-Disposition']
   }));
+
+  // --------------------------------------------------------------------------
+  // AI CRAWLER & SCRAPING AGENT BLOCKING MIDDLEWARE (Feature 2)
+  // Evaluates the incoming User-Agent against the centralized known AI crawler
+  // signatures list. Blocks automated bots with HTTP 403 and a dedicated warning
+  // HTML page before any static assets, SPA bundles, or API routes are processed.
+  // --------------------------------------------------------------------------
+  app.use((req, res, next) => {
+    // Exempt robots.txt so crawlers and search indexers can parse rules
+    if (req.path === '/robots.txt') {
+      return next();
+    }
+
+    const ua = (req.headers['user-agent'] as string) || '';
+    const crawlerCheck = isAiCrawler(ua);
+
+    if (crawlerCheck.isCrawler) {
+      logBlockedCrawlerAttempt({
+        userAgent: ua,
+        path: req.originalUrl || req.path,
+        ip: getClientIp(req),
+        matchedAgent: crawlerCheck.matchedAgent
+      });
+
+      return res
+        .status(403)
+        .setHeader('Content-Type', 'text/html; charset=utf-8')
+        .send(getAiCrawlerBlockHtml());
+    }
+
+    next();
+  });
+
+  // Explicit robots.txt route (synchronized with AI_CRAWLER_USER_AGENTS)
+  app.get('/robots.txt', (req, res) => {
+    res.type('text/plain').send(generateRobotsTxtContent());
+  });
 
   app.use(express.json({ limit: '5mb' }));
 
@@ -801,6 +846,15 @@ async function startServer() {
 
   // Lead deletion gated by DELETE permission and approval workflow
   app.delete('/api/leads/:id', (req, res) => {
+    if (!authorize(req.user!, 'DELETE', {})) {
+      logAudit('ACCESS_DENIED', `Denied DELETE on lead for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'DELETE' });
+      return res.status(403).json({
+        error: `Forbidden: Current role '${req.user!.role}' lacks permission to delete leads.`,
+        code: 'FORBIDDEN',
+        action: 'DELETE'
+      });
+    }
+
     const db = getDb();
     const { id } = req.params;
     const lead = db.leads.find(l => l.id === id);
@@ -895,8 +949,16 @@ async function startServer() {
     res.json({ count: importedLeads.length, importedLeads });
   });
 
-  // Bulk edit (gated by EDIT & REASSIGN authorizations)
+  // Bulk edit (gated by EDIT & REASSIGN authorizations, restricted to Team Lead and Admin roles)
   app.post('/api/leads/bulk-update', (req, res) => {
+    if (req.user!.role === 'telecaller' || (req.user!.role as any) === 'Rep') {
+      logAudit('ACCESS_DENIED', `Denied bulk-update for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
+      return res.status(403).json({
+        error: 'Forbidden: Bulk updates are restricted to Team Lead and Admin roles.',
+        code: 'FORBIDDEN'
+      });
+    }
+
     const db = getDb();
     const { leadIds, stage, assignedRepId } = req.body;
     if (!Array.isArray(leadIds) || leadIds.length === 0) {
@@ -1436,10 +1498,19 @@ async function startServer() {
     res.json(stats);
   });
 
-  // 11. Audit Logs
+  // 11. Audit Logs (Business actions)
   app.get('/api/audit-logs', (req, res) => {
     const db = getDb();
     res.json(db.auditLogs || []);
+  });
+
+  // Dedicated Infrastructure Telemetry: Blocked AI Crawler attempts (separate from business audit log)
+  app.get('/api/crawler-telemetry', (req, res) => {
+    if (!['owner', 'cto', 'it', 'Admin'].includes(req.user!.role)) {
+      return res.status(403).json({ error: 'Forbidden: Insufficient privileges to view infrastructure telemetry.' });
+    }
+    const blocks = getRecentCrawlerBlocks(100);
+    res.json({ count: blocks.length, blocks });
   });
 
   // 12. Automated Backups & Snapshots
