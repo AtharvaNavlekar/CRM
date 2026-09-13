@@ -40,10 +40,9 @@ export const TopBar: React.FC<TopBarProps> = ({
   onRefreshData = () => {},
   isRefreshing = false
 }) => {
-  const { currentUser, users, switchUser, updateCurrentRole, logout } = useAuth();
+  const { currentUser, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [userMenuFeedback, setUserMenuFeedback] = useState<string | null>(null);
 
   const getRoleBadgeStyle = (role?: UserRole) => {
     switch (role) {
@@ -273,105 +272,6 @@ export const TopBar: React.FC<TopBarProps> = ({
                   <p className="text-[11px] text-[#6F7976] dark:text-[#89938F]">
                     {getRoleScopeDescription(currentUser?.role)}
                   </p>
-                </div>
-              </div>
-
-              {userMenuFeedback && (
-                <div className="mb-3 p-2.5 rounded-2xl bg-[#FFDAD6] text-[#410002] text-xs flex items-start space-x-2">
-                  <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                  <span>{userMenuFeedback}</span>
-                </div>
-              )}
-
-              {/* M3 Segmented Role Switcher */}
-              <div className="mb-4">
-                <p className="text-xs font-medium text-[#6F7976] dark:text-[#89938F] mb-2 flex items-center justify-between">
-                  <span>Switch Role Simulation</span>
-                  <span className="text-[10px] uppercase font-mono">RBAC</span>
-                </p>
-                <div className="grid grid-cols-2 gap-1.5">
-                  {[
-                    { role: 'telecaller' as UserRole, label: 'Telecaller', scope: 'SELF' },
-                    { role: 'tl' as UserRole, label: 'Team Lead', scope: 'TEAM' },
-                    { role: 'tl_head' as UserRole, label: 'TL Head', scope: 'ALL_TEAMS' },
-                    { role: 'it' as UserRole, label: 'IT Admin', scope: 'SYSTEM' },
-                    { role: 'owner' as UserRole, label: 'Owner', scope: 'COMPANY' },
-                    { role: 'cto' as UserRole, label: 'CTO', scope: 'COMPANY' },
-                  ].map((item) => {
-                    const isSelected = currentUser?.role === item.role;
-                    return (
-                      <button
-                        key={item.role}
-                        id={`btn-switch-role-${item.role}`}
-                        onClick={async () => {
-                          setUserMenuFeedback(null);
-                          try {
-                            await updateCurrentRole(item.role);
-                            setShowUserMenu(false);
-                          } catch (err: any) {
-                            setUserMenuFeedback(err.message || 'Failed to switch role. Please try again.');
-                          }
-                        }}
-                        className={`px-3 py-2 rounded-2xl text-xs text-left transition-all flex flex-col justify-center min-h-[44px] ${
-                          isSelected
-                            ? 'bg-[#00695C] text-white shadow-sm'
-                            : 'bg-[#ECEFEC] dark:bg-[#272B2A] text-[#191C1B] dark:text-[#E1E3E0] hover:bg-[#E0E4E0] dark:hover:bg-[#323634]'
-                        }`}
-                      >
-                        <span className="font-medium">{item.label}</span>
-                        <span className={`text-[10px] font-mono ${isSelected ? 'text-[#A3F2E4]' : 'text-[#6F7976] dark:text-[#89938F]'}`}>
-                          {item.scope}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Switch to Another Team Member */}
-              <div className="pt-3 border-t border-[#BEC9C5]/40 dark:border-[#3F4946]/40">
-                <p className="text-xs font-medium text-[#6F7976] dark:text-[#89938F] mb-2 flex items-center justify-between">
-                  <span>Switch Team Persona</span>
-                  <Users className="w-4 h-4" />
-                </p>
-                <div className="space-y-1.5 max-h-44 overflow-y-auto pr-1">
-                  {users.map((u) => {
-                    const isSelected = currentUser?.id === u.id;
-                    return (
-                      <button
-                        key={u.id}
-                        onClick={async () => {
-                          setUserMenuFeedback(null);
-                          try {
-                            await switchUser(u.id);
-                            setShowUserMenu(false);
-                          } catch (err: any) {
-                            setUserMenuFeedback(err.message || 'Failed to switch user. Please try again.');
-                          }
-                        }}
-                        className={`w-full flex items-center justify-between p-2 rounded-2xl text-left transition-colors min-h-[44px] ${
-                          isSelected
-                            ? 'bg-[#CCE8E1] dark:bg-[#005046] text-[#00201B] dark:text-[#A3F2E4] font-medium'
-                            : 'hover:bg-[#ECEFEC] dark:hover:bg-[#272B2A] text-[#191C1B] dark:text-[#E1E3E0]'
-                        }`}
-                      >
-                        <div className="flex items-center space-x-2.5">
-                          <div className="w-7 h-7 rounded-full bg-[#E0E4E0] dark:bg-[#323634] flex items-center justify-center text-xs font-medium">
-                            {u.name.charAt(0)}
-                          </div>
-                          <div>
-                            <p className="text-xs leading-none font-medium">{u.name}</p>
-                            <p className="text-[10px] text-[#6F7976] dark:text-[#89938F] mt-0.5">
-                              {u.teamId ? (u.teamId === 'team-mumbai' ? 'Mumbai' : u.teamId === 'team-delhi' ? 'Delhi' : u.teamId) : (u.title || getRoleDisplayName(u.role))}
-                            </p>
-                          </div>
-                        </div>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${getRoleBadgeStyle(u.role)}`}>
-                          {getRoleDisplayName(u.role)}
-                        </span>
-                      </button>
-                    );
-                  })}
                 </div>
               </div>
 

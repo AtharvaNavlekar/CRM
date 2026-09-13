@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { Lead, LeadStage, LeadSource, User as UserType } from '../../types';
 import { LeadCard } from './LeadCard';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth, usePolicy } from '../../context/AuthContext';
 import { api } from '../../services/api';
 
 interface KanbanBoardProps {
@@ -71,6 +71,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   setSelectedRep
 }) => {
   const { currentUser, users: authUsers } = useAuth();
+  const { can } = usePolicy();
   const effectiveUsers = users && users.length > 0 ? users : authUsers;
   const handleOpenDetail = onOpenDetail || onSelectLead || (() => {});
 
@@ -249,16 +250,17 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
           </div>
 
           {/* Rep Status Badge */}
-          {currentUser?.role === 'telecaller' && (
+          {!can('leads:reassign') && (
             <div className="text-xs font-medium text-[#00201B] dark:text-[#80D5C4] bg-[#CCE8E1] dark:bg-[#004F46] px-3 py-1.5 rounded-full flex items-center space-x-1.5">
               <span className="w-2 h-2 rounded-full bg-[#00695C] dark:bg-[#80D5C4]" aria-hidden="true"></span>
-              <span>{currentRep === currentUser.id ? 'My Assigned Leads' : 'Viewing All'}</span>
+              <span>{currentRep === currentUser?.id ? 'My Assigned Leads' : 'Viewing All'}</span>
             </div>
           )}
 
           {/* Auto-Assignment Round Robin Toggle */}
-          <button
-            id="btn-toggle-auto-assign"
+          {can('users:create') && (
+            <button
+              id="btn-toggle-auto-assign"
             type="button"
             onClick={handleToggleAutoAssign}
             disabled={isTogglingAutoAssign}
@@ -274,10 +276,12 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
             <Zap className={`w-3.5 h-3.5 ${autoAssignmentEnabled ? 'text-amber-500 fill-amber-500' : 'text-[#6F7976]'}`} />
             <span>Auto-Assign: {autoAssignmentEnabled ? 'ON' : 'OFF'}</span>
           </button>
+          )}
 
           {/* Bulk Select Mode Toggle */}
-          <button
-            id="btn-toggle-bulk-mode"
+          {can('leads:update') && (
+            <button
+              id="btn-toggle-bulk-mode"
             type="button"
             onClick={() => {
               const nextMode = !isBulkMode;
@@ -295,6 +299,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
             <CheckSquare className="w-3.5 h-3.5" />
             <span>{isBulkMode ? 'Exit Selection' : 'Bulk Edit'}</span>
           </button>
+          )}
         </div>
 
         {/* Total stats pill */}

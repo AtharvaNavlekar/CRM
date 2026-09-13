@@ -15,7 +15,7 @@ import {
   Shield,
   Activity
 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth, usePolicy } from '../../context/AuthContext';
 
 export type NavView =
   | 'home'
@@ -50,6 +50,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { currentUser } = useAuth();
+  const { can } = usePolicy();
 
   const handleSelect = (viewId: NavView) => {
     onViewChange(viewId);
@@ -156,15 +157,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badgeColor: 'bg-indigo-600 text-white',
       desc: 'Multi-Tenant Control'
     }] : []),
-    {
+    ...(can('manage:policy') ? [{
       id: 'settings' as NavView,
       label: 'Admin Settings',
       shortLabel: 'Config',
       icon: Settings,
-      badge: null,
+      badge: null as string | null,
       badgeColor: '',
       desc: 'Permissions & Fields'
-    }
+    }] : [])
   ];
 
   return (

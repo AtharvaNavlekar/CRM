@@ -159,7 +159,7 @@ export const api = {
     return res.json();
   },
 
-  async login(email: string, password: string): Promise<{ user: User; token: string; refreshToken?: string }> {
+  async login(email: string, password: string): Promise<{ user: User; token: string; securityContext?: any; permissions?: any }> {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       credentials: 'include',
@@ -193,7 +193,7 @@ export const api = {
     return null;
   },
 
-  async getCurrentUser(): Promise<{ user: User }> {
+  async getCurrentUser(): Promise<{ user: User; securityContext?: any; permissions?: any }> {
     const res = await authFetch('/api/auth/me');
     return res.json();
   },
@@ -207,17 +207,6 @@ export const api = {
       });
     } catch {}
     setStoredTokens(null);
-  },
-
-  async switchUser(userId: string, role?: string): Promise<{ user: User; token: string; refreshToken?: string }> {
-    const res = await authFetch('/api/auth/switch-user', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, role })
-    });
-    const data = await res.json();
-    setStoredTokens(data.token);
-    return data;
   },
 
   async createUser(userData: Partial<User> & { password?: string }): Promise<User> {
@@ -273,12 +262,17 @@ export const api = {
     return res.json();
   },
 
-  async importLeads(leads: Partial<Lead>[]): Promise<{ count: number; importedLeads: Lead[] }> {
+  async importLeads(leads: Partial<Lead>[]): Promise<{ jobId: string }> {
     const res = await authFetch('/api/leads/import', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ leads })
     });
+    return res.json();
+  },
+
+  async getJob(jobId: string): Promise<any> {
+    const res = await authFetch(`/api/jobs/${jobId}`);
     return res.json();
   },
 

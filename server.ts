@@ -525,7 +525,24 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
       path: '/api/auth'
     });
 
-    res.json({ user: sanitizeUser(user), token, expiresIn: 900 });
+    const dbState = await getLegacyState();
+    const perms = dbState.rolePermissions || [];
+    const rolePermission = perms.find(p => p.role === user.role);
+
+    res.json({ 
+      user: sanitizeUser(user), 
+      token, 
+      expiresIn: 900,
+      securityContext: {
+        actorRole: user.role,
+        tenantId: user.tenantId,
+        actingAsUserId: user.id,
+        sessionId,
+        impersonating: false,
+        isPlatformStaff: user.isPlatformStaff
+      },
+      permissions: rolePermission
+    });
   });
 
   app.post('/api/auth/refresh', async (req, res) => {
@@ -568,6 +585,9 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
       return res.status(401).json({ error: 'User account not found', code: 'USER_NOT_FOUND' });
     }
 
+    const perms = legacyDb.rolePermissions || [];
+    const rolePermission = perms.find(p => p.role === user.role);
+
     // Atomically rotate: revoke old token and create new one (simulated transactionally)
     const now = new Date();
     await db.update(sessions)
@@ -601,7 +621,19 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
       path: '/api/auth'
     });
 
-    res.json({ token, user: sanitizeUser(user) });
+    res.json({ 
+      token, 
+      user: sanitizeUser(user),
+      securityContext: {
+        actorRole: user.role,
+        tenantId: user.tenantId,
+        actingAsUserId: user.id,
+        sessionId: newSessionId,
+        impersonating: false,
+        isPlatformStaff: user.isPlatformStaff
+      },
+      permissions: rolePermission
+    });
   });
 
   app.get('/api/auth/me', async (req, res) => {
@@ -614,7 +646,16 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     if (req.isPlatformStaff) {
        (sanitized as any).impersonationSession = req.impersonationSession || null;
     }
-    res.json({ user: sanitized });
+
+    const perms = db.rolePermissions || [];
+    let effectiveRole = req.securityContext?.actorRole || user.role;
+    const rolePermission = perms.find(p => p.role === effectiveRole);
+
+    res.json({ 
+      user: sanitized,
+      securityContext: req.securityContext,
+      permissions: rolePermission
+    });
   });
 
   app.post('/api/auth/logout', async (req, res) => {
@@ -656,69 +697,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     res.json({ success: true });
   });
 
-  // User Switching / Role Updating
-  // Persona switching and testing (supports all 6 RBAC roles: telecaller, tl, tl_head, it, owner, cto)
-  app.post('/api/auth/switch-user', async (req, res) => {
-    if (!req.user) {
-      return res.status(401).json({ error: 'Authentication required to switch user.', code: 'UNAUTHORIZED' });
-    }
 
-    if (req.user.role !== 'owner' && req.user.role !== 'cto') {
-      return res.status(403).json({ error: 'Only owners and CTOs can use the impersonation endpoint.', code: 'FORBIDDEN' });
-    }
-
-    const { userId, role } = req.body;
-    const db = await getLegacyState();
-    let targetUser = userId ? db.users.find(u => u.id === userId) : db.users.find(u => u.id === req.user!.id);
-    if (!targetUser) {
-      targetUser = db.users[0];
-    }
-
-    if (!targetUser) {
-      return res.status(404).json({ error: 'Target user not found' });
-    }
-
-    const validRoles: UserRole[] = ['telecaller', 'tl', 'tl_head', 'it', 'owner', 'cto'];
-    let mappedRole = role as UserRole;
-    if (mappedRole === ('Rep' as any)) mappedRole = 'telecaller';
-    if (mappedRole === ('Team Lead' as any)) mappedRole = 'tl';
-    if (mappedRole === ('Admin' as any)) mappedRole = 'owner';
-
-    if (role && validRoles.includes(mappedRole)) {
-      targetUser.role = mappedRole;
-      // saveDatabase(); // TODO: Migrate to repository write
-      adapterLogAudit(req, 
-        'ROLE_UPDATED',
-        `${req.user.name} switched role of ${targetUser.name} to ${mappedRole}`,
-        { id: targetUser.id, name: targetUser.name, role: targetUser.role },
-        getClientIp(req),
-        { actionType: 'MANAGE_USERS' }
-      );
-    } else {
-      adapterLogAudit(req, 
-        'USER_SWITCH',
-        `Switched active persona to ${targetUser.name} (${targetUser.role})`,
-        { id: targetUser.id, name: targetUser.name, role: targetUser.role },
-        getClientIp(req)
-      );
-    }
-
-    const token = jwt.sign(
-      { id: targetUser.id, email: targetUser.email, role: targetUser.role, type: 'access', jti: crypto.randomUUID() },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRY as any }
-    );
-
-    const refreshToken = jwt.sign(
-      { id: targetUser.id, email: targetUser.email, type: 'refresh', jti: crypto.randomUUID() },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
-
-    res.json({ user: sanitizeUser(targetUser), token, refreshToken });
-  });
-
-  // Teams Directory API (Mumbai & Delhi)
   app.get('/api/teams', async (req, res) => {
     res.json(TEAMS);
   });
@@ -884,6 +863,37 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     });
   });
 
+  // Bulk Import API (gated by EDIT permission and approval workflow)
+  app.post('/api/leads/import', async (req, res) => {
+    if (!(await can(req.securityContext!, 'leads:import'))) {
+      adapterLogAudit(req, 'ACCESS_DENIED', `Denied IMPORT to ${req.user!.name} (${req.user!.role})`, req.user, getClientIp(req), { actionType: 'EDIT' });
+      return res.status(403).json({
+        error: `Forbidden: Current role '${req.user!.role}' lacks IMPORT permission.`,
+        code: 'FORBIDDEN',
+        action: 'EDIT'
+      });
+    }
+
+    const { leads } = req.body;
+    if (!Array.isArray(leads) || leads.length === 0) {
+      return res.status(400).json({ error: 'No leads provided for import' });
+    }
+
+    // Queue the background job
+    const job = await enqueueJob('IMPORT_LEADS', req.securityContext!, { leads });
+
+    adapterLogAudit(req, 'DATA_IMPORT', `Queued import job for ${leads.length} leads`, req.user, getClientIp(req), {
+      actionType: 'EDIT',
+      metadata: { jobId: job.id, leadCount: leads.length }
+    });
+
+    res.status(202).json({
+      message: 'Import job queued successfully',
+      jobId: job.id,
+      status: 'QUEUED'
+    });
+  });
+
   // Single Lead Inspection (gated by VIEW authorization on lead scope)
   app.get('/api/leads/:id', async (req, res) => {
     const db = await getLegacyState();
@@ -908,10 +918,9 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     res.json(lead);
   });
 
-  // Get job status by ID
   app.get('/api/jobs/:id', async (req, res) => {
     try {
-      const job = await jobRepository.getById(req.params.id, req.securityContext!.tenantId);
+      const job = await jobRepository.getJobById(req.params.id, req.securityContext!.tenantId);
       if (!job) {
         return res.status(404).json({ error: 'Job not found' });
       }

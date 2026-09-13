@@ -61,7 +61,7 @@ const ALL_AVAILABLE_ACTIONS: { id: Action; label: string; short: string; descrip
 ];
 
 export const SettingsView: React.FC<SettingsViewProps> = ({ onDataReset }) => {
-  const { currentUser, users, refreshUsers, updateCurrentRole } = useAuth();
+  const { currentUser, users, refreshUsers } = useAuth();
   const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<'automation' | 'pipeline' | 'fields' | 'rbac' | 'backups' | 'audit'>('automation');
 

@@ -1,18 +1,16 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, UserRole } from '../types';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { User, UserRole, SecurityContext, RolePermission, Action } from '../types';
 import { api, getStoredToken, setStoredToken } from '../services/api';
 
 interface AuthContextType {
   currentUser: User | null;
+  securityContext: SecurityContext | null;
+  permissions: RolePermission | null;
   users: User[];
   isLoading: boolean;
   sessionExpiredMessage: string | null;
   login: (email: string, password?: string) => Promise<void>;
   logout: () => Promise<void>;
-  switchUser: (userId: string) => Promise<void>;
-  updateCurrentRole: (role: UserRole) => Promise<void>;
-  showRoleSelector: boolean;
-  setShowRoleSelector: (show: boolean) => void;
   refreshUsers: () => Promise<void>;
   clearSessionExpiredMessage: () => void;
 }
@@ -21,9 +19,10 @@ export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [securityContext, setSecurityContext] = useState<SecurityContext | null>(null);
+  const [permissions, setPermissions] = useState<RolePermission | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [showRoleSelector, setShowRoleSelector] = useState(false);
   const [sessionExpiredMessage, setSessionExpiredMessage] = useState<string | null>(null);
 
   const fetchUsers = async () => {
@@ -39,6 +38,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const handleUnauthorized = () => {
       setCurrentUser(null);
+      setSecurityContext(null);
+      setPermissions(null);
       setSessionExpiredMessage('Your session has expired or token is invalid. Please log in again.');
     };
 
@@ -56,6 +57,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const me = await api.getCurrentUser();
           if (me && me.user) {
             setCurrentUser(me.user);
+            setSecurityContext(me.securityContext || null);
+            setPermissions(me.permissions || null);
             await fetchUsers();
             setIsLoading(false);
             return;
@@ -64,12 +67,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Token is invalid or expired
           setStoredToken(null);
           setCurrentUser(null);
+          setSecurityContext(null);
+          setPermissions(null);
           setSessionExpiredMessage('Previous session expired. Please sign in.');
         }
       }
 
       // If no valid session token exists, user must log in
       setCurrentUser(null);
+      setSecurityContext(null);
+      setPermissions(null);
       setIsLoading(false);
     };
 
@@ -88,6 +95,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const res = await api.login(email, password);
       setCurrentUser(res.user);
+      setSecurityContext(res.securityContext || null);
+      setPermissions(res.permissions || null);
       await fetchUsers();
     } finally {
       setIsLoading(false);
@@ -102,30 +111,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Logout error:', e);
     } finally {
       setCurrentUser(null);
+      setSecurityContext(null);
+      setPermissions(null);
       setIsLoading(false);
-    }
-  };
-
-  const switchUser = async (userId: string) => {
-    try {
-      const res = await api.switchUser(userId);
-      setCurrentUser(res.user);
-      await fetchUsers();
-    } catch (e: any) {
-      console.error('Failed to switch user:', e);
-      throw e;
-    }
-  };
-
-  const updateCurrentRole = async (role: UserRole) => {
-    if (!currentUser) return;
-    try {
-      const res = await api.switchUser(currentUser.id, role);
-      setCurrentUser(res.user);
-      await fetchUsers();
-    } catch (e: any) {
-      console.error('Failed to switch role:', e);
-      throw e;
     }
   };
 
@@ -141,15 +129,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider
       value={{
         currentUser,
+        securityContext,
+        permissions,
         users,
         isLoading,
         sessionExpiredMessage,
         login,
         logout,
-        switchUser,
-        updateCurrentRole,
-        showRoleSelector,
-        setShowRoleSelector,
         refreshUsers,
         clearSessionExpiredMessage
       }}
@@ -165,4 +151,50 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
+};
+
+/**
+ * usePolicy hook allows components to conditionally render UI based on the backend's SecurityContext
+ * Note: Actual data enforcement happens on the backend. This is just for UI presentation.
+ */
+export const usePolicy = () => {
+  const { securityContext, permissions } = useAuth();
+
+  const can = useCallback((action: Action | string): boolean => {
+    if (!securityContext || !permissions) return false;
+
+    // 1. Platform Staff Override (if impersonating or platform admin)
+    if (securityContext.isPlatformStaff) {
+      if (['PLATFORM_ADMIN', 'PLATFORM_IMPERSONATE', 'platform:manage', 'users:impersonate_tenant'].includes(action)) {
+        return true;
+      }
+      if (securityContext.impersonating) {
+        return true;
+      }
+    }
+
+    // 2. Role Permissions check
+    const actionMap: Record<string, string> = {
+      'users:create': 'MANAGE_USERS',
+      'users:impersonate_tenant': 'PLATFORM_IMPERSONATE',
+      'leads:read': 'VIEW',
+      'leads:create': 'EDIT',
+      'leads:update': 'EDIT',
+      'leads:reassign': 'REASSIGN',
+      'leads:export': 'EXPORT',
+      'leads:delete': 'DELETE',
+      'leads:import': 'EDIT',
+      'calls:read': 'VIEW',
+      'calls:create': 'EDIT',
+      'messages:create': 'EDIT',
+      'compliance:update': 'MANAGE_COMPLIANCE_RULES',
+      'compliance:manage': 'MANAGE_COMPLIANCE_RULES',
+      'platform:manage': 'PLATFORM_ADMIN',
+    };
+
+    const mappedAction = actionMap[action] || action;
+    return permissions.actions.includes(mappedAction as any);
+  }, [securityContext, permissions]);
+
+  return { can, securityContext };
 };

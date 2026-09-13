@@ -30,6 +30,7 @@ import {
   DevToolsWarningOverlay,
   AutomationWarningBanner
 } from './components/common/SecurityDeterrenceComponents';
+import { ImpersonationBanner } from './components/common/ImpersonationBanner';
 
 // ============================================================================
 // SECURITY & UX DETERRENCE FEATURE FLAGS
@@ -218,27 +219,7 @@ const AppContent: React.FC = () => {
           isRefreshing={isRefreshing}
         />
 
-        {currentUser?.impersonationSession?.active && (
-          <div className="bg-amber-500 text-amber-950 px-4 py-2 text-sm font-medium flex justify-between items-center shadow-md z-10 shrink-0">
-            <span className="flex items-center gap-2">
-               <Shield className="w-4 h-4" />
-               <strong>IMPERSONATING TENANT:</strong> 
-               {currentUser.impersonationSession.targetTenantName}
-            </span>
-            <button 
-              onClick={async () => {
-                const res = await fetch('/api/platform/impersonate/end', {
-                  method: 'POST',
-                  headers: { 'Authorization': `Bearer ${currentUser?.token}` }
-                });
-                if(res.ok) window.location.reload();
-              }}
-              className="bg-amber-950 text-white px-3 py-1 text-xs rounded hover:bg-amber-900 transition-colors"
-            >
-              End Session
-            </button>
-          </div>
-        )}
+        <ImpersonationBanner />
 
         {/* View Router */}
         <main className="flex-1 overflow-hidden relative flex flex-col">

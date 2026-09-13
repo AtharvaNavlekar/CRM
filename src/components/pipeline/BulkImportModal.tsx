@@ -7,19 +7,22 @@ import { useModalFocusTrap } from '../../utils/useModalFocusTrap';
 interface BulkImportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onImport: (leads: Partial<Lead>[]) => Promise<void>;
+  onImportComplete?: (leads: Partial<Lead>[]) => void;
+  users?: User[];
 }
-
 export const BulkImportModal: React.FC<BulkImportModalProps> = ({
   isOpen,
   onClose,
-  onImport
+  onImportComplete,
+  users
 }) => {
   const [csvText, setCsvText] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState('');
   const [previewRows, setPreviewRows] = useState<any[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [jobStatus, setJobStatus] = useState<string | null>(null);
 
   // Column mapping states
   const [nameCol, setNameCol] = useState('name');
@@ -154,11 +157,45 @@ Bhavna Mehra,+91 98444 55667,Google Ads,Health insurance plan for senior citizen
     setIsProcessing(true);
     setError('');
     try {
-      await onImport(leadsToImport);
-      onClose();
+      // We import api inside the component to avoid circular dep if any, or at the top
+      const { api } = await import('../../services/api');
+      
+      // Attempt backend import
+      const res = await api.importLeads(leadsToImport);
+      
+      if (res && res.jobId) {
+        setJobId(res.jobId);
+        setJobStatus('QUEUED');
+        
+        // Poll for completion
+        const pollInterval = setInterval(async () => {
+          try {
+            const jobData = await api.getJob(res.jobId);
+            setJobStatus(jobData.status);
+            if (jobData.status === 'COMPLETED') {
+              clearInterval(pollInterval);
+              setIsProcessing(false);
+              if (onImportComplete) {
+                onImportComplete(leadsToImport);
+              }
+              onClose();
+            } else if (jobData.status === 'FAILED') {
+              clearInterval(pollInterval);
+              setIsProcessing(false);
+              setError(jobData.error || 'Job failed on server');
+            }
+          } catch (pollErr) {
+            console.error('Job poll error', pollErr);
+          }
+        }, 1500);
+      } else {
+        // Fallback if backend doesn't support job based import yet
+        if (onImportComplete) onImportComplete(leadsToImport);
+        setIsProcessing(false);
+        onClose();
+      }
     } catch (err: any) {
       setError(err.message || 'Import failed');
-    } finally {
       setIsProcessing(false);
     }
   };
@@ -198,12 +235,24 @@ Bhavna Mehra,+91 98444 55667,Google Ads,Health insurance plan for senior citizen
         {/* Body */}
         <div className="p-6 overflow-y-auto space-y-4 flex-1">
           {error && (
-            <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-xs text-rose-700 dark:text-rose-300 font-medium">
-              {error}
+            <div className="p-4 rounded-xl bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300 border border-rose-200 dark:border-rose-900 flex items-start space-x-3 text-sm">
+              <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold mb-1">Import Error</p>
+                <p>{error}</p>
+              </div>
             </div>
           )}
-
-          {/* Quick sample buttons */}
+          
+          {jobId && (
+            <div className="p-4 rounded-xl bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-900 flex items-center space-x-3 text-sm">
+              <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin shrink-0" />
+              <div>
+                <p className="font-bold mb-0">Processing Import Job</p>
+                <p>Status: {jobStatus || 'Unknown'}</p>
+              </div>
+            </div>
+          )}{/* Quick sample buttons */}
           <div className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-xl bg-teal-50/50 dark:bg-teal-950/30 border border-teal-200/60 dark:border-teal-900/60">
             <div className="text-xs text-teal-900 dark:text-teal-200">
               <span className="font-bold">Need a template?</span> We have prepared a sample Indian SMB leads sheet.
