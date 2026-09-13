@@ -56,6 +56,23 @@ export interface ImpersonationSession {
   ip: string;
 }
 
+export interface SecurityContext {
+  actorUserId: string;
+  actorRole: UserRole | string;
+  actorTenantId?: string;
+  isPlatformStaff: boolean;
+
+  tenantId?: string;
+
+  impersonating: boolean;
+  impersonationSessionId?: string;
+  actingAsUserId?: string;
+
+  requestId: string;
+  ipAddress: string;
+  userAgent?: string;
+}
+
 export interface SecurityAlert {
   id: string;
   timestamp: string;

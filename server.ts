@@ -148,6 +148,20 @@ const app = express();
     return (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
   };
 
+  // 0. Initialize Canonical Security Context
+  app.use((req, res, next) => {
+    req.securityContext = {
+      requestId: crypto.randomUUID(),
+      ipAddress: getClientIp(req),
+      userAgent: req.get('user-agent'),
+      actorUserId: '', // Populated by authenticateToken
+      actorRole: '',   // Populated by authenticateToken
+      isPlatformStaff: false,
+      impersonating: false
+    };
+    next();
+  });
+
   // 1. Network-Layer Hardening & Security Headers
   app.use(helmet({
     contentSecurityPolicy: {

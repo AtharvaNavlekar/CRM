@@ -219,6 +219,16 @@ export const authenticateToken: express.RequestHandler = (req, res, next) => {
       token
     };
 
+    if (req.securityContext) {
+      req.securityContext.actorUserId = user.id;
+      req.securityContext.actorRole = user.role;
+      req.securityContext.actorTenantId = user.tenantId;
+      req.securityContext.isPlatformStaff = Boolean(
+        user.isPlatformStaff ||
+        ['platform_admin', 'platform_support', 'platform_security'].includes(user.role)
+      );
+    }
+
     next();
   } catch (err: any) {
     if (err.name === 'TokenExpiredError') {

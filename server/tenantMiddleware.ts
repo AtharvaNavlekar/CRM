@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { User, ImpersonationSession } from '../src/types';
+import { User, ImpersonationSession, SecurityContext } from '../src/types';
 import { getDb, logAudit } from './db';
 
 declare global {
@@ -8,6 +8,7 @@ declare global {
       tenantId?: string;
       isPlatformStaff?: boolean;
       impersonationSession?: ImpersonationSession;
+      securityContext?: SecurityContext;
     }
   }
 }
@@ -22,7 +23,7 @@ declare global {
  * For platform staff with an active impersonation session, tenantId is set to the
  * target tenant being actively impersonated with full audit trail logging.
  *
- * Automatically attaches `req.tenantId` and `req.isPlatformStaff`.
+ * Automatically attaches canonical `req.securityContext` properties.
  */
 export const enforceTenantScope: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
   // Public/exempt routes (health, unauthenticated login/refresh)
@@ -37,19 +38,15 @@ export const enforceTenantScope: RequestHandler = async (req: Request, res: Resp
   }
 
   // If request has not been authenticated, let downstream authenticateToken handle 401
-  if (!req.user) {
+  if (!req.user || !req.securityContext) {
     return next();
   }
 
   const user = req.user;
   const db = await getDb();
 
-  // Check if user is platform staff
-  const isPlatformStaff = Boolean(
-    user.isPlatformStaff ||
-    ['platform_admin', 'platform_support', 'platform_security'].includes(user.role)
-  );
-  req.isPlatformStaff = isPlatformStaff;
+  // The actor is already populated by authenticateToken in req.securityContext
+  const isPlatformStaff = req.securityContext.isPlatformStaff;
 
   if (isPlatformStaff) {
     // Check if platform staff has an active impersonation session
@@ -58,17 +55,35 @@ export const enforceTenantScope: RequestHandler = async (req: Request, res: Resp
     );
 
     if (activeSession) {
+      req.securityContext.tenantId = activeSession.targetTenantId;
+      req.securityContext.impersonating = true;
+      req.securityContext.impersonationSessionId = activeSession.id;
+      req.securityContext.actingAsUserId = activeSession.targetUserId;
+      
+      // Legacy compat properties
       req.tenantId = activeSession.targetTenantId;
       req.impersonationSession = activeSession;
     } else {
       // Platform staff in global management view (unscoped or platform scope)
+      req.securityContext.tenantId = undefined;
       req.tenantId = undefined;
     }
   } else {
     // Tenant user: Derive tenantId strictly from user's verified database record
-    // Default to 'tenant-apex' for legacy accounts if not explicitly set
-    req.tenantId = user.tenantId || 'tenant-apex';
+    // If not set and not platform staff, we must reject rather than fallback arbitrarily.
+    if (!user.tenantId) {
+      return res.status(403).json({
+        error: 'Access denied: User is not associated with a tenant.',
+        code: 'NO_TENANT_SCOPE'
+      });
+    }
+    
+    req.securityContext.tenantId = user.tenantId;
+    req.tenantId = user.tenantId;
   }
+
+  // Set legacy compat for isPlatformStaff
+  req.isPlatformStaff = isPlatformStaff;
 
   next();
 };

@@ -46,7 +46,7 @@ async function runProductionSafetyTests() {
     
     // Dynamically import db to trigger initialization
     const { getDb } = await import(`../server/db.ts?cacheBuster=${Date.now()}`);
-    const db = getDb();
+    const db = await getDb();
 
     if (db.users.length === 0) {
       console.log('✅ PASS: NODE_ENV=production does NOT automatically seed demo users.');
