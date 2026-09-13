@@ -69,6 +69,8 @@ import {
   getAiCrawlerBlockHtml
 } from './server/crawlerAgents';
 import { enforceTenantScope, verifyTenantActive, scopeToTenant } from './server/tenantMiddleware';
+import { enqueueJob } from './server/jobs/queue';
+import { jobRepository } from './server/repositories/jobRepository';
 
 // Middleware to prevent platform staff from accessing raw data without an impersonation session
 
@@ -843,6 +845,45 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     res.json(leads);
   });
 
+  // Data Export API (gated by EXPORT permission and approval workflow)
+  app.get('/api/leads/export', async (req, res) => {
+    if (!(await can(req.securityContext!, 'leads:export'))) {
+      adapterLogAudit(req, 'ACCESS_DENIED', `Denied EXPORT to ${req.user!.name} (${req.user!.role})`, req.user, getClientIp(req), { actionType: 'EXPORT' });
+      return res.status(403).json({
+        error: `Forbidden: Current role '${req.user!.role}' lacks EXPORT permission.`,
+        code: 'FORBIDDEN',
+        action: 'EXPORT'
+      });
+    }
+
+    const requiresApproval = await actionRequiresApproval(req.user!, 'EXPORT');
+    if (requiresApproval && req.query.confirmed !== 'true') {
+      return res.status(202).json({
+        requiresApproval: true,
+        action: 'EXPORT',
+        message: 'Exporting customer records requires explicit confirmation. All exports are recorded in the security audit trail.',
+        warning: 'High-impact data export requires explicit confirmation.'
+      });
+    }
+
+    const format = req.query.format === 'json' ? 'json' : 'csv';
+
+    // Queue the background job
+    const job = await enqueueJob('EXPORT_LEADS', req.securityContext!, { format });
+
+    adapterLogAudit(req, 'DATA_EXPORT', `Queued export job in ${format} format`, req.user, getClientIp(req), {
+      actionType: 'EXPORT',
+      requiredApproval: requiresApproval,
+      metadata: { jobId: job.id }
+    });
+
+    res.status(202).json({
+      message: 'Export job queued successfully',
+      jobId: job.id,
+      status: 'QUEUED'
+    });
+  });
+
   // Single Lead Inspection (gated by VIEW authorization on lead scope)
   app.get('/api/leads/:id', async (req, res) => {
     const db = await getLegacyState();
@@ -867,70 +908,26 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     res.json(lead);
   });
 
-  // Data Export API (gated by EXPORT permission and approval workflow)
-  app.get('/api/leads/export', async (req, res) => {
-    const db = await getLegacyState();
-    if (!(await can(req.securityContext!, 'leads:export'))) {
-      adapterLogAudit(req, 'ACCESS_DENIED', `Denied EXPORT to ${req.user!.name} (${req.user!.role})`, req.user, getClientIp(req), { actionType: 'EXPORT' });
-      return res.status(403).json({
-        error: `Forbidden: Current role '${req.user!.role}' lacks EXPORT permission.`,
-        code: 'FORBIDDEN',
-        action: 'EXPORT'
-      });
+  // Get job status by ID
+  app.get('/api/jobs/:id', async (req, res) => {
+    try {
+      const job = await jobRepository.getById(req.params.id, req.securityContext!.tenantId);
+      if (!job) {
+        return res.status(404).json({ error: 'Job not found' });
+      }
+
+      // Allow users to see jobs created by themselves, or admins/tl to see team jobs
+      const isCreator = job.createdBy === req.securityContext!.userId;
+      const isAdminOrTL = ['admin', 'tl'].includes(req.user!.role);
+      
+      if (!isCreator && !isAdminOrTL) {
+        return res.status(403).json({ error: 'Forbidden: Cannot view this job' });
+      }
+
+      return res.json(job);
+    } catch (err) {
+      return res.status(500).json({ error: 'Internal server error' });
     }
-
-    const requiresApproval = await actionRequiresApproval(req.user!, 'EXPORT');
-    if (requiresApproval && req.query.confirmed !== 'true') {
-      return res.status(202).json({
-        requiresApproval: true,
-        action: 'EXPORT',
-        message: 'Exporting customer records requires explicit confirmation. All exports are recorded in the security audit trail.',
-        warning: 'High-impact data export requires explicit confirmation.'
-      });
-    }
-
-    let leads = [...db.leads];
-    // Filter exported leads strictly to authorized view scope
-    const canViewResults = await Promise.all(leads.map(l => can(req.securityContext!, 'leads:read', { teamId: l.teamId, ownerId: l.assignedRepId })));
-    leads = leads.filter((l, i) => canViewResults[i]);
-
-    const format = req.query.format === 'json' ? 'json' : 'csv';
-    if (format === 'json') {
-      adapterLogAudit(req, 'DATA_EXPORT', `Exported ${leads.length} leads in JSON format`, req.user, getClientIp(req), {
-        actionType: 'EXPORT',
-        requiredApproval: requiresApproval
-      });
-      return res.json(leads);
-    }
-
-    // CSV format with formula neutralization
-    const headers = ['ID', 'Name', 'Phone', 'Email', 'Source', 'Stage', 'Team', 'Assigned Rep', 'Value (INR)', 'Created Date', 'Notes'];
-    const rows = leads.map(l => [
-      l.id,
-      sanitizeFormula(l.name),
-      sanitizeFormula(l.phone),
-      sanitizeFormula(l.email || ''),
-      l.source,
-      l.stage,
-      l.teamId || '',
-      l.assignedRepName,
-      l.value || 0,
-      l.createdDate,
-      sanitizeFormula(l.notes || '')
-    ]);
-
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
-    ].join('\n');
-
-    adapterLogAudit(req, 'DATA_EXPORT', `Exported ${leads.length} leads in CSV format`, req.user, getClientIp(req), {
-      actionType: 'EXPORT',
-      requiredApproval: requiresApproval
-    });
-    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-    res.setHeader('Content-Disposition', `attachment; filename="dialpulse_leads_${Date.now()}.csv"`);
-    res.send(csvContent);
   });
 
   app.post('/api/leads', async (req, res) => {
@@ -1192,76 +1189,25 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
       });
     }
 
-    const db = await getLegacyState();
     const { leads: rawLeads } = req.body;
     if (!Array.isArray(rawLeads) || rawLeads.length === 0) {
       return res.status(400).json({ error: 'No valid leads provided for import' });
     }
 
-    if (rawLeads.length > 250) {
-      return res.status(400).json({
-        error: `Batch size exceeds limit of 250 records per import request (received ${rawLeads.length}). Please split into smaller batches.`,
-        code: 'BATCH_SIZE_EXCEEDED',
-        maxBatchSize: 250
-      });
-    }
+    // Queue the background job
+    const job = await enqueueJob('IMPORT_LEADS', req.securityContext!, { rawLeads });
 
-    const reps = db.users.filter(u => u.role === 'telecaller' || u.role === 'tl');
-    const defaultRep = reps[0] || db.users[0];
-    const importedLeads: Lead[] = [];
-    const nowIso = new Date().toISOString();
-
-    rawLeads.forEach((item: any, idx: number) => {
-      if (!item.name && !item.phone) return;
-      const rep = reps[idx % reps.length] || defaultRep;
-
-      // Check if a lead with this phone already exists — never downgrade opt-out/DNC
-      const existingLead = db.leads.find((l: Lead) => l.phone === (item.phone || '').trim());
-      const existingOptOut = existingLead?.preferences?.isOptedOut === true;
-      const existingBlocked = existingLead?.blockedReason?.trim();
-      const existingPaused = existingLead?.preferences?.isPaused30Days === true;
-
-      // Preserve imported compliance state, but never weaken existing restrictions
-      const importedOptOut = item.isOptedOut === true || item.optedOut === true;
-      const importedBlocked = item.blockedReason?.trim() || '';
-      const importedPaused = item.isPaused30Days === true || item.paused === true;
-
-      const newLead: Lead = {
-        id: `lead-${Date.now()}-${idx}`,
-        name: sanitizeFormula((item.name || 'Unnamed Lead').trim()),
-        phone: sanitizeFormula((item.phone || '+91 98000 00000').trim()),
-        source: item.source || 'Manual',
-        stage: item.stage || 'New',
-        teamId: rep.teamId || req.user!.teamId || 'team-mumbai',
-        assignedRepId: rep.id,
-        assignedRepName: rep.name,
-        createdDate: nowIso,
-        updatedAt: nowIso,
-        version: 1,
-        notes: sanitizeFormula(item.notes || 'Imported via CSV batch upload.'),
-        industry: item.industry || 'Real Estate',
-        value: Number(item.value) || 1000000,
-        callbackReminder: null,
-        // Preserve opt-out: never downgrade from true to false
-        blockedReason: existingBlocked || importedBlocked || undefined,
-        preferences: {
-          preferredChannel: item.preferredChannel || 'Any',
-          preferredTimeWindow: 'Anytime',
-          allowedTopics: [],
-          isPaused30Days: existingPaused || importedPaused,
-          isOptedOut: existingOptOut || importedOptOut,
-          optOutReason: item.optOutReason || existingLead?.preferences?.optOutReason,
-          blockedReason: existingBlocked || importedBlocked || undefined,
-          updatedAt: nowIso,
-        },
-      };
-      importedLeads.push(newLead);
-      db.leads.unshift(newLead);
+    adapterLogAudit(req, 'CSV_BULK_IMPORT_QUEUED', `Queued import job for ${rawLeads.length} leads.`, req.user, getClientIp(req), {
+      actionType: 'EDIT',
+      metadata: { jobId: job.id, count: rawLeads.length }
     });
-
-    // saveDatabase(); // TODO: Migrate to repository write
-    adapterLogAudit(req, 'CSV_BULK_IMPORT', `Imported ${importedLeads.length} leads via CSV batch upload.`, req.user, getClientIp(req), { actionType: 'EDIT' });
-    res.json({ count: importedLeads.length, importedLeads });
+    
+    res.status(202).json({
+      message: 'Import job queued successfully',
+      jobId: job.id,
+      status: 'QUEUED',
+      count: rawLeads.length
+    });
   });
 
   // Bulk edit (gated by EDIT & REASSIGN authorizations, restricted to Team Lead and Admin roles)
@@ -1274,61 +1220,25 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
       });
     }
 
-    const db = await getLegacyState();
     const { leadIds, stage, assignedRepId } = req.body;
     if (!Array.isArray(leadIds) || leadIds.length === 0) {
       return res.status(400).json({ error: 'leadIds array is required' });
     }
 
-    const isReassigning = Boolean(assignedRepId);
-    const assignedUser = assignedRepId ? db.users.find(u => u.id === assignedRepId) : null;
+    // Queue the background job
+    const job = await enqueueJob('BULK_UPDATE_LEADS', req.securityContext!, { leadIds, stage, assignedRepId });
 
-    // Validate permission on all targeted leads
-    for (const l of db.leads) {
-      if (leadIds.includes(l.id)) {
-        if (!(await can(req.securityContext!, 'leads:update', { teamId: l.teamId, ownerId: l.assignedRepId }))) {
-          adapterLogAudit(req, 'ACCESS_DENIED', `Denied bulk EDIT on lead ${l.id} for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
-          return res.status(403).json({
-            error: `Forbidden: You do not have EDIT permission for lead ${l.name}.`,
-            code: 'FORBIDDEN',
-            action: 'EDIT'
-          });
-        }
-        if (isReassigning && !(await can(req.securityContext!, 'leads:reassign', { teamId: l.teamId, ownerId: l.assignedRepId }))) {
-          adapterLogAudit(req, 'ACCESS_DENIED', `Denied bulk REASSIGN on lead ${l.id} for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'REASSIGN' });
-          return res.status(403).json({
-            error: `Forbidden: Current role lacks REASSIGN permission for lead ${l.name}.`,
-            code: 'FORBIDDEN',
-            action: 'REASSIGN'
-          });
-        }
-      }
-    }
-
-    let count = 0;
-    const nowIso = new Date().toISOString();
-
-    db.leads.forEach(l => {
-      if (leadIds.includes(l.id)) {
-        if (stage) l.stage = stage;
-        if (assignedUser) {
-          l.assignedRepId = assignedUser.id;
-          l.assignedRepName = assignedUser.name;
-          if (assignedUser.teamId) {
-            l.teamId = assignedUser.teamId;
-          }
-        }
-        l.version = (l.version || 1) + 1;
-        l.updatedAt = nowIso;
-        count++;
-      }
+    adapterLogAudit(req, 'BULK_LEAD_UPDATE_QUEUED', `Queued bulk update job for ${leadIds.length} leads.`, req.user, getClientIp(req), {
+      actionType: assignedRepId ? 'REASSIGN' : 'EDIT',
+      metadata: { jobId: job.id, count: leadIds.length }
     });
 
-    // saveDatabase(); // TODO: Migrate to repository write
-    adapterLogAudit(req, 'BULK_LEAD_UPDATE', `Bulk updated ${count} leads${stage ? ' -> ' + stage : ''}${assignedUser ? ' -> Rep ' + assignedUser.name : ''}`, req.user, getClientIp(req), {
-      actionType: isReassigning ? 'REASSIGN' : 'EDIT'
+    res.status(202).json({
+      message: 'Bulk update job queued successfully',
+      jobId: job.id,
+      status: 'QUEUED',
+      count: leadIds.length
     });
-    res.json({ success: true, count });
   });
 
   // 6. Calls APIs

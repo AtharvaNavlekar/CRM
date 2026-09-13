@@ -271,3 +271,20 @@ export const complianceRules = pgTable('compliance_rules', {
   updatedBy: text('updated_by'),
   version: integer('version').notNull().default(1),
 });
+
+export const jobs = pgTable('jobs', {
+  id: text('id').primaryKey(),
+  type: text('type').notNull(),
+  status: text('status').notNull(), // 'QUEUED' | 'RUNNING' | 'COMPLETED' | 'FAILED' | 'RETRYING' | 'CANCEL_REQUESTED' | 'CANCELLED'
+  tenantId: text('tenant_id').notNull(),
+  createdBy: text('created_by').notNull(),
+  actingAsUserId: text('acting_as_user_id'),
+  queueJobId: text('queue_job_id'),
+  progress: integer('progress').default(0),
+  resultMetadata: jsonb('result_metadata'),
+  errorDetails: jsonb('error_details'),
+  createdAt: timestamp('created_at', { mode: 'string' }).notNull(),
+  startedAt: timestamp('started_at', { mode: 'string' }),
+  completedAt: timestamp('completed_at', { mode: 'string' }),
+  failedAt: timestamp('failed_at', { mode: 'string' })
+});

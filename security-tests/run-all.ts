@@ -8,6 +8,7 @@ import { runConfigSecretsTests } from './config-secrets.test';
 import { runBusinessLogicTests } from './business-logic.test';
 import { runRateLimitingTests } from './rate-limiting.test';
 import { runComplianceTests } from './compliance.test';
+import { runJobsTests } from './jobs.test';
 import { BASE_URL, TestResult } from './helpers';
 
 const COLORS = {
@@ -84,6 +85,12 @@ async function main() {
   const complianceResults = await runComplianceTests();
   printCategoryResults(complianceResults);
   allResults.push(...complianceResults);
+
+  // 8. Background Jobs & Architecture
+  console.log(`\n${COLORS.bold}${COLORS.magenta}[CATEGORY 8] Background Jobs & Tenant Isolation${COLORS.reset}`);
+  const jobsResults = await runJobsTests();
+  printCategoryResults(jobsResults);
+  allResults.push(...jobsResults);
 
   // Print Summary Table
   printSummary(allResults);
