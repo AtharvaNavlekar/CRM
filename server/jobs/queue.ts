@@ -2,7 +2,7 @@ import { Queue, JobsOptions } from 'bullmq';
 import { redisService } from '../infrastructure/redis';
 import { jobRepository } from '../repositories/jobRepository';
 import { JobType, JobPayload } from './types';
-import { SecurityContext } from '../policy';
+import { SecurityContext } from '../../src/types';
 
 // Reuse the existing Redis connection from infrastructure layer
 // BullMQ requires an ioredis instance. We use the existing one.

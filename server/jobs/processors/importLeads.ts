@@ -11,12 +11,10 @@ export async function processImportLeads(job: Job<ImportLeadsPayload>) {
   const { tenantId, securityContext, leads: rawLeads, jobId } = job.data;
 
   // 1. Execution-time Authorization Re-check
-  if (!(await can(securityContext, 'leads:edit'))) {
+  if (!(await can(securityContext, 'leads:create'))) {
     throw new Error('Authorization denied at execution time for IMPORT');
   }
 
-  // 2. Fetch compliance rules
-  const rules = await complianceService.getTenantRules(tenantId);
 
   const importedLeads = [];
   const errors = [];
@@ -49,8 +47,8 @@ export async function processImportLeads(job: Job<ImportLeadsPayload>) {
         phone: String(item.phone).trim(),
         source: String(item.source || 'csv_import').trim(),
         stage: String(item.stage || 'New').trim(),
-        assignedRepId: securityContext.actor.id,
-        assignedRepName: securityContext.actor.name,
+        assignedRepId: securityContext.actorUserId,
+        assignedRepName: securityContext.actorRole,
         createdDate: new Date().toISOString(),
         notes: String(item.notes || 'Imported via CSV batch upload.').trim(),
         industry: item.industry ? String(item.industry).trim() : null,
@@ -73,12 +71,11 @@ export async function processImportLeads(job: Job<ImportLeadsPayload>) {
   }
 
   // 3. Log completion to Audit Service
-  await auditService.logEvent({
-    event: 'CSV_BULK_IMPORT',
+  await auditService.logNormal({
+    eventType: 'CSV_BULK_IMPORT',
     outcome: 'SUCCESS',
-    message: `Background job imported ${importedLeads.length} leads. ${errors.length} failed.`,
+    reason: `Background job imported ${importedLeads.length} leads. ${errors.length} failed.`,
     securityContext,
-    ipAddress: 'worker-node',
     metadata: { jobId, actionType: 'EDIT' }
   });
 

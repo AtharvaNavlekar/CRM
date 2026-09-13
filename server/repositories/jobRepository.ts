@@ -16,7 +16,8 @@ export const jobRepository = {
       status: 'QUEUED',
       tenantId: params.tenantId,
       createdBy: params.createdBy,
-      actingAsUserId: params.actingAsUserId
+      actingAsUserId: params.actingAsUserId || null,
+      createdAt: new Date().toISOString()
     }).returning();
     return job;
   },

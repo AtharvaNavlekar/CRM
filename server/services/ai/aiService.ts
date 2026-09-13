@@ -7,6 +7,8 @@ import { SecurityContext } from '../../../src/types';
 import { can } from '../../policy';
 import { randomUUID } from 'crypto';
 import { sql } from 'drizzle-orm';
+import { logger } from '../../infrastructure/logger';
+import { aiRequestCount, aiErrorCount, aiLatency } from '../../infrastructure/metrics';
 
 class AIService {
   private provider: AIProvider;
@@ -57,13 +59,17 @@ class AIService {
         await new Promise(resolve => setTimeout(resolve, 1500));
         resultText = "This is a simulated transcription because no GEMINI_API_KEY is configured.";
         tokens = 15;
-        cost = 0;
       } else {
+        const startTime = Date.now();
         const result = await this.provider.transcribeAudio(audioBase64, mimeType, {
           model: aiConfig.models.transcription,
           timeoutMs: aiConfig.limits.timeoutMs,
           maxTokens: aiConfig.limits.maxOutputTokens
         });
+        const duration = Date.now() - startTime;
+        aiRequestCount.inc({ model: aiConfig.models.transcription, operation: 'transcribe' });
+        aiLatency.observe({ model: aiConfig.models.transcription, operation: 'transcribe' }, duration);
+
         resultText = result.text;
         tokens = result.estimatedTokens;
         cost = result.estimatedCost;
@@ -92,6 +98,12 @@ class AIService {
       return resultText;
 
     } catch (err: any) {
+      aiErrorCount.inc({ model: aiConfig.models.transcription, operation: 'transcribe' });
+      logger.error('AI transcription failed', err, {
+        tenantId: context.tenantId,
+        errorDetail: err.message
+      }, context);
+
       // 6. Audit Failure
       await auditService.logNormal({
         eventType: 'AI_FAILED' as any,

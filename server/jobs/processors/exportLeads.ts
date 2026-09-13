@@ -15,7 +15,7 @@ export async function processExportLeads(job: Job<ExportLeadsPayload>) {
     throw new Error('Authorization denied at execution time for EXPORT');
   }
 
-  const tenantConditions = enforceTenantScope(securityContext, 'leads');
+  const tenantConditions = eq(leads.tenantId, tenantId!);
 
   // 2. Perform the export query
   const records = await db.query.leads.findMany({
@@ -27,12 +27,11 @@ export async function processExportLeads(job: Job<ExportLeadsPayload>) {
   const fileUrl = `https://storage.example.com/exports/${tenantId}/${jobId}.${format}`;
 
   // 3. Log completion to Audit Service
-  await auditService.logEvent({
-    event: 'DATA_EXPORT',
+  await auditService.logNormal({
+    eventType: 'DATA_EXPORT_COMPLETED',
     outcome: 'SUCCESS',
-    message: `Background job exported ${records.length} leads in ${format} format`,
+    reason: `Background job exported ${records.length} leads in ${format} format`,
     securityContext,
-    ipAddress: 'worker-node',
     metadata: { jobId, actionType: 'EXPORT' }
   });
 

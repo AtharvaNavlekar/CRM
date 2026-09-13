@@ -3,6 +3,7 @@ import { auditLogs } from '../db/schema';
 import { SecurityContext } from '../../src/types';
 import { AuditEventType, AuditOutcome } from '../constants/auditEvents';
 import crypto from 'crypto';
+import { logger } from '../infrastructure/logger';
 
 interface AuditEventParams {
   eventType: AuditEventType;
@@ -78,7 +79,9 @@ class AuditService {
     try {
       await runner.insert(auditLogs).values(record);
     } catch (error) {
-      console.error(`[AUDIT FATAL] Failed to write critical audit event: ${params.eventType}`, error);
+      logger.fatal(`[AUDIT FATAL] Failed to write critical audit event: ${params.eventType}`, error, {
+        auditEventId: record.id
+      }, params.securityContext);
       throw new Error(`Security Audit Failure: Cannot verify the integrity of this operation.`);
     }
   }
@@ -94,7 +97,9 @@ class AuditService {
       await runner.insert(auditLogs).values(record);
     } catch (error) {
       // For non-critical events, we log the failure to stderr but don't fail the business operation
-      console.error(`[AUDIT WARNING] Failed to write normal audit event: ${params.eventType}. Operation proceeding.`, error);
+      logger.error(`[AUDIT WARNING] Failed to write normal audit event: ${params.eventType}. Operation proceeding.`, error, {
+        auditEventId: record.id
+      }, params.securityContext);
     }
   }
 }

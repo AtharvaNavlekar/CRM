@@ -1,4 +1,4 @@
-import { SecurityContext } from '../policy';
+import { SecurityContext } from '../../src/types';
 
 export type JobType = 'EXPORT_LEADS' | 'IMPORT_LEADS' | 'BULK_UPDATE_LEADS';
 

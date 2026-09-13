@@ -9,6 +9,7 @@ import { runBusinessLogicTests } from './business-logic.test';
 import { runRateLimitingTests } from './rate-limiting.test';
 import { runComplianceTests } from './compliance.test';
 import { runJobsTests } from './jobs.test';
+import { runObservabilityTests } from './observability.test';
 import { BASE_URL, TestResult } from './helpers';
 
 const COLORS = {
@@ -86,13 +87,20 @@ async function main() {
   printCategoryResults(complianceResults);
   allResults.push(...complianceResults);
 
-  // 8. Background Jobs & Architecture
+  // 8. Background Jobs
   console.log(`\n${COLORS.bold}${COLORS.magenta}[CATEGORY 8] Background Jobs & Tenant Isolation${COLORS.reset}`);
   const jobsResults = await runJobsTests();
   printCategoryResults(jobsResults);
   allResults.push(...jobsResults);
 
-  // Print Summary Table
+  // 9. Observability & Telemetry
+  console.log(`\n${COLORS.bold}${COLORS.magenta}[CATEGORY 9] Observability & Telemetry${COLORS.reset}`);
+  const observabilityResults = await runObservabilityTests();
+  printCategoryResults(observabilityResults);
+  allResults.push(...observabilityResults);
+
+  // Generate Summary
+  const total = allResults.length;
   printSummary(allResults);
 
   const failedCount = allResults.filter(r => !r.passed).length;

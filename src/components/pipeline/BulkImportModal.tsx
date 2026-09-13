@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Upload, FileSpreadsheet, Download, Check, AlertCircle, ArrowRight } from 'lucide-react';
 import { MaterialDropdown } from '../common/MaterialDropdown';
-import { Lead } from '../../types';
+import { Lead, User } from '../../types';
 import { useModalFocusTrap } from '../../utils/useModalFocusTrap';
 
 interface BulkImportModalProps {

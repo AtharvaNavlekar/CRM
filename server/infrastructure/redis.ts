@@ -1,5 +1,7 @@
 import { Redis, RedisOptions } from 'ioredis';
 import crypto from 'crypto';
+import { logger } from './logger';
+import { redisConnectionErrors } from './metrics';
 
 /**
  * ------------------------------------------------------------------
@@ -45,9 +47,10 @@ class RedisService {
     this.init();
   }
 
+
   private init() {
     if (!REDIS_URL && process.env.NODE_ENV === 'production') {
-      console.warn('[REDIS] WARNING: REDIS_URL is missing in production. Dependent features (e.g. rate limits) will fail securely.');
+      logger.warn('[REDIS] WARNING: REDIS_URL is missing in production. Dependent features (e.g. rate limits) will fail securely.');
     }
 
     if (REDIS_URL) {
@@ -69,25 +72,27 @@ class RedisService {
     if (!this.client) return;
 
     this.client.on('connect', () => {
-      this.isConnecting = true;
+      logger.debug('[REDIS] Attempting connection...');
     });
 
     this.client.on('ready', () => {
       this.isConnecting = false;
       this.connectionError = null;
-      console.log('[REDIS] Connection ready.');
+      logger.info('[REDIS] Connection established and ready.');
     });
 
     this.client.on('error', (err) => {
       this.connectionError = err;
-      // Intentionally not logging every error to avoid log spam on outage
-      if (!this.isConnecting) {
-        console.error('[REDIS] Connection error:', err.message);
-      }
+      redisConnectionErrors.inc();
+      logger.error('[REDIS] Connection error', err);
     });
 
     this.client.on('close', () => {
-      console.log('[REDIS] Connection closed.');
+      logger.warn('[REDIS] Connection closed.');
+    });
+
+    this.client.on('reconnecting', () => {
+      logger.info('[REDIS] Attempting to reconnect...');
     });
   }
 

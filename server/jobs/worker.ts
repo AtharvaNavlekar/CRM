@@ -11,21 +11,26 @@ dotenv.config();
 const connection = redisService.getClient();
 
 // Ensure db and other services that might lazy load are initialized
+import { logger } from '../infrastructure/logger';
+import { jobProcessedCount, jobFailedCount, jobDuration } from '../infrastructure/metrics';
+
+// Ensure db and other services that might lazy load are initialized
 import '../db/client';
 
-console.log('Starting DialPulse CRM Background Worker...');
+logger.info('Starting DialPulse CRM Background Worker...');
 
 if (!connection) {
-  console.log('Running in degraded mode without Redis. Background worker shutting down safely.');
+  logger.warn('Running in degraded mode without Redis. Background worker shutting down safely.');
   process.exit(0);
 }
 
 const worker = new Worker<JobPayload>(
   'crm-jobs',
   async (job: Job<JobPayload>) => {
-    console.log(`[Worker] Processing job ${job.id} of type ${job.name}`);
+    logger.info(`Processing job ${job.id} of type ${job.name}`, { jobId: job.id, jobType: job.name });
     const jobId = job.data.jobId;
 
+    const startTime = Date.now();
     try {
       await jobRepository.updateJob(jobId, {
         status: 'RUNNING',
@@ -53,11 +58,16 @@ const worker = new Worker<JobPayload>(
         resultMetadata: result
       });
 
-      console.log(`[Worker] Job ${job.id} completed successfully`);
+      const duration = Date.now() - startTime;
+      jobProcessedCount.inc({ jobType: job.name });
+      jobDuration.observe({ jobType: job.name }, duration);
+
+      logger.info(`Job ${job.id} completed successfully`, { jobId: job.id, jobType: job.name, durationMs: duration });
       return result;
 
     } catch (error: any) {
-      console.error(`[Worker] Job ${job.id} failed:`, error);
+      jobFailedCount.inc({ jobType: job.name });
+      logger.error(`Job ${job.id} failed`, error, { jobId: job.id, jobType: job.name });
       
       const failedData = {
         status: 'FAILED',
@@ -84,16 +94,16 @@ const worker = new Worker<JobPayload>(
 );
 
 worker.on('failed', (job, err) => {
-  console.log(`[Worker] Job ${job?.id} has failed with ${err.message}`);
+  logger.warn(`Job ${job?.id} has failed`, { jobId: job?.id, errorDetail: err.message });
 });
 
 worker.on('error', (err) => {
-  console.error('[Worker] Unexpected error', err);
+  logger.error('Unexpected worker error', err);
 });
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
-  console.log('Shutting down worker...');
+  logger.info('Shutting down worker...');
   await worker.close();
   process.exit(0);
 });

@@ -38,6 +38,7 @@ import {
 } from './server/compliance';
 import { complianceService } from './server/services/complianceService';
 import { compliancePolicyRepository } from './server/repositories/compliancePolicyRepository';
+import { healthRouter } from './server/routes/health';
 import {
   authenticateToken,
   actionRequiresApproval,
@@ -71,6 +72,10 @@ import {
 import { enforceTenantScope, verifyTenantActive, scopeToTenant } from './server/tenantMiddleware';
 import { enqueueJob } from './server/jobs/queue';
 import { jobRepository } from './server/repositories/jobRepository';
+import { logger } from './server/infrastructure/logger';
+import { telemetryMiddleware } from './server/middleware/telemetry';
+import { globalErrorHandler } from './server/middleware/errorHandler';
+
 
 // Middleware to prevent platform staff from accessing raw data without an impersonation session
 
@@ -232,9 +237,11 @@ const sanitizeFormula = (val: any): string => {
 // Initialize in-memory/file-backed database
 loadDatabase();
 
+// Export app for testing
+export const app = express();
+
 async function startServer() {
   const TEAMS: any[] = [];
-const app = express();
   const PORT = 3000;
 
   // Trust proxy for reverse proxy environments (Cloud Run, Nginx)
@@ -365,8 +372,15 @@ const app = express();
     next();
   });
 
-  // Brute-force Login Rate Limiter
-  const loginLimiter = rateLimit({
+  // Mount Health & Metrics early (bypass typical middlewares)
+  app.use('/health', healthRouter);
+  app.use('/metrics', healthRouter);
+
+  // 1. Observability & Telemetry
+  app.use(telemetryMiddleware);
+
+  // 2. Global Rate Limiting
+  let limiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 30,
     standardHeaders: true,
@@ -398,6 +412,7 @@ const app = express();
     },
     message: { error: 'Too many login attempts. Please try again in 15 minutes.' }
   });
+  const loginLimiter = limiter;
 
   // 2. Global Authentication Middleware (validates JWT tokens in Authorization header)
   app.use('/api', authenticateToken);
@@ -410,53 +425,6 @@ const app = express();
   app.use('/api/messages', enforceImpersonationForRawData);
   app.use('/api/tickets', enforceImpersonationForRawData);
 
-  // Liveness Probe (process is running)
-  app.get('/api/health/liveness', (req, res) => {
-    res.json({
-      status: 'ok',
-      service: 'DialPulse CRM API',
-      timestamp: new Date().toISOString(),
-      uptime: process.uptime()
-    });
-  });
-
-  // Readiness Probe (dependencies are connected)
-  app.get('/api/health/readiness', async (req, res) => {
-    try {
-      // 1. Check PostgreSQL
-      await db.execute(sql`SELECT 1`);
-      
-      // 2. Check Redis (if configured)
-      let redisOk = true;
-      if (process.env.REDIS_URL) {
-        redisOk = await redisService.ping();
-      }
-
-      if (!redisOk) {
-        return res.status(503).json({
-          status: 'error',
-          error: 'Redis unavailable',
-          timestamp: new Date().toISOString()
-        });
-      }
-
-      res.json({
-        status: 'ok',
-        service: 'DialPulse CRM API',
-        timestamp: new Date().toISOString(),
-        database: 'connected',
-        redis: process.env.REDIS_URL ? 'connected' : 'disabled'
-      });
-    } catch (err: any) {
-      res.status(503).json({
-        status: 'error',
-        error: 'Database unavailable',
-        timestamp: new Date().toISOString()
-      });
-    }
-  });
-
-  
 function parseCookies(cookieHeader?: string): Record<string, string> {
   const list: Record<string, string> = {};
   if (!cookieHeader) return list;
@@ -864,35 +832,6 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
   });
 
   // Bulk Import API (gated by EDIT permission and approval workflow)
-  app.post('/api/leads/import', async (req, res) => {
-    if (!(await can(req.securityContext!, 'leads:import'))) {
-      adapterLogAudit(req, 'ACCESS_DENIED', `Denied IMPORT to ${req.user!.name} (${req.user!.role})`, req.user, getClientIp(req), { actionType: 'EDIT' });
-      return res.status(403).json({
-        error: `Forbidden: Current role '${req.user!.role}' lacks IMPORT permission.`,
-        code: 'FORBIDDEN',
-        action: 'EDIT'
-      });
-    }
-
-    const { leads } = req.body;
-    if (!Array.isArray(leads) || leads.length === 0) {
-      return res.status(400).json({ error: 'No leads provided for import' });
-    }
-
-    // Queue the background job
-    const job = await enqueueJob('IMPORT_LEADS', req.securityContext!, { leads });
-
-    adapterLogAudit(req, 'DATA_IMPORT', `Queued import job for ${leads.length} leads`, req.user, getClientIp(req), {
-      actionType: 'EDIT',
-      metadata: { jobId: job.id, leadCount: leads.length }
-    });
-
-    res.status(202).json({
-      message: 'Import job queued successfully',
-      jobId: job.id,
-      status: 'QUEUED'
-    });
-  });
 
   // Single Lead Inspection (gated by VIEW authorization on lead scope)
   app.get('/api/leads/:id', async (req, res) => {
@@ -1680,7 +1619,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
           sender: req.user!.name,
           senderRole: req.user!.role,
           text: initialMessage.trim(),
-          timestamp: now.toISOString()
+          timestamp: new Date().toISOString()
         }
       ] : []
     };
@@ -1884,7 +1823,9 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
         model: 'gemini-3.5-transcribe' // Hardcoded placeholder to keep UI compatible for now
       });
     } catch (err: any) {
-      console.error('[Transcription Error]', err);
+        logger.warn('[REDIS] Fallback to in-memory rate limiting', {
+          errorDetail: err instanceof Error ? { message: err.message, stack: err.stack } : err
+        });
       // aiService will throw if unauthorized, quota exceeded, or provider error.
       const status = err.message.includes('Unauthorized') ? 403 : 500;
       res.status(status).json({
@@ -2226,9 +2167,15 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     });
   }
 
+  // Mount generic error handler at the end
+  app.use(globalErrorHandler);
+
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`[DialPulse CRM] Server running on port ${PORT}`);
+    logger.info('Server started', { port: PORT });
   });
 }
 
-startServer();
+startServer().catch(err => {
+  logger.fatal('Failed to start server', err);
+  process.exit(1);
+});
