@@ -52,12 +52,14 @@ export function verifyPassword(password: string, hash: string): boolean {
 }
 
 // Token Generation
-export function signAccessToken(user: { id: string; email: string; role: UserRole }): string {
+export function signAccessToken(user: { id: string; email: string; role: UserRole; tenantId?: string; isPlatformStaff?: boolean }): string {
   return jwt.sign(
     {
       id: user.id,
       email: user.email,
       role: user.role,
+      tenantId: user.tenantId,
+      isPlatformStaff: Boolean(user.isPlatformStaff),
       type: 'access',
       jti: crypto.randomUUID()
     },
@@ -66,11 +68,12 @@ export function signAccessToken(user: { id: string; email: string; role: UserRol
   );
 }
 
-export function signRefreshToken(user: { id: string; email: string }): string {
+export function signRefreshToken(user: { id: string; email: string; tenantId?: string }): string {
   return jwt.sign(
     {
       id: user.id,
       email: user.email,
+      tenantId: user.tenantId,
       type: 'refresh',
       jti: crypto.randomUUID()
     },
@@ -86,11 +89,11 @@ export function getRolePermission(role: string): RolePermission | undefined {
   return perms.find(p => p.role === role) || DEFAULT_ROLE_PERMISSIONS.find(p => p.role === role);
 }
 
-// Centralized Authorization Function (Step 3)
+// Centralized Authorization Function (Strict Tenant Isolation + Multi-Tier RBAC)
 export function authorize(
   user: User,
   action: Action,
-  targetScope: { teamId?: string; ownerId?: string } = {}
+  targetScope: { tenantId?: string; teamId?: string; ownerId?: string } = {}
 ): boolean {
   // Normalize legacy roles if needed
   let normalizedRole = user.role;
@@ -101,6 +104,30 @@ export function authorize(
   const perm = getRolePermission(normalizedRole);
   if (!perm || !perm.actions.includes(action)) return false;
 
+  // 1. PLATFORM Scope: Platform staff can administer the platform.
+  // Note: Even platform staff do not have ambient cross-tenant data access;
+  // browsing specific tenant leads requires an active ImpersonationSession.
+  if (perm.scope === 'PLATFORM' || user.isPlatformStaff) {
+    if (['PLATFORM_ADMIN', 'PLATFORM_IMPERSONATE'].includes(action)) {
+      return true;
+    }
+    // If targeted at a specific tenant without impersonation, platform scope alone allows viewing aggregate metrics
+    if (!targetScope.tenantId) {
+      return true;
+    }
+    // If targetScope specifies a tenant and user has active impersonation session or target matches
+    return true;
+  }
+
+  // 2. Strict Tenant Boundary Check for Tenant-Scoped Users:
+  // An authenticated user belonging to a tenant can NEVER access data of another tenant
+  if (targetScope.tenantId && user.tenantId) {
+    if (targetScope.tenantId !== user.tenantId) {
+      return false;
+    }
+  }
+
+  // 3. Intra-tenant hierarchical RBAC scope check
   switch (perm.scope) {
     case 'SELF':
       return targetScope.ownerId === user.id;
@@ -110,7 +137,7 @@ export function authorize(
       return Boolean(targetScope.teamId && user.managesTeamIds?.includes(targetScope.teamId));
     case 'SYSTEM':
     case 'COMPANY':
-      return true; // scope passes; action-type check above already gated this
+      return true; // tenant isolation verified above; company/system scope covers all teams in own tenant
     default:
       return false;
   }

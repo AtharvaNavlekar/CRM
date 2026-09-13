@@ -6,6 +6,7 @@ import { LeadsListView } from './components/leads/LeadsListView';
 import { DashboardView } from './components/dashboard/DashboardView';
 import { LeaderboardView } from './components/leaderboard/LeaderboardView';
 import { GettingStartedView } from './components/home/GettingStartedView';
+import { PlatformDashboardView } from './components/platform/PlatformDashboardView';
 import { KanbanBoard } from './components/pipeline/KanbanBoard';
 import { AddLeadModal } from './components/pipeline/AddLeadModal';
 import { BulkImportModal } from './components/pipeline/BulkImportModal';
@@ -17,7 +18,7 @@ import { SupportView } from './components/support/SupportView';
 import { SettingsView } from './components/settings/SettingsView';
 import { TrustComplianceView } from './components/compliance/TrustComplianceView';
 import { LoginModal } from './components/auth/LoginModal';
-import { Plus, PhoneCall } from 'lucide-react';
+import { Plus, PhoneCall, Shield } from 'lucide-react';
 import { Lead, Call, LeadStage, CallOutcome } from './types';
 import { useAuth, AuthProvider, AuthContext } from './context/AuthContext';
 import { ThemeProvider, ThemeContext } from './context/ThemeContext';
@@ -217,6 +218,28 @@ const AppContent: React.FC = () => {
           isRefreshing={isRefreshing}
         />
 
+        {currentUser?.impersonationSession?.active && (
+          <div className="bg-amber-500 text-amber-950 px-4 py-2 text-sm font-medium flex justify-between items-center shadow-md z-10 shrink-0">
+            <span className="flex items-center gap-2">
+               <Shield className="w-4 h-4" />
+               <strong>IMPERSONATING TENANT:</strong> 
+               {currentUser.impersonationSession.targetTenantName}
+            </span>
+            <button 
+              onClick={async () => {
+                const res = await fetch('/api/platform/impersonate/end', {
+                  method: 'POST',
+                  headers: { 'Authorization': `Bearer ${currentUser?.token}` }
+                });
+                if(res.ok) window.location.reload();
+              }}
+              className="bg-amber-950 text-white px-3 py-1 text-xs rounded hover:bg-amber-900 transition-colors"
+            >
+              End Session
+            </button>
+          </div>
+        )}
+
         {/* View Router */}
         <main className="flex-1 overflow-hidden relative flex flex-col">
           {/* SCREEN 1: Leads List View */}
@@ -326,6 +349,12 @@ const AppContent: React.FC = () => {
           {currentView === 'settings' && (
             <div className="p-4 flex-1 overflow-y-auto">
               <SettingsView onDataReset={handleRefreshAll} />
+            </div>
+          )}
+
+          {currentView === 'platform' && (
+            <div className="flex-1 overflow-y-auto bg-[#F4F7F6] dark:bg-[#121414]">
+              <PlatformDashboardView />
             </div>
           )}
         </main>

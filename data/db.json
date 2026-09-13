@@ -8,7 +8,8 @@
       "passwordHash": "$2b$10$n2qbDQvvrkqT/M4su1acGOvSR1Os0NaADPCFLoet3RtpX9Hks.Nn6",
       "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
       "title": "Owner & Managing Director",
-      "phone": "+91 98112 34567"
+      "phone": "+91 98112 34567",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "usr-2",
@@ -19,7 +20,8 @@
       "passwordHash": "$2b$10$n2qbDQvvrkqT/M4su1acGOvSR1Os0NaADPCFLoet3RtpX9Hks.Nn6",
       "avatar": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
       "title": "Team Lead - Mumbai",
-      "phone": "+91 98220 45678"
+      "phone": "+91 98220 45678",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "usr-3",
@@ -30,7 +32,8 @@
       "passwordHash": "$2b$10$n2qbDQvvrkqT/M4su1acGOvSR1Os0NaADPCFLoet3RtpX9Hks.Nn6",
       "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
       "title": "Outbound Telecaller (Mumbai)",
-      "phone": "+91 98333 56789"
+      "phone": "+91 98333 56789",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "usr-4",
@@ -41,7 +44,8 @@
       "passwordHash": "$2b$10$n2qbDQvvrkqT/M4su1acGOvSR1Os0NaADPCFLoet3RtpX9Hks.Nn6",
       "avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
       "title": "Inside Sales Telecaller (Delhi)",
-      "phone": "+91 98444 67890"
+      "phone": "+91 98444 67890",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "usr-5",
@@ -51,7 +55,8 @@
       "passwordHash": "$2b$10$n2qbDQvvrkqT/M4su1acGOvSR1Os0NaADPCFLoet3RtpX9Hks.Nn6",
       "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
       "title": "Chief Technology Officer",
-      "phone": "+91 98555 12345"
+      "phone": "+91 98555 12345",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "usr-6",
@@ -61,7 +66,8 @@
       "passwordHash": "$2b$10$n2qbDQvvrkqT/M4su1acGOvSR1Os0NaADPCFLoet3RtpX9Hks.Nn6",
       "avatar": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&auto=format&fit=crop&q=80",
       "title": "IT Systems Administrator",
-      "phone": "+91 98666 23456"
+      "phone": "+91 98666 23456",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "usr-7",
@@ -75,7 +81,8 @@
       "passwordHash": "$2b$10$n2qbDQvvrkqT/M4su1acGOvSR1Os0NaADPCFLoet3RtpX9Hks.Nn6",
       "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80",
       "title": "Head of Telecalling Operations",
-      "phone": "+91 98777 34567"
+      "phone": "+91 98777 34567",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "usr-1789237985082",
@@ -106,6 +113,86 @@
       "passwordHash": "$2b$10$2Lp3Qnl3KBqWaDc837atE.ZSUmFId6Smp8DaAAtyDkY2UMvXYx21O",
       "title": "Telecaller",
       "phone": "+91 9838351326"
+    },
+    {
+      "id": "usr-plat-admin",
+      "name": "Alex Rivera (Platform Super Admin)",
+      "email": "admin@platform.internal",
+      "role": "platform_admin",
+      "isPlatformStaff": true,
+      "passwordHash": "$2b$10$EJbp7O0QMu9hdtPWEyV4V.CpRKmnVyf19Vzv0e3hHsUN2iD8q4yNS",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+      "title": "Principal Platform Operations Director",
+      "phone": "+1 415 555 0101"
+    },
+    {
+      "id": "usr-plat-support",
+      "name": "Elena Rostova (Platform Support)",
+      "email": "support@platform.internal",
+      "role": "platform_support",
+      "isPlatformStaff": true,
+      "passwordHash": "$2b$10$EJbp7O0QMu9hdtPWEyV4V.CpRKmnVyf19Vzv0e3hHsUN2iD8q4yNS",
+      "avatar": "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150&auto=format&fit=crop&q=80",
+      "title": "Senior Tenant Support Specialist",
+      "phone": "+1 415 555 0102"
+    },
+    {
+      "id": "usr-plat-sec",
+      "name": "Marcus Vance (SOC Lead)",
+      "email": "security@platform.internal",
+      "role": "platform_security",
+      "isPlatformStaff": true,
+      "passwordHash": "$2b$10$EJbp7O0QMu9hdtPWEyV4V.CpRKmnVyf19Vzv0e3hHsUN2iD8q4yNS",
+      "avatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&auto=format&fit=crop&q=80",
+      "title": "Lead Security Operations Analyst",
+      "phone": "+1 415 555 0103"
+    },
+    {
+      "id": "usr-zen-1",
+      "tenantId": "tenant-zenith",
+      "name": "Sameer Rao",
+      "email": "sameer@zenithedtech.in",
+      "role": "owner",
+      "passwordHash": "$2b$10$EJbp7O0QMu9hdtPWEyV4V.CpRKmnVyf19Vzv0e3hHsUN2iD8q4yNS",
+      "avatar": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&auto=format&fit=crop&q=80",
+      "title": "Founder & CEO - Zenith",
+      "phone": "+91 98200 90001"
+    },
+    {
+      "id": "usr-zen-2",
+      "tenantId": "tenant-zenith",
+      "name": "Kavita Menon",
+      "email": "kavita@zenithedtech.in",
+      "role": "tl",
+      "teamId": "team-zenith-bengaluru",
+      "passwordHash": "$2b$10$EJbp7O0QMu9hdtPWEyV4V.CpRKmnVyf19Vzv0e3hHsUN2iD8q4yNS",
+      "avatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80",
+      "title": "Admissions Lead (Bengaluru)",
+      "phone": "+91 98200 90002"
+    },
+    {
+      "id": "usr-zen-3",
+      "tenantId": "tenant-zenith",
+      "name": "Arjun Das",
+      "email": "arjun@zenithedtech.in",
+      "role": "telecaller",
+      "teamId": "team-zenith-bengaluru",
+      "passwordHash": "$2b$10$EJbp7O0QMu9hdtPWEyV4V.CpRKmnVyf19Vzv0e3hHsUN2iD8q4yNS",
+      "avatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
+      "title": "Senior Education Counselor",
+      "phone": "+91 98200 90003"
+    },
+    {
+      "id": "usr-zen-4",
+      "tenantId": "tenant-zenith",
+      "name": "Meera Nambisan",
+      "email": "meera@zenithedtech.in",
+      "role": "telecaller",
+      "teamId": "team-zenith-hyderabad",
+      "passwordHash": "$2b$10$EJbp7O0QMu9hdtPWEyV4V.CpRKmnVyf19Vzv0e3hHsUN2iD8q4yNS",
+      "avatar": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80",
+      "title": "Student Enrollment Specialist",
+      "phone": "+91 98200 90004"
     }
   ],
   "leads": [
@@ -140,7 +227,8 @@
         "calls": 5,
         "whatsapp": 5,
         "sms": 2
-      }
+      },
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-1789238688957",
@@ -173,7 +261,8 @@
         "calls": 0,
         "whatsapp": 0,
         "sms": 0
-      }
+      },
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-1789238656933",
@@ -198,7 +287,8 @@
         "calls": 0,
         "whatsapp": 0,
         "sms": 0
-      }
+      },
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-1789238656915",
@@ -223,7 +313,8 @@
         "calls": 0,
         "whatsapp": 0,
         "sms": 0
-      }
+      },
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-1789238656891",
@@ -248,7 +339,8 @@
         "calls": 0,
         "whatsapp": 0,
         "sms": 0
-      }
+      },
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-1789238656144-0",
@@ -265,7 +357,8 @@
       "notes": "'@SUM(1+1)*cmd|",
       "industry": "Real Estate",
       "value": 1000000,
-      "callbackReminder": null
+      "callbackReminder": null,
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-1789238656138",
@@ -287,7 +380,8 @@
         "calls": 0,
         "whatsapp": 0,
         "sms": 0
-      }
+      },
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-1789238648893",
@@ -320,7 +414,8 @@
         "calls": 5,
         "whatsapp": 5,
         "sms": 2
-      }
+      },
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-1789238648882",
@@ -353,7 +448,8 @@
         "calls": 0,
         "whatsapp": 0,
         "sms": 0
-      }
+      },
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-1789238170668",
@@ -378,7 +474,8 @@
         "calls": 0,
         "whatsapp": 0,
         "sms": 0
-      }
+      },
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-1789238170648",
@@ -403,7 +500,8 @@
         "calls": 0,
         "whatsapp": 0,
         "sms": 0
-      }
+      },
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-1789238170621",
@@ -428,7 +526,8 @@
         "calls": 0,
         "whatsapp": 0,
         "sms": 0
-      }
+      },
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-1789238169920-0",
@@ -445,7 +544,8 @@
       "notes": "'@SUM(1+1)*cmd|",
       "industry": "Real Estate",
       "value": 1000000,
-      "callbackReminder": null
+      "callbackReminder": null,
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-1789238169914",
@@ -467,7 +567,8 @@
         "calls": 0,
         "whatsapp": 0,
         "sms": 0
-      }
+      },
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-1789238165046",
@@ -500,7 +601,8 @@
         "calls": 5,
         "whatsapp": 5,
         "sms": 2
-      }
+      },
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-1789238165036",
@@ -533,7 +635,8 @@
         "calls": 0,
         "whatsapp": 0,
         "sms": 0
-      }
+      },
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-1789238009110",
@@ -566,7 +669,8 @@
         "calls": 5,
         "whatsapp": 5,
         "sms": 2
-      }
+      },
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-1789238009101",
@@ -599,7 +703,8 @@
         "calls": 0,
         "whatsapp": 0,
         "sms": 0
-      }
+      },
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-1789237985428",
@@ -621,7 +726,8 @@
         "calls": 0,
         "whatsapp": 0,
         "sms": 0
-      }
+      },
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-1789237985411",
@@ -643,7 +749,8 @@
         "calls": 0,
         "whatsapp": 0,
         "sms": 0
-      }
+      },
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-1789237985369",
@@ -665,7 +772,8 @@
         "calls": 0,
         "whatsapp": 0,
         "sms": 0
-      }
+      },
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-1789237984697-0",
@@ -682,7 +790,8 @@
       "notes": "'@SUM(1+1)*cmd|",
       "industry": "Real Estate",
       "value": 1000000,
-      "callbackReminder": null
+      "callbackReminder": null,
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-1789237984692",
@@ -704,7 +813,8 @@
         "calls": 0,
         "whatsapp": 0,
         "sms": 0
-      }
+      },
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-1789237946835",
@@ -737,7 +847,8 @@
         "calls": 5,
         "whatsapp": 5,
         "sms": 2
-      }
+      },
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-1789237946819",
@@ -770,7 +881,8 @@
         "calls": 0,
         "whatsapp": 0,
         "sms": 0
-      }
+      },
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-101",
@@ -787,7 +899,8 @@
       "value": 25000000,
       "callbackReminder": "2026-09-12T20:32:01.397Z",
       "version": 2,
-      "updatedAt": "2026-09-12T18:33:04.378Z"
+      "updatedAt": "2026-09-12T18:33:04.378Z",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-102",
@@ -804,7 +917,8 @@
       "value": 125000,
       "callbackReminder": "2026-09-12T22:32:01.397Z",
       "version": 1,
-      "updatedAt": "2026-09-12T00:32:01.397Z"
+      "updatedAt": "2026-09-12T00:32:01.397Z",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-103",
@@ -821,7 +935,8 @@
       "value": 4500000,
       "callbackReminder": "2026-09-12T19:32:01.397Z",
       "version": 1,
-      "updatedAt": "2026-09-11T06:32:01.397Z"
+      "updatedAt": "2026-09-11T06:32:01.397Z",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-104",
@@ -838,7 +953,8 @@
       "value": 48000,
       "callbackReminder": null,
       "version": 1,
-      "updatedAt": "2026-09-10T06:32:01.397Z"
+      "updatedAt": "2026-09-10T06:32:01.397Z",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-105",
@@ -855,7 +971,8 @@
       "value": 8500000,
       "callbackReminder": null,
       "version": 1,
-      "updatedAt": "2026-09-09T00:32:01.397Z"
+      "updatedAt": "2026-09-09T00:32:01.397Z",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-106",
@@ -872,7 +989,8 @@
       "value": 2000000,
       "callbackReminder": null,
       "version": 1,
-      "updatedAt": "2026-09-07T18:32:01.397Z"
+      "updatedAt": "2026-09-07T18:32:01.397Z",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-107",
@@ -889,7 +1007,8 @@
       "value": 1500000,
       "callbackReminder": "2026-09-13T00:32:01.397Z",
       "version": 1,
-      "updatedAt": "2026-09-12T13:32:01.397Z"
+      "updatedAt": "2026-09-12T13:32:01.397Z",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "lead-108",
@@ -906,7 +1025,62 @@
       "value": 6800000,
       "callbackReminder": "2026-09-12T21:32:01.397Z",
       "version": 1,
-      "updatedAt": "2026-09-10T18:32:01.397Z"
+      "updatedAt": "2026-09-10T18:32:01.397Z",
+      "tenantId": "tenant-apex"
+    },
+    {
+      "id": "lead-zen-201",
+      "tenantId": "tenant-zenith",
+      "name": "Siddharth Varma",
+      "phone": "+91 98765 11223",
+      "source": "LinkedIn Ads",
+      "stage": "New",
+      "assignedRepId": "usr-zen-3",
+      "assignedRepName": "Arjun Das",
+      "teamId": "team-zenith-bengaluru",
+      "createdDate": "2026-09-13T06:21:16.657Z",
+      "notes": "Inquired about Cloud DevOps PG Diploma for working engineers.",
+      "industry": "Education",
+      "value": 220000,
+      "callbackReminder": "2026-09-13T11:21:16.657Z",
+      "version": 1,
+      "updatedAt": "2026-09-13T06:21:16.657Z"
+    },
+    {
+      "id": "lead-zen-202",
+      "tenantId": "tenant-zenith",
+      "name": "Aishwarya Rane",
+      "phone": "+91 98765 22334",
+      "source": "Website",
+      "stage": "Follow-up",
+      "assignedRepId": "usr-zen-4",
+      "assignedRepName": "Meera Nambisan",
+      "teamId": "team-zenith-hyderabad",
+      "createdDate": "2026-09-12T12:21:16.657Z",
+      "notes": "Requested brochure and syllabus for AI Product Management certificate.",
+      "industry": "Education",
+      "value": 180000,
+      "callbackReminder": "2026-09-13T13:21:16.657Z",
+      "version": 1,
+      "updatedAt": "2026-09-12T12:21:16.657Z"
+    },
+    {
+      "id": "lead-zen-203",
+      "tenantId": "tenant-zenith",
+      "name": "Nikhil Saxena",
+      "phone": "+91 98765 33445",
+      "source": "Referral",
+      "stage": "Won",
+      "assignedRepId": "usr-zen-3",
+      "assignedRepName": "Arjun Das",
+      "teamId": "team-zenith-bengaluru",
+      "createdDate": "2026-09-10T08:21:16.657Z",
+      "notes": "Enrolled in Full-Stack Java Bootcamp. Full payment received via Razorpay.",
+      "industry": "Education",
+      "value": 150000,
+      "callbackReminder": null,
+      "version": 1,
+      "updatedAt": "2026-09-10T08:21:16.657Z"
     }
   ],
   "calls": [
@@ -921,7 +1095,8 @@
       "duration": 185,
       "outcome": "Follow-up",
       "notes": "Discussed GST filings and 2 years ITR requirements. Client will email documents by 4 PM.",
-      "recordingSimulated": true
+      "recordingSimulated": true,
+      "tenantId": "tenant-apex"
     },
     {
       "id": "call-202",
@@ -934,7 +1109,8 @@
       "duration": 310,
       "outcome": "Interested",
       "notes": "Clarified placement assistance and batch timings (weekend). Agreed for scholarship test.",
-      "recordingSimulated": true
+      "recordingSimulated": true,
+      "tenantId": "tenant-apex"
     },
     {
       "id": "call-203",
@@ -947,7 +1123,8 @@
       "duration": 420,
       "outcome": "Follow-up",
       "notes": "Negotiating cashless hospital network riders. Requested 5% festive discount waiver.",
-      "recordingSimulated": true
+      "recordingSimulated": true,
+      "tenantId": "tenant-apex"
     },
     {
       "id": "call-204",
@@ -960,7 +1137,8 @@
       "duration": 540,
       "outcome": "Converted",
       "notes": "Finalized builder agreement terms. Payment confirmed.",
-      "recordingSimulated": true
+      "recordingSimulated": true,
+      "tenantId": "tenant-apex"
     },
     {
       "id": "call-205",
@@ -973,6 +1151,35 @@
       "duration": 95,
       "outcome": "Not interested",
       "notes": "Client stated interest rates higher than private bank offer.",
+      "recordingSimulated": true,
+      "tenantId": "tenant-apex"
+    },
+    {
+      "id": "call-zen-301",
+      "tenantId": "tenant-zenith",
+      "leadId": "lead-zen-201",
+      "leadName": "Siddharth Varma",
+      "leadPhone": "+91 98765 11223",
+      "repId": "usr-zen-3",
+      "repName": "Arjun Das",
+      "timestamp": "2026-09-13T06:51:16.657Z",
+      "duration": 240,
+      "outcome": "Follow-up",
+      "notes": "Reviewed candidate work experience in QA. Recommended Cloud Architecture track.",
+      "recordingSimulated": true
+    },
+    {
+      "id": "call-zen-302",
+      "tenantId": "tenant-zenith",
+      "leadId": "lead-zen-203",
+      "leadName": "Nikhil Saxena",
+      "leadPhone": "+91 98765 33445",
+      "repId": "usr-zen-3",
+      "repName": "Arjun Das",
+      "timestamp": "2026-09-10T10:21:16.657Z",
+      "duration": 480,
+      "outcome": "Converted",
+      "notes": "Discussed batch commencement date and sent LMS credentials after admission fee receipt.",
       "recordingSimulated": true
     }
   ],
@@ -983,7 +1190,8 @@
       "direction": "outbound",
       "text": "Namaste Rajesh ji, this is Sneha from TeleCRM lending desk. Here is the checklist of documents needed for your 45L business loan.",
       "timestamp": "2026-09-12T13:32:01.397Z",
-      "deliveryStatus": "Delivered"
+      "deliveryStatus": "Delivered",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "msg-302",
@@ -991,7 +1199,8 @@
       "direction": "inbound",
       "text": "Ji Sneha ji, I have the 2-year ITR ready. Can we discuss processing fee waivers on the call?",
       "timestamp": "2026-09-12T14:02:01.397Z",
-      "deliveryStatus": "Delivered"
+      "deliveryStatus": "Delivered",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "msg-303",
@@ -999,7 +1208,8 @@
       "direction": "outbound",
       "text": "Sure sir, I have marked a callback reminder for today at 3:30 PM. We will get you the best subvention rates!",
       "timestamp": "2026-09-12T14:32:01.397Z",
-      "deliveryStatus": "Delivered"
+      "deliveryStatus": "Delivered",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "msg-304",
@@ -1007,7 +1217,8 @@
       "direction": "outbound",
       "text": "Hello Vikram ji, thank you for your inquiry on IndiaMART for Sector 65 luxury towers. Would you prefer a digital brochure over WhatsApp?",
       "timestamp": "2026-09-12T16:32:01.397Z",
-      "deliveryStatus": "Delivered"
+      "deliveryStatus": "Delivered",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "msg-305",
@@ -1015,6 +1226,16 @@
       "direction": "outbound",
       "text": "Hi Ananya! Thanks for your interest in our Executive AI & Data Science Program. Here is the curriculum link: https://telecrm.in/curriculum",
       "timestamp": "2026-09-12T01:32:01.397Z",
+      "deliveryStatus": "Delivered",
+      "tenantId": "tenant-apex"
+    },
+    {
+      "id": "msg-zen-401",
+      "tenantId": "tenant-zenith",
+      "leadId": "lead-zen-202",
+      "direction": "outbound",
+      "text": "Hello Aishwarya, welcome to Zenith EdTech! Here is the downloadable PDF for our AI Product Management syllabus.",
+      "timestamp": "2026-09-12T13:21:16.657Z",
       "deliveryStatus": "Delivered"
     }
   ],
@@ -1044,7 +1265,8 @@
           "text": "Reviewing collateral now. Target dispatch within 1 hour.",
           "timestamp": "2026-09-12T17:44:01.397Z"
         }
-      ]
+      ],
+      "tenantId": "tenant-apex"
     },
     {
       "id": "tkt-402",
@@ -1064,7 +1286,8 @@
           "text": "Noticed same mobile number received twice with 2-minute gap.",
           "timestamp": "2026-09-12T18:02:01.397Z"
         }
-      ]
+      ],
+      "tenantId": "tenant-apex"
     },
     {
       "id": "tkt-403",
@@ -1091,10 +1314,75 @@
           "text": "Refund of ₹999 processed to source UPI ID. Ticket closed.",
           "timestamp": "2026-09-12T11:32:01.397Z"
         }
+      ],
+      "tenantId": "tenant-apex"
+    },
+    {
+      "id": "tkt-zen-501",
+      "tenantId": "tenant-zenith",
+      "subject": "Student LMS portal access delay after course registration",
+      "status": "Open",
+      "createdDate": "2026-09-13T05:21:16.657Z",
+      "slaDueTime": "2026-09-13T09:21:16.657Z",
+      "priority": "High",
+      "leadId": "lead-zen-203",
+      "leadName": "Nikhil Saxena",
+      "assignedRepId": "usr-zen-3",
+      "replies": [
+        {
+          "id": "rep-zen-1",
+          "sender": "Arjun Das",
+          "senderRole": "telecaller",
+          "text": "Student enrolled and submitted payment proof. IT desk please activate learning portal ID.",
+          "timestamp": "2026-09-13T05:33:16.657Z"
+        }
       ]
     }
   ],
   "auditLogs": [
+    {
+      "id": "aud-1789292339280-438",
+      "timestamp": "2026-09-13T09:38:59.280Z",
+      "userId": "usr-plat-admin",
+      "userName": "Alex Rivera (Platform Super Admin)",
+      "userRole": "platform_admin",
+      "action": "ACCESS_DENIED",
+      "details": "Denied raw data access to Alex Rivera (Platform Super Admin) (No active impersonation session)",
+      "ip": "127.0.0.1",
+      "actionType": "VIEW"
+    },
+    {
+      "id": "aud-1789292339265-873",
+      "timestamp": "2026-09-13T09:38:59.265Z",
+      "userId": "usr-plat-admin",
+      "userName": "Alex Rivera (Platform Super Admin)",
+      "userRole": "platform_admin",
+      "action": "USER_LOGIN",
+      "details": "Alex Rivera (Platform Super Admin) logged into DialPulse CRM",
+      "ip": "127.0.0.1"
+    },
+    {
+      "id": "aud-1789292303041-686",
+      "timestamp": "2026-09-13T09:38:23.041Z",
+      "userId": "usr-plat-admin",
+      "userName": "Alex Rivera (Platform Super Admin)",
+      "userRole": "platform_admin",
+      "action": "USER_LOGIN",
+      "details": "Alex Rivera (Platform Super Admin) logged into DialPulse CRM",
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
+    },
+    {
+      "id": "aud-1789289476664-951",
+      "tenantId": "tenant-apex",
+      "timestamp": "2026-09-13T08:51:16.665Z",
+      "userId": "system",
+      "userName": "System Auto",
+      "userRole": "owner",
+      "action": "AUTO_BACKUP_CREATED",
+      "details": "Snapshot created: \"Hourly Auto-Snapshot\" with 36 leads.",
+      "ip": "127.0.0.1"
+    },
     {
       "id": "aud-1789238688968-541",
       "timestamp": "2026-09-12T18:44:48.968Z",
@@ -1104,7 +1392,8 @@
       "action": "LEAD_CREATED",
       "details": "Added new lead: Ananya Deshmukh (High Fatigue) (Website) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238688958-692",
@@ -1115,7 +1404,8 @@
       "action": "LEAD_CREATED",
       "details": "Added new lead: Rohan Verma (DND) (Website) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238688951-181",
@@ -1126,7 +1416,8 @@
       "action": "CUSTOM_FIELDS_UPDATED",
       "details": "Updated 1 custom lead fields.",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_POLICY"
+      "actionType": "MANAGE_POLICY",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238688943-462",
@@ -1137,7 +1428,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied custom field update to Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_POLICY"
+      "actionType": "MANAGE_POLICY",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238688940-890",
@@ -1148,7 +1440,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied MANAGE_POLICY to Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_POLICY"
+      "actionType": "MANAGE_POLICY",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238688935-959",
@@ -1159,7 +1452,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied MANAGE_USERS to Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_USERS"
+      "actionType": "MANAGE_USERS",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238688925-8",
@@ -1169,7 +1463,8 @@
       "userRole": "owner",
       "action": "USER_LOGOUT",
       "details": "Rahul Sharma signed out",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238688920-828",
@@ -1179,7 +1474,8 @@
       "userRole": "owner",
       "action": "USER_LOGIN",
       "details": "Rahul Sharma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238688780-270",
@@ -1189,7 +1485,8 @@
       "userRole": "telecaller",
       "action": "USER_LOGIN",
       "details": "Amit Verma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238688655-348",
@@ -1199,7 +1496,8 @@
       "userRole": "owner",
       "action": "USER_LOGIN",
       "details": "Rahul Sharma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238656960-876",
@@ -1211,7 +1509,8 @@
       "details": "Updated compliance frequency & quiet hours rules",
       "ip": "127.0.0.1",
       "actionType": "MANAGE_COMPLIANCE_RULES",
-      "requiredApproval": false
+      "requiredApproval": false,
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238656953-443",
@@ -1222,7 +1521,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied MANAGE_COMPLIANCE_RULES to Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_COMPLIANCE_RULES"
+      "actionType": "MANAGE_COMPLIANCE_RULES",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238656943-328",
@@ -1234,7 +1534,8 @@
       "details": "Lead WhatsApp Only Customer updated",
       "ip": "127.0.0.1",
       "actionType": "EDIT",
-      "requiredApproval": false
+      "requiredApproval": false,
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238656934-311",
@@ -1245,7 +1546,8 @@
       "action": "LEAD_CREATED",
       "details": "Added new lead: WhatsApp Only Customer (Manual) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238656922-213",
@@ -1257,7 +1559,8 @@
       "details": "Lead Abusive Contact updated",
       "ip": "127.0.0.1",
       "actionType": "EDIT",
-      "requiredApproval": false
+      "requiredApproval": false,
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238656916-586",
@@ -1268,7 +1571,8 @@
       "action": "LEAD_CREATED",
       "details": "Added new lead: Abusive Contact (Manual) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238656900-930",
@@ -1280,7 +1584,8 @@
       "details": "Lead Opted Out Customer updated",
       "ip": "127.0.0.1",
       "actionType": "EDIT",
-      "requiredApproval": false
+      "requiredApproval": false,
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238656892-710",
@@ -1291,7 +1596,8 @@
       "action": "LEAD_CREATED",
       "details": "Added new lead: Opted Out Customer (Manual) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238656588-137",
@@ -1302,7 +1608,8 @@
       "action": "USER_INVITED",
       "details": "Rahul Sharma created user Invited User 8129 with role telecaller",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_USERS"
+      "actionType": "MANAGE_USERS",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238656418-298",
@@ -1312,7 +1619,8 @@
       "userRole": "telecaller",
       "action": "USER_LOGIN",
       "details": "Amit Verma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238656290-184",
@@ -1322,7 +1630,8 @@
       "userRole": "owner",
       "action": "USER_LOGIN",
       "details": "Rahul Sharma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238656145-571",
@@ -1333,7 +1642,8 @@
       "action": "CSV_BULK_IMPORT",
       "details": "Imported 1 leads via CSV batch upload.",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238656139-755",
@@ -1344,7 +1654,8 @@
       "action": "LEAD_CREATED",
       "details": "Added new lead: Proto Test (Manual) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238656115-69",
@@ -1354,7 +1665,8 @@
       "userRole": "telecaller",
       "action": "USER_LOGOUT",
       "details": "Amit Verma signed out",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238656108-813",
@@ -1364,7 +1676,8 @@
       "userRole": "telecaller",
       "action": "USER_LOGIN",
       "details": "Amit Verma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238655813-858",
@@ -1375,7 +1688,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied MANAGE_POLICY to Priya Iyer",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_POLICY"
+      "actionType": "MANAGE_POLICY",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238655806-967",
@@ -1386,7 +1700,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied MANAGE_POLICY to Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_POLICY"
+      "actionType": "MANAGE_POLICY",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238655781-314",
@@ -1397,7 +1712,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied MANAGE_USERS to Priya Iyer",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_USERS"
+      "actionType": "MANAGE_USERS",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238655756-117",
@@ -1408,7 +1724,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied MANAGE_USERS to Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_USERS"
+      "actionType": "MANAGE_USERS",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238655751-450",
@@ -1419,7 +1736,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied bulk-update for Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238655734-581",
@@ -1430,7 +1748,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied lead CSV import for Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238655727-14",
@@ -1441,7 +1760,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied DELETE on lead for Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "DELETE"
+      "actionType": "DELETE",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238655721-555",
@@ -1451,7 +1771,8 @@
       "userRole": "telecaller",
       "action": "USER_LOGIN",
       "details": "Amit Verma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238655576-16",
@@ -1462,7 +1783,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied EDIT on lead lead-103 for Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238655564-967",
@@ -1472,7 +1794,8 @@
       "userRole": "telecaller",
       "action": "USER_LOGIN",
       "details": "Sneha Kulkarni logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238655441-909",
@@ -1482,7 +1805,8 @@
       "userRole": "telecaller",
       "action": "USER_LOGIN",
       "details": "Amit Verma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238655319-618",
@@ -1492,7 +1816,8 @@
       "userRole": "tl",
       "action": "USER_LOGIN",
       "details": "Priya Iyer logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238655178-752",
@@ -1502,7 +1827,8 @@
       "userRole": "owner",
       "action": "USER_LOGIN",
       "details": "Rahul Sharma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238648894-324",
@@ -1513,7 +1839,8 @@
       "action": "LEAD_CREATED",
       "details": "Added new lead: Ananya Deshmukh (High Fatigue) (Website) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238648883-31",
@@ -1524,7 +1851,8 @@
       "action": "LEAD_CREATED",
       "details": "Added new lead: Rohan Verma (DND) (Website) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238648875-343",
@@ -1535,7 +1863,8 @@
       "action": "CUSTOM_FIELDS_UPDATED",
       "details": "Updated 1 custom lead fields.",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_POLICY"
+      "actionType": "MANAGE_POLICY",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238648867-57",
@@ -1546,7 +1875,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied custom field update to Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_POLICY"
+      "actionType": "MANAGE_POLICY",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238648860-880",
@@ -1557,7 +1887,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied MANAGE_POLICY to Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_POLICY"
+      "actionType": "MANAGE_POLICY",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238648853-336",
@@ -1568,7 +1899,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied MANAGE_USERS to Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_USERS"
+      "actionType": "MANAGE_USERS",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238648841-787",
@@ -1578,7 +1910,8 @@
       "userRole": "owner",
       "action": "USER_LOGOUT",
       "details": "Rahul Sharma signed out",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238648835-885",
@@ -1588,7 +1921,8 @@
       "userRole": "owner",
       "action": "USER_LOGIN",
       "details": "Rahul Sharma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238648707-44",
@@ -1598,7 +1932,8 @@
       "userRole": "telecaller",
       "action": "USER_LOGIN",
       "details": "Amit Verma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238648575-464",
@@ -1608,7 +1943,8 @@
       "userRole": "owner",
       "action": "USER_LOGIN",
       "details": "Rahul Sharma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238170693-333",
@@ -1620,7 +1956,8 @@
       "details": "Updated compliance frequency & quiet hours rules",
       "ip": "127.0.0.1",
       "actionType": "MANAGE_COMPLIANCE_RULES",
-      "requiredApproval": false
+      "requiredApproval": false,
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238170687-678",
@@ -1631,7 +1968,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied MANAGE_COMPLIANCE_RULES to Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_COMPLIANCE_RULES"
+      "actionType": "MANAGE_COMPLIANCE_RULES",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238170677-432",
@@ -1643,7 +1981,8 @@
       "details": "Lead WhatsApp Only Customer updated",
       "ip": "127.0.0.1",
       "actionType": "EDIT",
-      "requiredApproval": false
+      "requiredApproval": false,
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238170668-517",
@@ -1654,7 +1993,8 @@
       "action": "LEAD_CREATED",
       "details": "Added new lead: WhatsApp Only Customer (Manual) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238170655-549",
@@ -1666,7 +2006,8 @@
       "details": "Lead Abusive Contact updated",
       "ip": "127.0.0.1",
       "actionType": "EDIT",
-      "requiredApproval": false
+      "requiredApproval": false,
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238170649-346",
@@ -1677,7 +2018,8 @@
       "action": "LEAD_CREATED",
       "details": "Added new lead: Abusive Contact (Manual) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238170628-631",
@@ -1689,7 +2031,8 @@
       "details": "Lead Opted Out Customer updated",
       "ip": "127.0.0.1",
       "actionType": "EDIT",
-      "requiredApproval": false
+      "requiredApproval": false,
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238170622-262",
@@ -1700,7 +2043,8 @@
       "action": "LEAD_CREATED",
       "details": "Added new lead: Opted Out Customer (Manual) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238170327-643",
@@ -1711,7 +2055,8 @@
       "action": "USER_INVITED",
       "details": "Rahul Sharma created user Invited User 3021 with role telecaller",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_USERS"
+      "actionType": "MANAGE_USERS",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238170200-666",
@@ -1721,7 +2066,8 @@
       "userRole": "telecaller",
       "action": "USER_LOGIN",
       "details": "Amit Verma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238170070-699",
@@ -1731,7 +2077,8 @@
       "userRole": "owner",
       "action": "USER_LOGIN",
       "details": "Rahul Sharma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238169920-954",
@@ -1742,7 +2089,8 @@
       "action": "CSV_BULK_IMPORT",
       "details": "Imported 1 leads via CSV batch upload.",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238169915-291",
@@ -1753,7 +2101,8 @@
       "action": "LEAD_CREATED",
       "details": "Added new lead: Proto Test (Manual) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238169892-75",
@@ -1763,7 +2112,8 @@
       "userRole": "telecaller",
       "action": "USER_LOGOUT",
       "details": "Amit Verma signed out",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238169886-616",
@@ -1773,7 +2123,8 @@
       "userRole": "telecaller",
       "action": "USER_LOGIN",
       "details": "Amit Verma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238169603-92",
@@ -1784,7 +2135,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied MANAGE_POLICY to Priya Iyer",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_POLICY"
+      "actionType": "MANAGE_POLICY",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238169598-467",
@@ -1795,7 +2147,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied MANAGE_POLICY to Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_POLICY"
+      "actionType": "MANAGE_POLICY",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238169577-541",
@@ -1806,7 +2159,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied MANAGE_USERS to Priya Iyer",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_USERS"
+      "actionType": "MANAGE_USERS",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238169572-539",
@@ -1817,7 +2171,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied MANAGE_USERS to Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_USERS"
+      "actionType": "MANAGE_USERS",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238169567-417",
@@ -1828,7 +2183,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied bulk-update for Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238169561-380",
@@ -1839,7 +2195,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied lead CSV import for Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238169555-687",
@@ -1850,7 +2207,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied DELETE on lead for Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "DELETE"
+      "actionType": "DELETE",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238169550-329",
@@ -1860,7 +2218,8 @@
       "userRole": "telecaller",
       "action": "USER_LOGIN",
       "details": "Amit Verma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238169402-704",
@@ -1871,7 +2230,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied EDIT on lead lead-103 for Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238169387-230",
@@ -1881,7 +2241,8 @@
       "userRole": "telecaller",
       "action": "USER_LOGIN",
       "details": "Sneha Kulkarni logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238169263-959",
@@ -1891,7 +2252,8 @@
       "userRole": "telecaller",
       "action": "USER_LOGIN",
       "details": "Amit Verma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238169139-364",
@@ -1901,7 +2263,8 @@
       "userRole": "tl",
       "action": "USER_LOGIN",
       "details": "Priya Iyer logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238168996-300",
@@ -1911,7 +2274,8 @@
       "userRole": "owner",
       "action": "USER_LOGIN",
       "details": "Rahul Sharma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238165047-160",
@@ -1922,7 +2286,8 @@
       "action": "LEAD_CREATED",
       "details": "Added new lead: Ananya Deshmukh (High Fatigue) (Website) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238165037-610",
@@ -1933,7 +2298,8 @@
       "action": "LEAD_CREATED",
       "details": "Added new lead: Rohan Verma (DND) (Website) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238165030-445",
@@ -1944,7 +2310,8 @@
       "action": "CUSTOM_FIELDS_UPDATED",
       "details": "Updated 1 custom lead fields.",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_POLICY"
+      "actionType": "MANAGE_POLICY",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238165021-769",
@@ -1955,7 +2322,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied custom field update to Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_POLICY"
+      "actionType": "MANAGE_POLICY",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238165016-212",
@@ -1966,7 +2334,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied MANAGE_POLICY to Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_POLICY"
+      "actionType": "MANAGE_POLICY",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238165011-625",
@@ -1977,7 +2346,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied MANAGE_USERS to Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_USERS"
+      "actionType": "MANAGE_USERS",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238165002-895",
@@ -1987,7 +2357,8 @@
       "userRole": "owner",
       "action": "USER_LOGOUT",
       "details": "Rahul Sharma signed out",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238164996-72",
@@ -1997,7 +2368,8 @@
       "userRole": "owner",
       "action": "USER_LOGIN",
       "details": "Rahul Sharma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238164872-510",
@@ -2007,7 +2379,8 @@
       "userRole": "telecaller",
       "action": "USER_LOGIN",
       "details": "Amit Verma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238164760-347",
@@ -2017,7 +2390,8 @@
       "userRole": "owner",
       "action": "USER_LOGIN",
       "details": "Rahul Sharma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238009110-193",
@@ -2028,7 +2402,8 @@
       "action": "LEAD_CREATED",
       "details": "Added new lead: Ananya Deshmukh (High Fatigue) (Website) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238009102-171",
@@ -2039,7 +2414,8 @@
       "action": "LEAD_CREATED",
       "details": "Added new lead: Rohan Verma (DND) (Website) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238009096-698",
@@ -2050,7 +2426,8 @@
       "action": "CUSTOM_FIELDS_UPDATED",
       "details": "Updated 1 custom lead fields.",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_POLICY"
+      "actionType": "MANAGE_POLICY",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238009088-335",
@@ -2061,7 +2438,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied custom field update to Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_POLICY"
+      "actionType": "MANAGE_POLICY",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238009085-412",
@@ -2072,7 +2450,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied MANAGE_POLICY to Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_POLICY"
+      "actionType": "MANAGE_POLICY",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238009081-748",
@@ -2083,7 +2462,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied MANAGE_USERS to Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_USERS"
+      "actionType": "MANAGE_USERS",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238009074-143",
@@ -2093,7 +2473,8 @@
       "userRole": "owner",
       "action": "USER_LOGOUT",
       "details": "Rahul Sharma signed out",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238009070-320",
@@ -2103,7 +2484,8 @@
       "userRole": "owner",
       "action": "USER_LOGIN",
       "details": "Rahul Sharma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238008937-618",
@@ -2113,7 +2495,8 @@
       "userRole": "telecaller",
       "action": "USER_LOGIN",
       "details": "Amit Verma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238008813-478",
@@ -2123,7 +2506,8 @@
       "userRole": "owner",
       "action": "USER_LOGIN",
       "details": "Rahul Sharma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789238003456-449",
@@ -2134,7 +2518,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied MANAGE_USERS to Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_USERS"
+      "actionType": "MANAGE_USERS",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237998249-943",
@@ -2144,7 +2529,8 @@
       "userRole": "telecaller",
       "action": "USER_LOGIN",
       "details": "Amit Verma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237985447-147",
@@ -2156,7 +2542,8 @@
       "details": "Updated compliance frequency & quiet hours rules",
       "ip": "127.0.0.1",
       "actionType": "MANAGE_COMPLIANCE_RULES",
-      "requiredApproval": false
+      "requiredApproval": false,
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237985442-14",
@@ -2167,7 +2554,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied MANAGE_COMPLIANCE_RULES to Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_COMPLIANCE_RULES"
+      "actionType": "MANAGE_COMPLIANCE_RULES",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237985429-41",
@@ -2178,7 +2566,8 @@
       "action": "LEAD_CREATED",
       "details": "Added new lead: WhatsApp Only Customer (Manual) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237985412-320",
@@ -2189,7 +2578,8 @@
       "action": "LEAD_CREATED",
       "details": "Added new lead: Abusive Contact (Manual) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237985370-237",
@@ -2200,7 +2590,8 @@
       "action": "LEAD_CREATED",
       "details": "Added new lead: Opted Out Customer (Manual) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237985082-393",
@@ -2211,7 +2602,8 @@
       "action": "USER_INVITED",
       "details": "Rahul Sharma created user Invited User 1581 with role telecaller",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_USERS"
+      "actionType": "MANAGE_USERS",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237984962-402",
@@ -2221,7 +2613,8 @@
       "userRole": "telecaller",
       "action": "USER_LOGIN",
       "details": "Amit Verma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237984842-383",
@@ -2231,7 +2624,8 @@
       "userRole": "owner",
       "action": "USER_LOGIN",
       "details": "Rahul Sharma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237984697-502",
@@ -2242,7 +2636,8 @@
       "action": "CSV_BULK_IMPORT",
       "details": "Imported 1 leads via CSV batch upload.",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237984692-552",
@@ -2253,7 +2648,8 @@
       "action": "LEAD_CREATED",
       "details": "Added new lead: Proto Test (Manual) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237984671-822",
@@ -2263,7 +2659,8 @@
       "userRole": "telecaller",
       "action": "USER_LOGOUT",
       "details": "Amit Verma signed out",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237984667-522",
@@ -2273,7 +2670,8 @@
       "userRole": "telecaller",
       "action": "USER_LOGIN",
       "details": "Amit Verma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237984415-161",
@@ -2284,7 +2682,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied MANAGE_POLICY to Priya Iyer",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_POLICY"
+      "actionType": "MANAGE_POLICY",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237984410-989",
@@ -2295,7 +2694,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied MANAGE_POLICY to Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_POLICY"
+      "actionType": "MANAGE_POLICY",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237984388-440",
@@ -2306,7 +2706,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied MANAGE_USERS to Priya Iyer",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_USERS"
+      "actionType": "MANAGE_USERS",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237984383-379",
@@ -2317,7 +2718,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied MANAGE_USERS to Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_USERS"
+      "actionType": "MANAGE_USERS",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237984379-932",
@@ -2328,7 +2730,8 @@
       "action": "BULK_LEAD_UPDATE",
       "details": "Bulk updated 1 leads -> Won",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237984374-773",
@@ -2339,7 +2742,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied lead CSV import for Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237984363-776",
@@ -2349,7 +2753,8 @@
       "userRole": "telecaller",
       "action": "USER_LOGIN",
       "details": "Amit Verma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237984213-692",
@@ -2360,7 +2765,8 @@
       "action": "ACCESS_DENIED",
       "details": "Denied EDIT on lead lead-103 for Amit Verma",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237984203-356",
@@ -2370,7 +2776,8 @@
       "userRole": "telecaller",
       "action": "USER_LOGIN",
       "details": "Sneha Kulkarni logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237984083-222",
@@ -2380,7 +2787,8 @@
       "userRole": "telecaller",
       "action": "USER_LOGIN",
       "details": "Amit Verma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237983961-284",
@@ -2390,7 +2798,8 @@
       "userRole": "tl",
       "action": "USER_LOGIN",
       "details": "Priya Iyer logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237983822-164",
@@ -2400,7 +2809,8 @@
       "userRole": "owner",
       "action": "USER_LOGIN",
       "details": "Rahul Sharma logged into DialPulse CRM",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237946835-328",
@@ -2411,7 +2821,8 @@
       "action": "LEAD_CREATED",
       "details": "Added new lead: Ananya Deshmukh (High Fatigue) (Website) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237946819-203",
@@ -2422,7 +2833,8 @@
       "action": "LEAD_CREATED",
       "details": "Added new lead: Rohan Verma (DND) (Website) assigned to Amit Verma [team-mumbai]",
       "ip": "127.0.0.1",
-      "actionType": "EDIT"
+      "actionType": "EDIT",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237946811-742",
@@ -2433,7 +2845,8 @@
       "action": "CUSTOM_FIELDS_UPDATED",
       "details": "Updated 1 custom lead fields.",
       "ip": "127.0.0.1",
-      "actionType": "MANAGE_POLICY"
+      "actionType": "MANAGE_POLICY",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1789237946806-254",
@@ -2443,7 +2856,8 @@
       "userRole": "owner",
       "action": "DATABASE_RESET",
       "details": "Restored default Indian SMB sample leads, calls, and tickets.",
-      "ip": "127.0.0.1"
+      "ip": "127.0.0.1",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-1",
@@ -2453,7 +2867,8 @@
       "userRole": "owner",
       "action": "SYSTEM_INITIALIZED",
       "details": "TeleCRM 2.0 database initialized with 8 sample leads and role assignments.",
-      "ip": "103.21.124.50"
+      "ip": "103.21.124.50",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-2",
@@ -2463,7 +2878,8 @@
       "userRole": "telecaller",
       "action": "LEAD_STAGE_CHANGED",
       "details": "Changed Vikram Malhotra stage from New to Contacted.",
-      "ip": "103.21.124.52"
+      "ip": "103.21.124.52",
+      "tenantId": "tenant-apex"
     },
     {
       "id": "aud-3",
@@ -2473,10 +2889,24 @@
       "userRole": "telecaller",
       "action": "CALL_LOGGED",
       "details": "Logged 3m 5s follow-up call with Rajesh K. Singhania.",
-      "ip": "103.21.124.88"
+      "ip": "103.21.124.88",
+      "tenantId": "tenant-apex"
     }
   ],
   "backups": [
+    {
+      "id": "backup-1789289476661",
+      "timestamp": "2026-09-13T08:51:16.662Z",
+      "name": "Hourly Auto-Snapshot",
+      "recordsCount": {
+        "leads": 36,
+        "calls": 7,
+        "messages": 6,
+        "tickets": 4
+      },
+      "fileSizeKb": 45,
+      "autoCreated": true
+    },
     {
       "id": "backup-1789232860340",
       "timestamp": "2026-09-12T17:07:40.342Z",
@@ -2623,6 +3053,46 @@
         "DELETE",
         "MANAGE_COMPLIANCE_RULES"
       ]
+    },
+    {
+      "role": "platform_admin",
+      "scope": "PLATFORM",
+      "actions": [
+        "VIEW",
+        "EDIT",
+        "REASSIGN",
+        "EXPORT",
+        "DELETE",
+        "MANAGE_USERS",
+        "MANAGE_POLICY",
+        "MANAGE_COMPLIANCE_RULES",
+        "PLATFORM_ADMIN",
+        "PLATFORM_IMPERSONATE"
+      ],
+      "requiresApproval": [
+        "PLATFORM_IMPERSONATE",
+        "DELETE"
+      ]
+    },
+    {
+      "role": "platform_support",
+      "scope": "PLATFORM",
+      "actions": [
+        "VIEW",
+        "PLATFORM_IMPERSONATE"
+      ],
+      "requiresApproval": [
+        "PLATFORM_IMPERSONATE"
+      ]
+    },
+    {
+      "role": "platform_security",
+      "scope": "PLATFORM",
+      "actions": [
+        "VIEW",
+        "EXPORT",
+        "PLATFORM_ADMIN"
+      ]
     }
   ],
   "pipelineStages": [
@@ -2682,5 +3152,130 @@
     "quietHoursEnd": "09:00",
     "enforceTimezone": "Asia/Kolkata (IST)",
     "maxCallsPerDay": 5
-  }
+  },
+  "tenants": [
+    {
+      "id": "tenant-apex",
+      "name": "Apex Realty & Financial Services",
+      "slug": "apex-realty",
+      "status": "active",
+      "createdAt": "2026-01-15T08:00:00.000Z",
+      "tier": "enterprise",
+      "primaryContactName": "Rahul Sharma",
+      "primaryContactEmail": "rahul@telecrm.in",
+      "leadCap": 50000,
+      "userCap": 100
+    },
+    {
+      "id": "tenant-zenith",
+      "name": "Zenith EdTech & Career Solutions",
+      "slug": "zenith-edtech",
+      "status": "active",
+      "createdAt": "2026-02-01T10:30:00.000Z",
+      "tier": "growth",
+      "primaryContactName": "Sameer Rao",
+      "primaryContactEmail": "sameer@zenithedtech.in",
+      "leadCap": 15000,
+      "userCap": 25
+    },
+    {
+      "id": "tenant-horizon",
+      "name": "Horizon Lending Partners",
+      "slug": "horizon-lending",
+      "status": "suspended",
+      "createdAt": "2026-02-10T14:00:00.000Z",
+      "suspendedAt": "2026-03-01T12:00:00.000Z",
+      "suspensionReason": "Overdue subscription compliance review and TRAI spam complaint investigation.",
+      "tier": "starter",
+      "primaryContactName": "Aditi Deshpande",
+      "primaryContactEmail": "aditi@horizonlending.in",
+      "leadCap": 5000,
+      "userCap": 10
+    }
+  ],
+  "impersonationSessions": [],
+  "securityAlerts": [
+    {
+      "id": "sec-alert-1",
+      "severity": "high",
+      "title": "Cross-Tenant Scope Breach Attempt Detected",
+      "description": "User in tenant-apex attempted to access lead lead-zen-201 belonging to tenant-zenith via direct ID request.",
+      "tenantId": "tenant-apex",
+      "sourceIp": "103.21.124.52",
+      "timestamp": "2026-09-13T07:15:16.657Z",
+      "resolved": false
+    },
+    {
+      "id": "sec-alert-2",
+      "severity": "medium",
+      "title": "Rapid Telecalling Rate Limit Warning",
+      "description": "Tenant Zenith recorded 15 consecutive API calls within a 10-second interval.",
+      "tenantId": "tenant-zenith",
+      "sourceIp": "103.21.124.99",
+      "timestamp": "2026-09-13T04:51:16.657Z",
+      "resolved": true
+    }
+  ],
+  "billingRecords": [
+    {
+      "id": "inv-apex-1",
+      "tenantId": "tenant-apex",
+      "invoiceId": "INV-2026-08-01-APEX",
+      "amount": 15000,
+      "currency": "INR",
+      "status": "paid",
+      "dueDate": "2026-08-15T00:00:00.000Z",
+      "paidAt": "2026-08-14T10:30:00.000Z"
+    },
+    {
+      "id": "inv-apex-2",
+      "tenantId": "tenant-apex",
+      "invoiceId": "INV-2026-09-01-APEX",
+      "amount": 15000,
+      "currency": "INR",
+      "status": "pending",
+      "dueDate": "2026-09-15T00:00:00.000Z"
+    },
+    {
+      "id": "inv-zenith-1",
+      "tenantId": "tenant-zenith",
+      "invoiceId": "INV-2026-09-01-ZEN",
+      "amount": 8000,
+      "currency": "INR",
+      "status": "paid",
+      "dueDate": "2026-09-15T00:00:00.000Z",
+      "paidAt": "2026-09-02T14:20:00.000Z"
+    },
+    {
+      "id": "inv-horizon-1",
+      "tenantId": "tenant-horizon",
+      "invoiceId": "INV-2026-08-01-HOR",
+      "amount": 3000,
+      "currency": "INR",
+      "status": "failed",
+      "dueDate": "2026-08-15T00:00:00.000Z"
+    }
+  ],
+  "featureFlags": [
+    {
+      "id": "flag-reporting-v2",
+      "key": "new_reporting_widget",
+      "name": "Advanced Reporting V2",
+      "description": "Enable the new React-based analytics dashboard with drill-down capabilities.",
+      "enabledGlobally": false,
+      "enabledForTenantIds": [
+        "tenant-apex"
+      ],
+      "rolloutPercentage": 10
+    },
+    {
+      "id": "flag-whatsapp-api",
+      "key": "whatsapp_cloud_api",
+      "name": "WhatsApp Cloud API Direct Integration",
+      "description": "Bypass legacy provider and use Meta direct Cloud API for WhatsApp.",
+      "enabledGlobally": true,
+      "enabledForTenantIds": [],
+      "rolloutPercentage": 100
+    }
+  ]
 }

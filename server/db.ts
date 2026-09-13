@@ -15,9 +15,24 @@ import {
   PipelineStageConfig,
   HourlyCallActivity,
   RepLeaderboardItem,
-  ContactFrequencyRules
+  ContactFrequencyRules,
+  Tenant,
+  ImpersonationSession,
+  SecurityAlert
 } from '../src/types';
-import { INITIAL_USERS, INITIAL_LEADS, INITIAL_CALLS, INITIAL_MESSAGES, INITIAL_TICKETS, INITIAL_AUDIT_LOGS, DEFAULT_PASSWORD_HASH } from './seedData';
+import {
+  INITIAL_USERS,
+  INITIAL_LEADS,
+  INITIAL_CALLS,
+  INITIAL_MESSAGES,
+  INITIAL_TICKETS,
+  INITIAL_AUDIT_LOGS,
+  INITIAL_TENANTS,
+  INITIAL_SECURITY_ALERTS,
+  INITIAL_BILLING_RECORDS,
+  INITIAL_FEATURE_FLAGS,
+  DEFAULT_PASSWORD_HASH
+} from './seedData';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
@@ -72,6 +87,23 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermission[] = [
     scope: 'COMPANY',
     actions: ['VIEW', 'EDIT', 'EXPORT', 'DELETE', 'MANAGE_USERS', 'MANAGE_POLICY', 'MANAGE_COMPLIANCE_RULES'],
     requiresApproval: ['DELETE', 'MANAGE_COMPLIANCE_RULES']
+  },
+  {
+    role: 'platform_admin',
+    scope: 'PLATFORM',
+    actions: ['VIEW', 'EDIT', 'REASSIGN', 'EXPORT', 'DELETE', 'MANAGE_USERS', 'MANAGE_POLICY', 'MANAGE_COMPLIANCE_RULES', 'PLATFORM_ADMIN', 'PLATFORM_IMPERSONATE'],
+    requiresApproval: ['PLATFORM_IMPERSONATE', 'DELETE']
+  },
+  {
+    role: 'platform_support',
+    scope: 'PLATFORM',
+    actions: ['VIEW', 'PLATFORM_IMPERSONATE'],
+    requiresApproval: ['PLATFORM_IMPERSONATE']
+  },
+  {
+    role: 'platform_security',
+    scope: 'PLATFORM',
+    actions: ['VIEW', 'EXPORT', 'PLATFORM_ADMIN']
   }
 ];
 
@@ -106,17 +138,44 @@ export function loadDatabase(): DatabaseState {
       const raw = fs.readFileSync(DB_FILE, 'utf-8');
       dbState = JSON.parse(raw);
       let stateChanged = false;
+
+      // Ensure tenants array is present
+      if (!dbState.tenants || dbState.tenants.length === 0) {
+        dbState.tenants = [...INITIAL_TENANTS];
+        stateChanged = true;
+      }
+
+      // Ensure impersonationSessions array is present
+      if (!dbState.impersonationSessions) {
+        dbState.impersonationSessions = [];
+        stateChanged = true;
+      }
+
+      // Ensure securityAlerts array is present
+      if (!dbState.securityAlerts || dbState.securityAlerts.length === 0) {
+        dbState.securityAlerts = [...INITIAL_SECURITY_ALERTS];
+        stateChanged = true;
+      }
+
+      if (!dbState.billingRecords || dbState.billingRecords.length === 0) {
+        dbState.billingRecords = [...INITIAL_BILLING_RECORDS];
+        stateChanged = true;
+      }
+
+      if (!dbState.featureFlags || dbState.featureFlags.length === 0) {
+        dbState.featureFlags = [...INITIAL_FEATURE_FLAGS];
+        stateChanged = true;
+      }
+
       if (!dbState.customFields || dbState.customFields.length === 0) {
         dbState.customFields = [...DEFAULT_CUSTOM_FIELDS];
       }
       
-      // Migrate rolePermissions if using old 3-role shape or missing actions
-      const hasOldRoles = !dbState.rolePermissions ||
-        dbState.rolePermissions.length === 0 ||
-        dbState.rolePermissions.some(p => (p as any).canViewAllLeads !== undefined && !p.actions) ||
-        !dbState.rolePermissions.some(p => p.role === 'owner');
+      // Migrate rolePermissions if missing platform roles
+      const hasPlatformRoles = dbState.rolePermissions &&
+        dbState.rolePermissions.some(p => p.role === 'platform_admin');
 
-      if (hasOldRoles) {
+      if (!hasPlatformRoles) {
         dbState.rolePermissions = [...DEFAULT_ROLE_PERMISSIONS];
         stateChanged = true;
       }
@@ -132,44 +191,31 @@ export function loadDatabase(): DatabaseState {
         stateChanged = true;
       }
 
-      // Migrate existing users to the 6-role multi-tier model
-      for (const u of dbState.users) {
-        if (!u.passwordHash) {
-          u.passwordHash = DEFAULT_PASSWORD_HASH;
+      // Ensure platform staff accounts exist
+      for (const iu of INITIAL_USERS) {
+        const existing = dbState.users.find(u => u.id === iu.id || u.email.toLowerCase() === iu.email.toLowerCase());
+        if (!existing) {
+          dbState.users.push(iu);
           stateChanged = true;
-        }
-
-        // Migrate 'Admin' -> 'owner'
-        if (u.role === ('Admin' as any)) {
-          u.role = 'owner';
-          u.title = u.title || 'Owner & Managing Director';
-          stateChanged = true;
-        } else if (u.role === ('Team Lead' as any)) {
-          // Migrate 'Team Lead' -> 'tl'
-          u.role = 'tl';
-          if (!u.teamId) u.teamId = 'team-mumbai';
-          stateChanged = true;
-        } else if (u.role === ('Rep' as any)) {
-          // Migrate 'Rep' -> 'telecaller'
-          u.role = 'telecaller';
-          if (!u.teamId) {
-            u.teamId = (u.id === 'usr-4' || u.email === 'sneha@telecrm.in') ? 'team-delhi' : 'team-mumbai';
+        } else {
+          // Sync tenantId and isPlatformStaff if missing
+          if (iu.tenantId && !existing.tenantId) {
+            existing.tenantId = iu.tenantId;
+            stateChanged = true;
           }
-          stateChanged = true;
+          if (iu.isPlatformStaff && !existing.isPlatformStaff) {
+            existing.isPlatformStaff = true;
+            stateChanged = true;
+          }
         }
       }
 
-      // Ensure new accounts for all 6 roles exist (cto, it, tl_head)
-      const missingInitialUsers = INITIAL_USERS.filter(
-        iu => !dbState.users.some(u => u.email.toLowerCase() === iu.email.toLowerCase())
-      );
-      if (missingInitialUsers.length > 0) {
-        dbState.users.push(...missingInitialUsers);
-        stateChanged = true;
-      }
-
-      // Ensure all leads have version, updatedAt, and teamId
+      // Ensure all leads have tenantId, version, updatedAt, and teamId
       for (const l of dbState.leads) {
+        if (!l.tenantId) {
+          l.tenantId = 'tenant-apex';
+          stateChanged = true;
+        }
         if (!l.version) {
           l.version = 1;
           stateChanged = true;
@@ -185,6 +231,66 @@ export function loadDatabase(): DatabaseState {
         }
       }
 
+      // Ensure missing initial leads from other tenants (like Zenith) exist
+      for (const il of INITIAL_LEADS) {
+        if (!dbState.leads.some(l => l.id === il.id)) {
+          dbState.leads.push({ ...il });
+          stateChanged = true;
+        }
+      }
+
+      // Ensure calls have tenantId
+      for (const c of dbState.calls) {
+        if (!c.tenantId) {
+          const lead = dbState.leads.find(l => l.id === c.leadId);
+          c.tenantId = lead?.tenantId || 'tenant-apex';
+          stateChanged = true;
+        }
+      }
+      for (const ic of INITIAL_CALLS) {
+        if (!dbState.calls.some(c => c.id === ic.id)) {
+          dbState.calls.push({ ...ic });
+          stateChanged = true;
+        }
+      }
+
+      // Ensure messages have tenantId
+      for (const m of dbState.messages) {
+        if (!m.tenantId) {
+          const lead = dbState.leads.find(l => l.id === m.leadId);
+          m.tenantId = lead?.tenantId || 'tenant-apex';
+          stateChanged = true;
+        }
+      }
+      for (const im of INITIAL_MESSAGES) {
+        if (!dbState.messages.some(m => m.id === im.id)) {
+          dbState.messages.push({ ...im });
+          stateChanged = true;
+        }
+      }
+
+      // Ensure tickets have tenantId
+      for (const t of dbState.tickets) {
+        if (!t.tenantId) {
+          t.tenantId = 'tenant-apex';
+          stateChanged = true;
+        }
+      }
+      for (const it of INITIAL_TICKETS) {
+        if (!dbState.tickets.some(t => t.id === it.id)) {
+          dbState.tickets.push({ ...it });
+          stateChanged = true;
+        }
+      }
+
+      // Ensure audit logs have tenantId
+      for (const a of dbState.auditLogs) {
+        if (!a.tenantId) {
+          a.tenantId = 'tenant-apex';
+          stateChanged = true;
+        }
+      }
+
       if (stateChanged) {
         saveDatabase();
       }
@@ -196,6 +302,7 @@ export function loadDatabase(): DatabaseState {
 
   // Initialize fresh database
   dbState = {
+    tenants: [...INITIAL_TENANTS],
     users: [...INITIAL_USERS],
     leads: INITIAL_LEADS.map(l => ({
       ...l,
@@ -211,7 +318,11 @@ export function loadDatabase(): DatabaseState {
     rolePermissions: [...DEFAULT_ROLE_PERMISSIONS],
     pipelineStages: [...DEFAULT_PIPELINE_STAGES],
     autoAssignmentEnabled: true,
-    complianceRules: { ...DEFAULT_FREQUENCY_RULES }
+    complianceRules: { ...DEFAULT_FREQUENCY_RULES },
+    impersonationSessions: [],
+    securityAlerts: [...INITIAL_SECURITY_ALERTS],
+    billingRecords: [...INITIAL_BILLING_RECORDS],
+    featureFlags: [...INITIAL_FEATURE_FLAGS]
   };
 
   saveDatabase();
@@ -256,12 +367,14 @@ export function getDb(): DatabaseState {
 export function logAudit(
   action: string,
   details: string,
-  user?: { id?: string; name?: string; role?: string },
+  user?: { id?: string; name?: string; role?: string; tenantId?: string },
   ip: string = '127.0.0.1',
-  meta?: { scope?: any; actionType?: any; requiredApproval?: boolean }
+  meta?: { scope?: any; actionType?: any; requiredApproval?: boolean; tenantId?: string }
 ) {
+  const targetTenantId = meta?.tenantId || user?.tenantId || (user?.role?.startsWith('platform_') ? undefined : 'tenant-apex');
   const log: AuditLog = {
     id: `aud-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    tenantId: targetTenantId,
     timestamp: new Date().toISOString(),
     userId: user?.id || 'system',
     userName: user?.name || 'System Auto',
@@ -274,8 +387,8 @@ export function logAudit(
     ...(meta?.requiredApproval !== undefined ? { requiredApproval: meta.requiredApproval } : {})
   };
   dbState.auditLogs.unshift(log);
-  if (dbState.auditLogs.length > 500) {
-    dbState.auditLogs = dbState.auditLogs.slice(0, 500);
+  if (dbState.auditLogs.length > 1000) {
+    dbState.auditLogs = dbState.auditLogs.slice(0, 1000);
   }
   saveDatabase();
   return log;
@@ -296,6 +409,7 @@ export function createBackup(name: string, autoCreated = false, user?: { id?: st
       version: '2.0.0'
     },
     data: {
+      tenants: dbState.tenants,
       users: dbState.users,
       leads: dbState.leads,
       calls: dbState.calls,
@@ -345,6 +459,7 @@ export function restoreBackup(backupId: string, user?: { id?: string; name?: str
     const raw = fs.readFileSync(backupFilePath, 'utf-8');
     const parsed = JSON.parse(raw);
     if (parsed && parsed.data) {
+      if (parsed.data.tenants) dbState.tenants = parsed.data.tenants;
       dbState.leads = parsed.data.leads || [];
       dbState.calls = parsed.data.calls || [];
       dbState.messages = parsed.data.messages || [];
@@ -364,6 +479,7 @@ export function restoreBackup(backupId: string, user?: { id?: string; name?: str
 
 export function resetDatabase(user?: { id?: string; name?: string; role?: string }) {
   dbState = {
+    tenants: [...INITIAL_TENANTS],
     users: [...INITIAL_USERS],
     leads: INITIAL_LEADS.map(l => ({
       ...l,
@@ -378,18 +494,23 @@ export function resetDatabase(user?: { id?: string; name?: string; role?: string
     customFields: dbState?.customFields || [...DEFAULT_CUSTOM_FIELDS],
     rolePermissions: dbState?.rolePermissions || [...DEFAULT_ROLE_PERMISSIONS],
     pipelineStages: dbState?.pipelineStages || [...DEFAULT_PIPELINE_STAGES],
-    autoAssignmentEnabled: dbState?.autoAssignmentEnabled ?? true
+    autoAssignmentEnabled: dbState?.autoAssignmentEnabled ?? true,
+    complianceRules: { ...DEFAULT_FREQUENCY_RULES },
+    impersonationSessions: [],
+    securityAlerts: [...INITIAL_SECURITY_ALERTS],
+    billingRecords: [...INITIAL_BILLING_RECORDS],
+    featureFlags: [...INITIAL_FEATURE_FLAGS]
   };
   saveDatabase();
   logAudit('DATABASE_RESET', 'Restored default Indian SMB sample leads, calls, and tickets.', user);
   return dbState;
 }
 
-// Compute real report metrics from database records
-export function calculateReports(): ReportStats {
-  const leads = dbState.leads;
-  const calls = dbState.calls;
-  const users = dbState.users;
+// Compute real report metrics from database records scoped to tenant
+export function calculateReports(tenantId?: string): ReportStats {
+  const leads = tenantId ? dbState.leads.filter(l => l.tenantId === tenantId) : dbState.leads;
+  const calls = tenantId ? dbState.calls.filter(c => c.tenantId === tenantId) : dbState.calls;
+  const users = tenantId ? dbState.users.filter(u => u.tenantId === tenantId) : dbState.users;
 
   const totalLeads = leads.length;
   const leadsWon = leads.filter(l => l.stage === 'Won').length;
@@ -454,7 +575,8 @@ export function calculateReports(): ReportStats {
   }
 
   // WhatsApp delivery rate computation
-  const outboundMessages = dbState.messages.filter(m => m.direction === 'outbound');
+  const allMessages = tenantId ? dbState.messages.filter(m => m.tenantId === tenantId) : dbState.messages;
+  const outboundMessages = allMessages.filter(m => m.direction === 'outbound');
   const deliveredCount = outboundMessages.filter(m => m.deliveryStatus === 'Delivered').length;
   const whatsappDeliveryRate = outboundMessages.length > 0
     ? Math.round((deliveredCount / outboundMessages.length) * 100)
@@ -537,7 +659,7 @@ export function calculateReports(): ReportStats {
   };
 }
 
-// Simulated automated backup scheduler (runs periodically or on demand)
+// Simulated automated backup scheduler
 setInterval(() => {
   if (dbState && dbState.leads.length > 0) {
     const lastBackup = dbState.backups[0];
@@ -546,4 +668,4 @@ setInterval(() => {
       createBackup('Hourly Auto-Snapshot', true);
     }
   }
-}, 1000 * 60 * 30); // check every 30 mins
+}, 1000 * 60 * 30);

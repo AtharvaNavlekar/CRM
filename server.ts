@@ -65,6 +65,19 @@ import {
   generateRobotsTxtContent,
   getAiCrawlerBlockHtml
 } from './server/crawlerAgents';
+import { enforceTenantScope, verifyTenantActive, scopeToTenant } from './server/tenantMiddleware';
+
+// Middleware to prevent platform staff from accessing raw data without an impersonation session
+const enforceImpersonationForRawData = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (req.isPlatformStaff && !req.impersonationSession) {
+    logAudit('ACCESS_DENIED', `Denied raw data access to ${req.user!.name || req.user!.id} (No active impersonation session)`, req.user, req.ip || '127.0.0.1', { actionType: 'VIEW' });
+    return res.status(403).json({
+      error: 'Platform staff must have an active impersonation session to view or modify raw tenant data.',
+      code: 'IMPERSONATION_REQUIRED'
+    });
+  }
+  next();
+};
 
 // ============================================================================
 // GEMINI API & SECRETS CONFIGURATION NOTICE (Priority 6)
@@ -257,7 +270,14 @@ async function startServer() {
 
   // 2. Global Authentication Middleware (validates JWT tokens in Authorization header)
   app.use('/api', authenticateToken);
+  app.use('/api', enforceTenantScope);
+  app.use('/api', verifyTenantActive);
 
+  // Apply impersonation enforcement for raw data routes
+  app.use('/api/leads', enforceImpersonationForRawData);
+  app.use('/api/calls', enforceImpersonationForRawData);
+  app.use('/api/messages', enforceImpersonationForRawData);
+  app.use('/api/tickets', enforceImpersonationForRawData);
 
   // Health API
   app.get('/api/health', (req, res) => {
@@ -351,7 +371,11 @@ async function startServer() {
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    res.json({ user: sanitizeUser(user) });
+    const sanitized = sanitizeUser(user);
+    if (req.isPlatformStaff) {
+       (sanitized as any).impersonationSession = req.impersonationSession || null;
+    }
+    res.json({ user: sanitized });
   });
 
   app.post('/api/auth/logout', (req, res) => {
@@ -1697,6 +1721,299 @@ async function startServer() {
         code: 'TRANSCRIPTION_FAILED'
       });
     }
+  });
+
+  // ==========================================
+  // PLATFORM OPERATIONS (Steps 1-5)
+  // ==========================================
+
+  // Step 1: Tenant directory and lifecycle control
+  app.get('/api/platform/tenants', (req, res) => {
+    if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
+    const db = getDb();
+    const result = db.tenants?.map(t => {
+      const tUsers = db.users.filter(u => u.tenantId === t.id).length;
+      const tLeads = db.leads.filter(l => l.tenantId === t.id).length;
+      
+      const thirtyDaysAgo = Date.now() - 30 * 24 * 3600 * 1000;
+      const tCalls = db.calls.filter(c => c.tenantId === t.id && new Date(c.timestamp).getTime() >= thirtyDaysAgo).length;
+
+      return {
+        ...t,
+        userCount: tUsers,
+        leadCount: tLeads,
+        callVolume30d: tCalls
+      };
+    }) || [];
+    res.json(result);
+  });
+
+  app.get('/api/platform/tenants/:id', (req, res) => {
+    if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
+    const db = getDb();
+    const t = db.tenants?.find(t => t.id === req.params.id);
+    if (!t) return res.status(404).json({ error: 'Tenant not found' });
+
+    // Aggregate metrics (no raw content)
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 3600 * 1000;
+    const calls30d = db.calls.filter(c => c.tenantId === t.id && new Date(c.timestamp).getTime() >= thirtyDaysAgo);
+    
+    const trend = [];
+    for (let i = 6; i >= 0; i--) {
+       const start = new Date(Date.now() - i*24*3600*1000).setHours(0,0,0,0);
+       const end = start + 24*3600*1000;
+       const cCount = calls30d.filter(c => new Date(c.timestamp).getTime() >= start && new Date(c.timestamp).getTime() < end).length;
+       trend.push({ date: new Date(start).toISOString().split('T')[0], calls: cCount });
+    }
+
+    const tTickets = db.tickets.filter(tk => tk.tenantId === t.id);
+    const ticketsByStatus = {
+      Open: tTickets.filter(tk => tk.status === 'Open').length,
+      InProgress: tTickets.filter(tk => tk.status === 'In Progress').length,
+      Resolved: tTickets.filter(tk => tk.status === 'Resolved').length
+    };
+
+    res.json({
+      ...t,
+      trend,
+      ticketsByStatus
+    });
+  });
+
+  app.post('/api/platform/tenants/:id/suspend', (req, res) => {
+    if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
+    if (!authorize(req.user!, 'PLATFORM_ADMIN', {})) {
+      return res.status(403).json({ error: 'Forbidden: Requires PLATFORM_ADMIN' });
+    }
+    const { reason, confirmed } = req.body;
+    if (!confirmed) return res.status(400).json({ error: 'Must explicitly confirm suspension' });
+    if (!reason) return res.status(400).json({ error: 'Reason required for suspension' });
+
+    const db = getDb();
+    const t = db.tenants?.find(t => t.id === req.params.id);
+    if (!t) return res.status(404).json({ error: 'Tenant not found' });
+
+    t.status = 'suspended';
+    t.suspendedAt = new Date().toISOString();
+    t.suspensionReason = reason;
+
+    saveDatabase();
+    logAudit('TENANT_SUSPENDED', `Suspended tenant ${t.name}. Reason: ${reason}`, req.user, getClientIp(req), { tenantId: 'platform' });
+    res.json({ success: true, tenant: t });
+  });
+
+  app.post('/api/platform/tenants/:id/reactivate', (req, res) => {
+    if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
+    if (!authorize(req.user!, 'PLATFORM_ADMIN', {})) {
+      return res.status(403).json({ error: 'Forbidden: Requires PLATFORM_ADMIN' });
+    }
+    const { confirmed } = req.body;
+    if (!confirmed) return res.status(400).json({ error: 'Must explicitly confirm reactivation' });
+
+    const db = getDb();
+    const t = db.tenants?.find(t => t.id === req.params.id);
+    if (!t) return res.status(404).json({ error: 'Tenant not found' });
+
+    t.status = 'active';
+    t.suspendedAt = undefined;
+    t.suspensionReason = undefined;
+
+    saveDatabase();
+    logAudit('TENANT_REACTIVATED', `Reactivated tenant ${t.name}.`, req.user, getClientIp(req), { tenantId: 'platform' });
+    res.json({ success: true, tenant: t });
+  });
+
+  // Step 2: Cross-tenant Security Operations Center
+  app.get('/api/platform/soc/alerts', (req, res) => {
+    if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
+    const db = getDb();
+    
+    const alerts = (db.securityAlerts || []).map(a => {
+       const t = db.tenants?.find(t => t.id === a.tenantId);
+       return { ...a, tenantName: t?.name || a.tenantId };
+    });
+
+    res.json({ alerts, impersonationSessions: db.impersonationSessions || [] });
+  });
+
+  // Step 3: Impersonation
+  app.post('/api/platform/impersonate', (req, res) => {
+    if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
+    if (!authorize(req.user!, 'PLATFORM_IMPERSONATE', {})) {
+       return res.status(403).json({ error: 'Insufficient platform role to impersonate.' });
+    }
+
+    const { targetTenantId, targetUserId, reason } = req.body;
+    if (!targetTenantId) return res.status(400).json({ error: 'Target tenant ID required' });
+    if (!reason || reason.trim() === '') return res.status(400).json({ error: 'Non-empty reason required' });
+
+    const db = getDb();
+    const t = db.tenants?.find(t => t.id === targetTenantId);
+    if (!t) return res.status(404).json({ error: 'Target tenant not found' });
+
+    let tUser;
+    if (targetUserId) {
+       tUser = db.users.find(u => u.id === targetUserId && u.tenantId === targetTenantId);
+       if (!tUser) return res.status(404).json({ error: 'Target user not found in this tenant' });
+    }
+
+    const session: any = {
+      id: `imp-${crypto.randomUUID()}`,
+      platformUserId: req.user!.id,
+      platformUserName: req.user!.name,
+      platformUserRole: req.user!.role,
+      targetTenantId,
+      targetTenantName: t.name,
+      targetUserId: tUser?.id || '',
+      targetUserName: tUser?.name || 'Tenant Admin Default',
+      targetUserRole: tUser?.role || 'owner',
+      reason,
+      startedAt: new Date().toISOString(),
+      active: true,
+      ip: getClientIp(req)
+    };
+
+    if (!db.impersonationSessions) db.impersonationSessions = [];
+    
+    db.impersonationSessions.filter(s => s.platformUserId === req.user!.id && s.active).forEach(s => {
+      s.active = false;
+      s.endedAt = new Date().toISOString();
+    });
+
+    db.impersonationSessions.push(session);
+    saveDatabase();
+
+    logAudit('IMPERSONATION_STARTED', `Started impersonating ${t.name}. Reason: ${reason}`, req.user, getClientIp(req), { tenantId: 'platform' });
+    res.json({ success: true, session });
+  });
+
+  app.post('/api/platform/impersonate/end', (req, res) => {
+    if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
+    
+    const db = getDb();
+    const active = db.impersonationSessions?.find(s => s.platformUserId === req.user!.id && s.active);
+    if (active) {
+       active.active = false;
+       active.endedAt = new Date().toISOString();
+       saveDatabase();
+       logAudit('IMPERSONATION_ENDED', `Ended impersonating ${active.targetTenantName}.`, req.user, getClientIp(req), { tenantId: 'platform' });
+    }
+    res.json({ success: true });
+  });
+
+  // Step 4: Billing across tenants
+  app.get('/api/platform/billing', (req, res) => {
+    if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
+    const db = getDb();
+    
+    const tenants = db.tenants || [];
+    const rates: Record<string, number> = {
+      trial: 0,
+      starter: 5000,
+      growth: 15000,
+      enterprise: 50000
+    };
+
+    let totalMRR = 0;
+    const tierCounts = { trial: 0, starter: 0, growth: 0, enterprise: 0 };
+    
+    tenants.forEach(t => {
+      if (t.status === 'active') {
+         const tier = t.tier || 'starter';
+         totalMRR += rates[tier] || 0;
+         if (tierCounts[tier] !== undefined) tierCounts[tier]++;
+      }
+    });
+
+    const records = db.billingRecords || [];
+    const invoicesWithNames = records.map(r => {
+       const t = tenants.find(t => t.id === r.tenantId);
+       return { ...r, tenantName: t?.name || r.tenantId };
+    }).sort((a,b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime());
+
+    const prioritizedInvoices = invoicesWithNames.filter(r => r.status === 'overdue' || r.status === 'failed');
+    
+    res.json({
+       totalMRR,
+       tierCounts,
+       prioritizedInvoices,
+       allInvoices: invoicesWithNames
+    });
+  });
+
+  app.post('/api/platform/billing/:id/mark-paid', (req, res) => {
+    if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
+    if (!authorize(req.user!, 'PLATFORM_ADMIN', {})) {
+      return res.status(403).json({ error: 'Forbidden: Requires PLATFORM_ADMIN' });
+    }
+
+    const db = getDb();
+    const inv = db.billingRecords?.find(b => b.id === req.params.id);
+    if (!inv) return res.status(404).json({ error: 'Invoice not found' });
+    
+    inv.status = 'paid';
+    inv.paidAt = new Date().toISOString();
+    saveDatabase();
+    
+    logAudit('INVOICE_PAID', `Marked invoice ${inv.invoiceId} for ${inv.tenantId} as paid.`, req.user, getClientIp(req), { tenantId: 'platform' });
+    res.json({ success: true, invoice: inv });
+  });
+
+  // Step 5: Feature-flag / release control
+  app.get('/api/platform/features', (req, res) => {
+    if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
+    const db = getDb();
+    res.json(db.featureFlags || []);
+  });
+
+  app.put('/api/platform/features/:id', (req, res) => {
+    if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
+    if (!authorize(req.user!, 'PLATFORM_ADMIN', {})) {
+      return res.status(403).json({ error: 'Forbidden: Requires PLATFORM_ADMIN' });
+    }
+
+    const db = getDb();
+    const flag = db.featureFlags?.find(f => f.id === req.params.id);
+    if (!flag) return res.status(404).json({ error: 'Feature flag not found' });
+
+    const oldState = { ...flag };
+    const { enabledGlobally, enabledForTenantIds, rolloutPercentage } = req.body;
+    
+    if (enabledGlobally !== undefined) flag.enabledGlobally = enabledGlobally;
+    if (enabledForTenantIds !== undefined) flag.enabledForTenantIds = enabledForTenantIds;
+    if (rolloutPercentage !== undefined) flag.rolloutPercentage = rolloutPercentage;
+
+    saveDatabase();
+    
+    logAudit('FEATURE_FLAG_UPDATED', `Updated flag ${flag.key} from G:${oldState.enabledGlobally} to G:${flag.enabledGlobally}`, req.user, getClientIp(req), { tenantId: 'platform' });
+    res.json({ success: true, flag });
+  });
+
+  // Helper endpoint to check a flag for a specific tenant (can be called by frontend)
+  app.get('/api/features/check', (req, res) => {
+    const { key, tenantId } = req.query;
+    if (!key || !tenantId) return res.status(400).json({ error: 'key and tenantId required' });
+    
+    const db = getDb();
+    const flag = db.featureFlags?.find(f => f.key === key);
+    if (!flag) return res.json({ enabled: false });
+
+    if (flag.enabledForTenantIds?.includes(tenantId as string)) {
+       return res.json({ enabled: true });
+    }
+    
+    if (flag.rolloutPercentage !== undefined && flag.rolloutPercentage > 0) {
+       const hashStr = `${tenantId}-${key}`;
+       let hash = 0;
+       for (let i = 0; i < hashStr.length; i++) {
+          hash = ((hash << 5) - hash) + hashStr.charCodeAt(i);
+          hash |= 0;
+       }
+       const val = Math.abs(hash) % 100;
+       if (val < flag.rolloutPercentage) return res.json({ enabled: true });
+    }
+
+    res.json({ enabled: flag.enabledGlobally });
   });
 
   // Vite middleware for development vs static build in production

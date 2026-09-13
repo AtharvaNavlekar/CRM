@@ -28,6 +28,7 @@ export type NavView =
   | 'whatsapp'
   | 'support'
   | 'activity'
+  | 'platform'
   | 'settings';
 
 interface SidebarProps {
@@ -146,6 +147,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
       badgeColor: 'bg-[#00695C] text-white',
       desc: 'Security & Event Trail'
     },
+    ...(currentUser?.isPlatformStaff ? [{
+      id: 'platform' as NavView,
+      label: 'Platform Ops',
+      shortLabel: 'Ops',
+      icon: Shield,
+      badge: 'Admin',
+      badgeColor: 'bg-indigo-600 text-white',
+      desc: 'Multi-Tenant Control'
+    }] : []),
     {
       id: 'settings' as NavView,
       label: 'Admin Settings',

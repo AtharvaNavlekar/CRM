@@ -1,4 +1,4 @@
-export type ViewScope = 'SELF' | 'TEAM' | 'ALL_TEAMS' | 'SYSTEM' | 'COMPANY';
+export type ViewScope = 'SELF' | 'TEAM' | 'ALL_TEAMS' | 'SYSTEM' | 'COMPANY' | 'PLATFORM';
 
 export type Action =
   | 'VIEW'
@@ -8,7 +8,9 @@ export type Action =
   | 'DELETE'
   | 'MANAGE_USERS'
   | 'MANAGE_POLICY'
-  | 'MANAGE_COMPLIANCE_RULES';
+  | 'MANAGE_COMPLIANCE_RULES'
+  | 'PLATFORM_ADMIN'
+  | 'PLATFORM_IMPERSONATE';
 
 export type UserRole =
   | 'telecaller'
@@ -16,19 +18,77 @@ export type UserRole =
   | 'tl_head'
   | 'it'
   | 'owner'
-  | 'cto';
+  | 'cto'
+  | 'platform_admin'
+  | 'platform_support'
+  | 'platform_security';
+
+export interface Tenant {
+  id: string;
+  name: string;
+  slug: string;
+  status: 'active' | 'suspended' | 'trial' | 'provisioning';
+  createdAt: string;
+  updatedAt?: string;
+  suspendedAt?: string;
+  suspensionReason?: string;
+  tier?: 'starter' | 'growth' | 'enterprise';
+  primaryContactName?: string;
+  primaryContactEmail?: string;
+  leadCap?: number;
+  userCap?: number;
+}
+
+export interface ImpersonationSession {
+  id: string;
+  platformUserId: string;
+  platformUserName: string;
+  platformUserRole: string;
+  targetTenantId: string;
+  targetTenantName: string;
+  targetUserId: string;
+  targetUserName: string;
+  targetUserRole: string;
+  reason: string;
+  startedAt: string;
+  endedAt?: string;
+  active: boolean;
+  ip: string;
+}
+
+export interface SecurityAlert {
+  id: string;
+  timestamp: string;
+  type?: 'CROSS_TENANT_ACCESS_ATTEMPT' | 'UNAUTHORIZED_SCOPE' | 'RATE_LIMIT_EXCEEDED' | 'SUSPICIOUS_LOGIN' | 'CRAWLER_BOT_BLOCKED';
+  title?: string;
+  description?: string;
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  tenantId?: string;
+  tenantName?: string;
+  userId?: string;
+  userName?: string;
+  ip?: string;
+  sourceIp?: string;
+  details?: string;
+  path?: string;
+  resolved?: boolean;
+}
 
 export interface Team {
   id: string;
   name: string;
   location: string;
+  tenantId?: string;
 }
 
 export interface User {
   id: string;
+  tenantId?: string;           // Scoped to tenant (empty/undefined for global platform staff)
   name: string;
   email: string;
   role: UserRole;
+  isPlatformStaff?: boolean;   // True for platform staff accounts
+  impersonationSession?: ImpersonationSession | null; // For platform staff
   passwordHash?: string;
   avatar?: string;
   title?: string;
@@ -59,6 +119,7 @@ export interface LeadPreferences {
 
 export interface Lead {
   id: string;
+  tenantId?: string; // Multi-tenant isolation scope
   name: string;
   phone: string;
   source: LeadSource;
@@ -91,6 +152,7 @@ export type CallOutcome = 'Interested' | 'Follow-up' | 'Not interested' | 'Conve
 
 export interface Call {
   id: string;
+  tenantId?: string; // Multi-tenant isolation scope
   leadId: string;
   leadName: string;
   leadPhone: string;
@@ -108,6 +170,7 @@ export type DeliveryStatus = 'Queued' | 'Sent' | 'Delivered' | 'Failed-Retrying'
 
 export interface Message {
   id: string;
+  tenantId?: string; // Multi-tenant isolation scope
   leadId: string;
   direction: MessageDirection;
   text: string;
@@ -129,6 +192,7 @@ export interface TicketReply {
 
 export interface Ticket {
   id: string;
+  tenantId?: string; // Multi-tenant isolation scope
   subject: string;
   status: TicketStatus;
   createdDate: string; // ISO string
@@ -142,6 +206,7 @@ export interface Ticket {
 
 export interface AuditLog {
   id: string;
+  tenantId?: string; // Multi-tenant isolation scope ('platform' for platform-level actions)
   timestamp: string;
   userId: string;
   userName: string;
@@ -195,6 +260,7 @@ export interface PipelineStageConfig {
 }
 
 export interface DatabaseState {
+  tenants?: Tenant[];
   users: User[];
   leads: Lead[];
   calls: Call[];
@@ -207,6 +273,31 @@ export interface DatabaseState {
   pipelineStages?: PipelineStageConfig[];
   autoAssignmentEnabled?: boolean;
   complianceRules?: ContactFrequencyRules;
+  impersonationSessions?: ImpersonationSession[];
+  securityAlerts?: SecurityAlert[];
+  billingRecords?: BillingRecord[];
+  featureFlags?: FeatureFlag[];
+}
+
+export interface BillingRecord {
+  id: string;
+  tenantId: string;
+  invoiceId: string;
+  amount: number;
+  currency: string;
+  status: 'paid' | 'pending' | 'overdue' | 'failed';
+  dueDate: string;
+  paidAt?: string;
+}
+
+export interface FeatureFlag {
+  id: string;
+  key: string;               // e.g., 'new_reporting_widget'
+  name: string;
+  description: string;
+  enabledGlobally: boolean;
+  enabledForTenantIds: string[]; // explicit per-tenant overrides
+  rolloutPercentage?: number;    // optional gradual rollout, 0-100
 }
 
 export interface HourlyCallActivity {
@@ -284,6 +375,7 @@ export interface CallReasonTag {
 }
 
 export interface ContactFrequencyRules {
+  tenantId?: string;
   callCapMaxAttempts: number;
   callCapDays: number;
   whatsAppCapMaxAttempts: number;
@@ -298,6 +390,7 @@ export interface ContactFrequencyRules {
 
 export interface ChannelRoutingRule {
   id: string;
+  tenantId?: string;
   pipelineStageOrCampaign: string;
   primaryChannel: 'WhatsApp' | 'Call' | 'SMS';
   waitPeriodHours: number;
@@ -309,6 +402,7 @@ export interface ChannelRoutingRule {
 
 export interface ComplianceWatchCategory {
   id: string;
+  tenantId?: string;
   categoryName: string;
   volumeCount: number;
   volumeChangePercent: number; // e.g. +85%
