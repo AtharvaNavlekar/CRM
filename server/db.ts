@@ -32,7 +32,7 @@ import {
   INITIAL_BILLING_RECORDS,
   INITIAL_FEATURE_FLAGS,
   DEFAULT_PASSWORD_HASH
-} from './seedData';
+} from './seed/development';
 
 const DATA_DIR = path.join(process.cwd(), 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
@@ -191,21 +191,23 @@ export function loadDatabase(): DatabaseState {
         stateChanged = true;
       }
 
-      // Ensure platform staff accounts exist
-      for (const iu of INITIAL_USERS) {
-        const existing = dbState.users.find(u => u.id === iu.id || u.email.toLowerCase() === iu.email.toLowerCase());
-        if (!existing) {
-          dbState.users.push(iu);
-          stateChanged = true;
-        } else {
-          // Sync tenantId and isPlatformStaff if missing
-          if (iu.tenantId && !existing.tenantId) {
-            existing.tenantId = iu.tenantId;
+      // Ensure platform staff accounts exist (development only)
+      if (process.env.NODE_ENV !== 'production') {
+        for (const iu of INITIAL_USERS) {
+          const existing = dbState.users.find(u => u.id === iu.id || u.email.toLowerCase() === iu.email.toLowerCase());
+          if (!existing) {
+            dbState.users.push(iu);
             stateChanged = true;
-          }
-          if (iu.isPlatformStaff && !existing.isPlatformStaff) {
-            existing.isPlatformStaff = true;
-            stateChanged = true;
+          } else {
+            // Sync tenantId and isPlatformStaff if missing
+            if (iu.tenantId && !existing.tenantId) {
+              existing.tenantId = iu.tenantId;
+              stateChanged = true;
+            }
+            if (iu.isPlatformStaff && !existing.isPlatformStaff) {
+              existing.isPlatformStaff = true;
+              stateChanged = true;
+            }
           }
         }
       }
@@ -231,11 +233,13 @@ export function loadDatabase(): DatabaseState {
         }
       }
 
-      // Ensure missing initial leads from other tenants (like Zenith) exist
-      for (const il of INITIAL_LEADS) {
-        if (!dbState.leads.some(l => l.id === il.id)) {
-          dbState.leads.push({ ...il });
-          stateChanged = true;
+      // Ensure missing initial leads from other tenants (like Zenith) exist (development only)
+      if (process.env.NODE_ENV !== 'production') {
+        for (const il of INITIAL_LEADS) {
+          if (!dbState.leads.some(l => l.id === il.id)) {
+            dbState.leads.push({ ...il });
+            stateChanged = true;
+          }
         }
       }
 
@@ -247,10 +251,12 @@ export function loadDatabase(): DatabaseState {
           stateChanged = true;
         }
       }
-      for (const ic of INITIAL_CALLS) {
-        if (!dbState.calls.some(c => c.id === ic.id)) {
-          dbState.calls.push({ ...ic });
-          stateChanged = true;
+      if (process.env.NODE_ENV !== 'production') {
+        for (const ic of INITIAL_CALLS) {
+          if (!dbState.calls.some(c => c.id === ic.id)) {
+            dbState.calls.push({ ...ic });
+            stateChanged = true;
+          }
         }
       }
 
@@ -262,10 +268,12 @@ export function loadDatabase(): DatabaseState {
           stateChanged = true;
         }
       }
-      for (const im of INITIAL_MESSAGES) {
-        if (!dbState.messages.some(m => m.id === im.id)) {
-          dbState.messages.push({ ...im });
-          stateChanged = true;
+      if (process.env.NODE_ENV !== 'production') {
+        for (const im of INITIAL_MESSAGES) {
+          if (!dbState.messages.some(m => m.id === im.id)) {
+            dbState.messages.push({ ...im });
+            stateChanged = true;
+          }
         }
       }
 
@@ -276,10 +284,12 @@ export function loadDatabase(): DatabaseState {
           stateChanged = true;
         }
       }
-      for (const it of INITIAL_TICKETS) {
-        if (!dbState.tickets.some(t => t.id === it.id)) {
-          dbState.tickets.push({ ...it });
-          stateChanged = true;
+      if (process.env.NODE_ENV !== 'production') {
+        for (const it of INITIAL_TICKETS) {
+          if (!dbState.tickets.some(t => t.id === it.id)) {
+            dbState.tickets.push({ ...it });
+            stateChanged = true;
+          }
         }
       }
 
@@ -302,17 +312,17 @@ export function loadDatabase(): DatabaseState {
 
   // Initialize fresh database
   dbState = {
-    tenants: [...INITIAL_TENANTS],
-    users: [...INITIAL_USERS],
-    leads: INITIAL_LEADS.map(l => ({
+    tenants: process.env.NODE_ENV !== 'production' ? [...INITIAL_TENANTS] : [],
+    users: process.env.NODE_ENV !== 'production' ? [...INITIAL_USERS] : [],
+    leads: process.env.NODE_ENV !== 'production' ? INITIAL_LEADS.map(l => ({
       ...l,
       version: l.version || 1,
       updatedAt: l.updatedAt || l.createdDate || new Date().toISOString()
-    })),
-    calls: [...INITIAL_CALLS],
-    messages: [...INITIAL_MESSAGES],
-    tickets: [...INITIAL_TICKETS],
-    auditLogs: [...INITIAL_AUDIT_LOGS],
+    })) : [],
+    calls: process.env.NODE_ENV !== 'production' ? [...INITIAL_CALLS] : [],
+    messages: process.env.NODE_ENV !== 'production' ? [...INITIAL_MESSAGES] : [],
+    tickets: process.env.NODE_ENV !== 'production' ? [...INITIAL_TICKETS] : [],
+    auditLogs: process.env.NODE_ENV !== 'production' ? [...INITIAL_AUDIT_LOGS] : [],
     backups: [],
     customFields: [...DEFAULT_CUSTOM_FIELDS],
     rolePermissions: [...DEFAULT_ROLE_PERMISSIONS],
@@ -320,9 +330,9 @@ export function loadDatabase(): DatabaseState {
     autoAssignmentEnabled: true,
     complianceRules: { ...DEFAULT_FREQUENCY_RULES },
     impersonationSessions: [],
-    securityAlerts: [...INITIAL_SECURITY_ALERTS],
-    billingRecords: [...INITIAL_BILLING_RECORDS],
-    featureFlags: [...INITIAL_FEATURE_FLAGS]
+    securityAlerts: process.env.NODE_ENV !== 'production' ? [...INITIAL_SECURITY_ALERTS] : [],
+    billingRecords: process.env.NODE_ENV !== 'production' ? [...INITIAL_BILLING_RECORDS] : [],
+    featureFlags: process.env.NODE_ENV !== 'production' ? [...INITIAL_FEATURE_FLAGS] : []
   };
 
   saveDatabase();

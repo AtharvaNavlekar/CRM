@@ -11,7 +11,8 @@
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
     "test": "tsx tests/auth-and-compliance.test.ts",
-    "test:security": "tsx security-tests/run-all.ts"
+    "test:security": "tsx security-tests/run-all.ts",
+    "bootstrap-admin": "tsx server/bootstrap.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",

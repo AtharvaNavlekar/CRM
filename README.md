@@ -97,11 +97,12 @@ The following scripts are defined in `package.json`:
 *   `tests/` - Application logic unit and integration tests
 *   `data/` - Contains the `db.json` file used for application state persistence (Note: this directory is git-ignored as it contains runtime data).
 
-## Runtime Data Hygiene
+## Seed Data and Production Safety
 
 *   **Local State Only**: Runtime database files (`data/db.json`), backups, exports, and generated logs are local to your environment and must **never** be committed to Git.
-*   **Seed Definitions**: Development dummy data (e.g., `src/data/mockSeedData.ts` and `server/seedData.ts`) belong in source code and can be committed.
-*   **Production Data**: Genuine customer data or PII must never be stored in Git.
+*   **Production Safety**: When `NODE_ENV=production`, the application boots in a secured, fail-closed state. No default users, demo leads, or test configurations are inserted into the database.
+*   **Bootstrap Admin**: To provision the first platform administrator in a production environment, run `npm run bootstrap-admin <email> <password> [name]`. Predictable passwords like `password123` are strictly forbidden.
+*   **Development Seeding**: Running the app locally (`npm run dev`) automatically injects development dummy data into `data/db.json` for rapid testing and UI mockups.
 
 ## Current Status & Limitations
 
