@@ -1848,43 +1848,22 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
 
   // 12. Automated Backups & Snapshots
   app.get('/api/backups', async (req, res) => {
-    const db = await getLegacyState();
-    res.json(db.backups || []);
+    // Backups are now managed externally via infrastructure. Return empty array to keep UI from crashing.
+    res.json([]);
   });
 
   app.post('/api/backups', async (req, res) => {
-    if (!['owner', 'cto', 'it', 'tl_head', 'tl'].includes(req.user!.role)) {
-      return res.status(403).json({ error: 'Forbidden: Insufficient privileges to create system backups.', code: 'FORBIDDEN' });
-    }
-    const { name } = req.body;
-    const record = createBackup(
-      name || `Manual Snapshot ${new Date().toLocaleTimeString('en-IN')}`,
-      false,
-      { id: req.user!.id, name: req.user!.name, role: req.user!.role }
-    );
-    res.json(record);
+    return res.status(501).json({ error: 'Not Implemented: Backups are now managed by infrastructure scripts (pg_dump). Application identity no longer has backup privileges.' });
   });
 
   // Admin & IT restore
   app.post('/api/backups/:id/restore', async (req, res) => {
-    if (!['owner', 'cto', 'it'].includes(req.user!.role)) {
-      return res.status(403).json({ error: 'Forbidden: Only Owner, CTO, or IT administrators can restore backups.', code: 'FORBIDDEN' });
-    }
-    const { id } = req.params;
-    const success = restoreBackup(id, { id: req.user!.id, name: req.user!.name, role: req.user!.role });
-    if (!success) {
-      return res.status(400).json({ error: 'Backup file not found or corrupted' });
-    }
-    res.json({ success: true, message: 'Database restored successfully' });
+    return res.status(501).json({ error: 'Not Implemented: Restores must be performed by infrastructure administrators using secure restore scripts.' });
   });
 
   // Database Reset (Owner, CTO, IT only)
   app.post('/api/reset-data', async (req, res) => {
-    if (!['owner', 'cto', 'it'].includes(req.user!.role)) {
-      return res.status(403).json({ error: 'Forbidden: Only Owner, CTO, or IT administrators can reset database.', code: 'FORBIDDEN' });
-    }
-    const newState = resetDatabase({ id: req.user!.id, name: req.user!.name, role: req.user!.role });
-    res.json({ success: true, message: 'Sample Indian SMB data reset successfully', state: newState });
+    return res.status(501).json({ error: 'Not Implemented: Destructive database operations are disabled in the application runtime.' });
   });
 
   // 14. Settings APIs (Custom Fields, Role Permissions, Pipeline, Auto-Assignment)
