@@ -29,18 +29,9 @@ function parseJwtExpiry(raw: string | undefined): string | number {
 
 // JWT Configuration
 export const JWT_SECRET = resolveJwtSecret();
-export const JWT_EXPIRY = parseJwtExpiry(process.env.JWT_EXPIRY);
+export const JWT_EXPIRY = parseJwtExpiry(process.env.JWT_EXPIRY || '15m');
 
-// In-memory revocation registry for active session invalidation / logout
-export const revokedTokens = new Set<string>();
 
-export function revokeToken(token: string): void {
-  revokedTokens.add(token);
-}
-
-export function isTokenRevoked(token: string): boolean {
-  return revokedTokens.has(token);
-}
 
 // Password Hashing Helpers
 export function hashPassword(password: string): string {
@@ -51,34 +42,30 @@ export function verifyPassword(password: string, hash: string): boolean {
   return bcryptjs.compareSync(password, hash);
 }
 
+// Session & Token Utilities
+export function generateOpaqueRefreshToken(): string {
+  return crypto.randomBytes(32).toString('hex');
+}
+
+export function hashToken(token: string): string {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
+
 // Token Generation
-export function signAccessToken(user: { id: string; email: string; role: UserRole; tenantId?: string; isPlatformStaff?: boolean }): string {
+export function signAccessToken(user: { id: string; email: string; role: UserRole; tenantId?: string; isPlatformStaff?: boolean }, sessionId: string): string {
   return jwt.sign(
     {
       id: user.id,
       email: user.email,
       role: user.role,
       tenantId: user.tenantId,
+      sessionId,
       isPlatformStaff: Boolean(user.isPlatformStaff),
       type: 'access',
       jti: crypto.randomUUID()
     },
     JWT_SECRET,
-    { expiresIn: JWT_EXPIRY as any }
-  );
-}
-
-export function signRefreshToken(user: { id: string; email: string; tenantId?: string }): string {
-  return jwt.sign(
-    {
-      id: user.id,
-      email: user.email,
-      tenantId: user.tenantId,
-      type: 'refresh',
-      jti: crypto.randomUUID()
-    },
-    JWT_SECRET,
-    { expiresIn: '7d' }
+    { expiresIn: JWT_EXPIRY as any, issuer: 'dialpulse-crm', audience: 'dialpulse-client' }
   );
 }
 
@@ -182,18 +169,14 @@ export const authenticateToken: express.RequestHandler = async (req, res, next) 
     });
   }
 
-  if (isTokenRevoked(token)) {
-    return res.status(401).json({
-      error: 'Session has been invalidated. Please log in again.',
-      code: 'TOKEN_REVOKED'
-    });
-  }
+
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] }) as {
+    const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'], issuer: 'dialpulse-crm', audience: 'dialpulse-client' }) as {
       id: string;
       email: string;
       role: UserRole;
+      sessionId: string;
       type?: string;
     };
 

@@ -15,7 +15,6 @@ import {
 } from '../types';
 
 const TOKEN_STORAGE_KEY = 'dialpulse_access_token';
-const REFRESH_TOKEN_KEY = 'dialpulse_refresh_token';
 
 export function getStoredToken(): string | null {
   try {
@@ -25,28 +24,14 @@ export function getStoredToken(): string | null {
   }
 }
 
-export function getStoredRefreshToken(): string | null {
-  try {
-    return sessionStorage.getItem(REFRESH_TOKEN_KEY) || localStorage.getItem(REFRESH_TOKEN_KEY);
-  } catch {
-    return null;
-  }
-}
-
-export function setStoredTokens(token: string | null, refreshToken?: string | null): void {
+export function setStoredTokens(token: string | null): void {
   try {
     if (token) {
       sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
       localStorage.setItem(TOKEN_STORAGE_KEY, token); // compatibility
-      if (refreshToken) {
-        sessionStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-        localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-      }
     } else {
       sessionStorage.removeItem(TOKEN_STORAGE_KEY);
-      sessionStorage.removeItem(REFRESH_TOKEN_KEY);
       localStorage.removeItem(TOKEN_STORAGE_KEY);
-      localStorage.removeItem(REFRESH_TOKEN_KEY);
       localStorage.removeItem('dialpulse_token');
       localStorage.removeItem('telecrm_token');
       localStorage.removeItem('telecrm_user_id');
@@ -93,31 +78,31 @@ async function authFetch(url: string, options: RequestInit = {}): Promise<Respon
 
   let response = await fetch(url, {
     ...options,
+    credentials: 'include',
     headers
   });
 
   // If 401 Unauthorized, attempt silent refresh before giving up
   if (response.status === 401 && !url.includes('/api/auth/login') && !url.includes('/api/auth/refresh')) {
-    const refreshToken = getStoredRefreshToken();
-
-    if (refreshToken && !isRefreshing) {
+    
+    if (!isRefreshing) {
       isRefreshing = true;
       try {
         const refreshRes = await fetch('/api/auth/refresh', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refreshToken })
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' }
         });
 
         if (refreshRes.ok) {
           const data = await refreshRes.json();
-          setStoredTokens(data.token, refreshToken);
+          setStoredTokens(data.token);
           isRefreshing = false;
           onRefreshed(data.token);
 
           // Retry original request
           headers.set('Authorization', `Bearer ${data.token}`);
-          response = await fetch(url, { ...options, headers });
+          response = await fetch(url, { ...options, credentials: 'include', headers });
         } else {
           isRefreshing = false;
           setStoredTokens(null);
@@ -138,7 +123,7 @@ async function authFetch(url: string, options: RequestInit = {}): Promise<Respon
         subscribeTokenRefresh(async (newToken) => {
           headers.set('Authorization', `Bearer ${newToken}`);
           try {
-            const retryRes = await fetch(url, { ...options, headers });
+            const retryRes = await fetch(url, { ...options, credentials: 'include', headers });
             resolve(retryRes);
           } catch (err) {
             reject(err);
@@ -177,6 +162,7 @@ export const api = {
   async login(email: string, password: string): Promise<{ user: User; token: string; refreshToken?: string }> {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
@@ -187,23 +173,20 @@ export const api = {
     }
 
     const data = await res.json();
-    setStoredTokens(data.token, data.refreshToken);
+    setStoredTokens(data.token);
     return data;
   },
 
   async refreshToken(): Promise<string | null> {
-    const refreshToken = getStoredRefreshToken();
-    if (!refreshToken) return null;
-
     const res = await fetch('/api/auth/refresh', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken })
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' }
     });
 
     if (res.ok) {
       const data = await res.json();
-      setStoredTokens(data.token, refreshToken);
+      setStoredTokens(data.token);
       return data.token;
     }
     setStoredTokens(null);
@@ -217,11 +200,10 @@ export const api = {
 
   async logout(): Promise<void> {
     try {
-      const refreshToken = getStoredRefreshToken();
       await authFetch('/api/auth/logout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refreshToken })
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
       });
     } catch {}
     setStoredTokens(null);
@@ -234,7 +216,7 @@ export const api = {
       body: JSON.stringify({ userId, role })
     });
     const data = await res.json();
-    setStoredTokens(data.token, data.refreshToken);
+    setStoredTokens(data.token);
     return data;
   },
 

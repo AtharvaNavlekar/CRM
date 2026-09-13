@@ -72,6 +72,7 @@ export interface ImpersonationSession {
 }
 
 export interface SecurityContext {
+  sessionId?: string;
   actorUserId: string;
   actorRole: UserRole | string;
   actorTenantId?: string;

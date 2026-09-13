@@ -1,4 +1,27 @@
-import { pgTable, text, timestamp, boolean, jsonb, integer, real } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, jsonb, integer, real, index } from 'drizzle-orm/pg-core';
+
+export const sessions = pgTable('sessions', {
+  id: text('id').primaryKey(), // Session ID
+  userId: text('user_id').notNull(),
+  tenantId: text('tenant_id'), // Optional for platform staff
+  tokenFamilyId: text('token_family_id').notNull(),
+  refreshTokenHash: text('refresh_token_hash').notNull(),
+  createdAt: timestamp('created_at', { mode: 'string' }).notNull(),
+  expiresAt: timestamp('expires_at', { mode: 'string' }).notNull(),
+  lastUsedAt: timestamp('last_used_at', { mode: 'string' }).notNull(),
+  revokedAt: timestamp('revoked_at', { mode: 'string' }),
+  revokeReason: text('revoke_reason'),
+  createdIp: text('created_ip'),
+  lastUsedIp: text('last_used_ip'),
+  createdUserAgent: text('created_user_agent'),
+  lastUsedUserAgent: text('last_used_user_agent')
+}, (table) => {
+  return {
+    userIdIdx: index('idx_sessions_user_id').on(table.userId),
+    tokenFamilyIdIdx: index('idx_sessions_token_family_id').on(table.tokenFamilyId),
+    refreshTokenHashIdx: index('idx_sessions_refresh_token_hash').on(table.refreshTokenHash)
+  };
+});
 
 export const tenants = pgTable('tenants', {
   id: text('id').primaryKey(),

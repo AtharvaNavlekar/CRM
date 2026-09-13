@@ -1,3 +1,7 @@
+import { generateOpaqueRefreshToken, hashToken } from './server/auth';
+import { db } from './server/db/client';
+import { sessions } from './server/db/schema';
+import { eq } from 'drizzle-orm';
 import express from 'express';
 import { can } from './server/policy';
 import path from 'path';
@@ -36,13 +40,10 @@ import {
   getRolePermission,
   JWT_SECRET,
   JWT_EXPIRY,
-  revokedTokens,
-  revokeToken,
   hashPassword,
   verifyPassword,
   signAccessToken,
-  signRefreshToken
-} from './server/auth';
+  } from './server/auth';
 import {
   Lead,
   Call,
@@ -302,6 +303,17 @@ const app = express();
     });
   });
 
+  
+function parseCookies(cookieHeader?: string): Record<string, string> {
+  const list: Record<string, string> = {};
+  if (!cookieHeader) return list;
+  cookieHeader.split(';').forEach(cookie => {
+    const parts = cookie.split('=');
+    list[parts.shift()!.trim()] = decodeURI(parts.join('='));
+  });
+  return list;
+}
+
   // 3. Auth Routes
   app.post('/api/auth/login', loginLimiter, async (req, res) => {
     const { email, password } = req.body;
@@ -313,8 +325,8 @@ const app = express();
       return res.status(400).json({ error: 'Invalid email address format' });
     }
 
-    const db = await getLegacyState();
-    const user = db.users.find(u => u.email.toLowerCase() === String(email).trim().toLowerCase());
+    const legacyDb = await getLegacyState();
+    const user = legacyDb.users.find(u => u.email.toLowerCase() === String(email).trim().toLowerCase());
 
     if (!user || !user.passwordHash) {
       return res.status(401).json({ error: 'Invalid email or password' });
@@ -325,57 +337,118 @@ const app = express();
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 
-    const token = jwt.sign(
-      { id: user.id, email: user.email, role: user.role, type: 'access', jti: crypto.randomUUID() },
-      JWT_SECRET,
-      { expiresIn: JWT_EXPIRY as any }
-    );
+    // Generate Session
+    const tokenFamilyId = crypto.randomUUID();
+    const rawRefreshToken = generateOpaqueRefreshToken();
+    const refreshTokenHash = hashToken(rawRefreshToken);
+    const sessionId = crypto.randomUUID();
 
-    const refreshToken = jwt.sign(
-      { id: user.id, email: user.email, type: 'refresh', jti: crypto.randomUUID() },
-      JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+    await db.insert(sessions).values({
+      id: sessionId,
+      userId: user.id,
+      tenantId: user.tenantId,
+      tokenFamilyId,
+      refreshTokenHash,
+      createdAt: now.toISOString(),
+      expiresAt: expiresAt.toISOString(),
+      lastUsedAt: now.toISOString(),
+      createdIp: getClientIp(req),
+      lastUsedIp: getClientIp(req),
+      createdUserAgent: req.headers['user-agent']?.substring(0, 255),
+      lastUsedUserAgent: req.headers['user-agent']?.substring(0, 255),
+    });
+
+    const token = signAccessToken({ id: user.id, email: user.email, role: user.role, tenantId: user.tenantId, isPlatformStaff: user.isPlatformStaff }, sessionId);
 
     logAudit('USER_LOGIN', `${user.name} logged into DialPulse CRM`, { id: user.id, name: user.name, role: user.role }, getClientIp(req));
-    res.json({ user: sanitizeUser(user), token, refreshToken, expiresIn: 3600 });
+    
+    res.cookie('refreshToken', rawRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/api/auth'
+    });
+
+    res.json({ user: sanitizeUser(user), token, expiresIn: 900 });
   });
 
   app.post('/api/auth/refresh', async (req, res) => {
-    const { refreshToken } = req.body;
-    if (!refreshToken || typeof refreshToken !== 'string') {
-      return res.status(400).json({ error: 'Refresh token is required', code: 'REFRESH_TOKEN_REQUIRED' });
+    const cookies = parseCookies(req.headers.cookie);
+    const rawRefreshToken = cookies['refreshToken'];
+    if (!rawRefreshToken) {
+      return res.status(401).json({ error: 'Refresh token is required', code: 'REFRESH_TOKEN_REQUIRED' });
     }
 
-    if (revokedTokens.has(refreshToken)) {
-      return res.status(401).json({ error: 'Refresh token has been revoked. Please log in again.', code: 'TOKEN_REVOKED' });
+    const hashedToken = hashToken(rawRefreshToken);
+    
+    // Find session
+    const sessionRecords = await db.select().from(sessions).where(eq(sessions.refreshTokenHash, hashedToken));
+    const session = sessionRecords[0];
+
+    if (!session) {
+      return res.status(401).json({ error: 'Invalid refresh token', code: 'INVALID_TOKEN' });
     }
 
-    try {
-      const decoded = jwt.verify(refreshToken, JWT_SECRET) as { id: string; email: string; type?: string };
-      if (decoded.type !== 'refresh') {
-        return res.status(401).json({ error: 'Invalid token type. Expected refresh token.', code: 'INVALID_TOKEN' });
-      }
-
-      const db = await getLegacyState();
-      const user = db.users.find(u => u.id === decoded.id);
-      if (!user) {
-        return res.status(401).json({ error: 'User account not found or deactivated.', code: 'USER_NOT_FOUND' });
-      }
-
-      const newToken = jwt.sign(
-        { id: user.id, email: user.email, role: user.role, type: 'access', jti: crypto.randomUUID() },
-        JWT_SECRET,
-        { expiresIn: JWT_EXPIRY as any }
-      );
-
-      res.json({ token: newToken, user: sanitizeUser(user) });
-    } catch (err: any) {
-      if (err.name === 'TokenExpiredError') {
-        return res.status(401).json({ error: 'Refresh token has expired. Please log in again.', code: 'TOKEN_EXPIRED' });
-      }
-      return res.status(401).json({ error: 'Invalid refresh token.', code: 'INVALID_TOKEN' });
+    if (session.revokedAt) {
+      // REUSE DETECTION! Token was already revoked but is being used again
+      // Revoke the entire family
+      await db.update(sessions)
+        .set({ revokedAt: new Date().toISOString(), revokeReason: 'reuse_detected' })
+        .where(eq(sessions.tokenFamilyId, session.tokenFamilyId));
+        
+      logAudit('SECURITY_ALERT', 'Token reuse detected', { id: session.userId, name: 'Unknown', role: 'Unknown' }, getClientIp(req), { actionType: 'SECURITY' });
+      
+      res.clearCookie('refreshToken', { path: '/api/auth' });
+      return res.status(401).json({ error: 'Session invalidated due to suspicious activity', code: 'TOKEN_REVOKED' });
     }
+
+    if (new Date(session.expiresAt) < new Date()) {
+      return res.status(401).json({ error: 'Refresh token expired', code: 'TOKEN_EXPIRED' });
+    }
+
+    const legacyDb = await getLegacyState();
+    const user = legacyDb.users.find(u => u.id === session.userId);
+    if (!user) {
+      return res.status(401).json({ error: 'User account not found', code: 'USER_NOT_FOUND' });
+    }
+
+    // Atomically rotate: revoke old token and create new one (simulated transactionally)
+    const now = new Date();
+    await db.update(sessions)
+      .set({ revokedAt: now.toISOString(), revokeReason: 'rotated' })
+      .where(eq(sessions.id, session.id));
+
+    const newRawRefreshToken = generateOpaqueRefreshToken();
+    const newSessionId = crypto.randomUUID();
+    
+    await db.insert(sessions).values({
+      id: newSessionId,
+      userId: user.id,
+      tenantId: user.tenantId,
+      tokenFamilyId: session.tokenFamilyId, // keep same family
+      refreshTokenHash: hashToken(newRawRefreshToken),
+      createdAt: now.toISOString(),
+      expiresAt: session.expiresAt, // keep original expiry limit (or extend it depending on policy)
+      lastUsedAt: now.toISOString(),
+      createdIp: session.createdIp,
+      lastUsedIp: getClientIp(req),
+      createdUserAgent: session.createdUserAgent,
+      lastUsedUserAgent: req.headers['user-agent']?.substring(0, 255),
+    });
+
+    const token = signAccessToken({ id: user.id, email: user.email, role: user.role, tenantId: user.tenantId, isPlatformStaff: user.isPlatformStaff }, newSessionId);
+
+    res.cookie('refreshToken', newRawRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      path: '/api/auth'
+    });
+
+    res.json({ token, user: sanitizeUser(user) });
   });
 
   app.get('/api/auth/me', async (req, res) => {
@@ -392,14 +465,42 @@ const app = express();
   });
 
   app.post('/api/auth/logout', async (req, res) => {
-    if (req.user?.token) {
-      revokedTokens.add(req.user.token);
+    const cookies = parseCookies(req.headers.cookie);
+    const rawRefreshToken = cookies['refreshToken'];
+    
+    if (rawRefreshToken) {
+      const hashedToken = hashToken(rawRefreshToken);
+      await db.update(sessions)
+        .set({ revokedAt: new Date().toISOString(), revokeReason: 'logout' })
+        .where(eq(sessions.refreshTokenHash, hashedToken));
     }
-    if (req.body?.refreshToken && typeof req.body.refreshToken === 'string') {
-      revokedTokens.add(req.body.refreshToken);
-    }
+    
+    res.clearCookie('refreshToken', { path: '/api/auth' });
     logAudit('USER_LOGOUT', `${req.user?.name} signed out`, { id: req.user?.id, name: req.user?.name, role: req.user?.role }, getClientIp(req));
     res.json({ success: true, message: 'Successfully logged out' });
+  });
+
+  
+  app.get('/api/auth/sessions', async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+    const userSessions = await db.select().from(sessions).where(eq(sessions.userId, req.user.id));
+    // Filter out active ones for display
+    const active = userSessions.filter(s => !s.revokedAt && new Date(s.expiresAt) > new Date());
+    res.json({ sessions: active.map(s => ({ id: s.id, createdAt: s.createdAt, lastUsedAt: s.lastUsedAt, lastUsedIp: s.lastUsedIp, current: s.id === req.securityContext?.sessionId })) });
+  });
+
+  app.delete('/api/auth/sessions/:id', async (req, res) => {
+    if (!req.user) return res.status(401).json({ error: 'Unauthorized' });
+    const sessionId = req.params.id;
+    const sessionRecords = await db.select().from(sessions).where(eq(sessions.id, sessionId));
+    const session = sessionRecords[0];
+    if (!session || session.userId !== req.user.id) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+    await db.update(sessions)
+      .set({ revokedAt: new Date().toISOString(), revokeReason: 'user_revoked' })
+      .where(eq(sessions.id, sessionId));
+    res.json({ success: true });
   });
 
   // User Switching / Role Updating
