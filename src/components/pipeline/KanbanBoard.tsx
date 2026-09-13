@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { MaterialDropdown } from '../common/MaterialDropdown';
 import {
   Kanban,
   Filter,
@@ -216,41 +217,35 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
           {/* Source Filter */}
           <div className="flex items-center space-x-2 bg-[#ECEFEC] dark:bg-[#272B2A] px-3.5 py-1.5 rounded-full border border-transparent">
             <Filter className="w-3.5 h-3.5 text-[#6F7976]" />
-            <span className="text-xs text-[#6F7976] font-medium">Source:</span>
-            <select
+            <MaterialDropdown
               id="filter-source-select"
+              label="Source:"
               value={currentSource}
-              aria-label="Filter pipeline leads by acquisition source"
-              onChange={(e) => handleSourceChange(e.target.value)}
-              className="text-xs font-medium m3-select-bare"
-            >
-              <option value="all">All Channels ({leads.length})</option>
-              {SOURCES.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </select>
+              ariaLabel="Filter pipeline leads by acquisition source"
+              onChange={(val) => handleSourceChange(val)}
+              variant="chip"
+              options={[
+                { value: 'all', label: `All Channels (${leads.length})` },
+                ...SOURCES.map((s) => ({ value: s, label: s })),
+              ]}
+            />
           </div>
 
           {/* Rep Filter */}
           <div className="flex items-center space-x-2 bg-[#ECEFEC] dark:bg-[#272B2A] px-3.5 py-1.5 rounded-full border border-transparent">
             <User className="w-3.5 h-3.5 text-[#6F7976]" />
-            <span className="text-xs text-[#6F7976] font-medium">Rep:</span>
-            <select
+            <MaterialDropdown
               id="filter-rep-select"
+              label="Rep:"
               value={currentRep}
-              aria-label="Filter pipeline leads by assigned sales representative"
-              onChange={(e) => handleRepChange(e.target.value)}
-              className="text-xs font-medium m3-select-bare"
-            >
-              <option value="all">All Team Reps</option>
-              {effectiveUsers.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name} ({u.role})
-                </option>
-              ))}
-            </select>
+              ariaLabel="Filter pipeline leads by assigned sales representative"
+              onChange={(val) => handleRepChange(val)}
+              variant="chip"
+              options={[
+                { value: 'all', label: 'All Team Reps' },
+                ...effectiveUsers.map((u) => ({ value: u.id, label: `${u.name} (${u.role})` })),
+              ]}
+            />
           </div>
 
           {/* Rep Status Badge */}
@@ -458,39 +453,37 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
           {/* Stage selector */}
           <div className="flex items-center space-x-1.5">
             <span className="text-[11px] text-[#A2ADA9] font-medium">Stage:</span>
-            <select
+            <MaterialDropdown
               id="bulk-stage-select"
               value={bulkStage}
-              aria-label="Bulk update stage for selected leads"
-              onChange={(e) => setBulkStage(e.target.value as LeadStage)}
-              className="text-xs font-medium bg-black/40 text-white border-white/20 rounded-full px-3 py-1.5 focus-visible:ring-2 focus-visible:ring-[#80D5C4] m3-select-bare"
-            >
-              <option value="">Keep unchanged</option>
-              {STAGES.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.title}
-                </option>
-              ))}
-            </select>
+              ariaLabel="Bulk update stage for selected leads"
+              onChange={(val) => setBulkStage(val as LeadStage)}
+              variant="chip"
+              triggerClassName="bg-black/40 text-white rounded-full px-3 py-1.5"
+              menuClassName="min-w-[160px]"
+              options={[
+                { value: '', label: 'Keep unchanged' },
+                ...STAGES.map((s) => ({ value: s.id, label: s.title })),
+              ]}
+            />
           </div>
 
           {/* Rep selector */}
           <div className="flex items-center space-x-1.5">
             <span className="text-[11px] text-[#A2ADA9] font-medium">Assign:</span>
-            <select
+            <MaterialDropdown
               id="bulk-rep-select"
               value={bulkRepId}
-              aria-label="Bulk assign sales rep for selected leads"
-              onChange={(e) => setBulkRepId(e.target.value)}
-              className="text-xs font-medium bg-black/40 text-white border-white/20 rounded-full px-3 py-1.5 focus-visible:ring-2 focus-visible:ring-[#80D5C4] max-w-[140px] truncate m3-select-bare"
-            >
-              <option value="">Keep unchanged</option>
-              {effectiveUsers.map((u) => (
-                <option key={u.id} value={u.id}>
-                  {u.name} ({u.role})
-                </option>
-              ))}
-            </select>
+              ariaLabel="Bulk assign sales rep for selected leads"
+              onChange={(val) => setBulkRepId(val)}
+              variant="chip"
+              triggerClassName="bg-black/40 text-white rounded-full px-3 py-1.5 max-w-[140px]"
+              menuClassName="min-w-[160px]"
+              options={[
+                { value: '', label: 'Keep unchanged' },
+                ...effectiveUsers.map((u) => ({ value: u.id, label: `${u.name} (${u.role})` })),
+              ]}
+            />
           </div>
 
           {/* Apply button */}

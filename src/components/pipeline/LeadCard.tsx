@@ -1,5 +1,6 @@
 import React from 'react';
 import { Phone, MessageSquare, Clock, Calendar, ArrowRight, UserCheck, AlertCircle } from 'lucide-react';
+import { MaterialDropdown } from '../common/MaterialDropdown';
 import { Lead, LeadStage, User } from '../../types';
 
 interface LeadCardProps {
@@ -154,19 +155,15 @@ export const LeadCard: React.FC<LeadCardProps> = ({
           <UserCheck className="w-3.5 h-3.5 text-[#6F7976]" />
           <span className="text-[11px]">Rep:</span>
         </div>
-        <select
+        <MaterialDropdown
           id={`select-rep-${lead.id}`}
           value={lead.assignedRepId}
-          aria-label={`Assign sales representative for ${lead.name}`}
-          onChange={(e) => onAssignRep(lead.id, e.target.value)}
-          className="text-[11px] font-medium hover:text-[#00695C] dark:hover:text-[#80D5C4] text-right max-w-[130px] truncate m3-select"
-        >
-          {users.map((u) => (
-            <option key={u.id} value={u.id} className="text-[#191C1B] dark:bg-[#1D201F] dark:text-[#E1E3E0]">
-              {u.name} ({u.role})
-            </option>
-          ))}
-        </select>
+          ariaLabel={`Assign sales representative for ${lead.name}`}
+          onChange={(val) => onAssignRep(lead.id, val)}
+          variant="chip"
+          triggerClassName="text-[11px] max-w-[130px]"
+          options={users.map((u) => ({ value: u.id, label: `${u.name} (${u.role})` }))}
+        />
       </div>
 
       {/* Bottom Action Buttons: Call, WhatsApp */}

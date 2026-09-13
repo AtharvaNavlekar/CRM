@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, UserPlus, Phone, User, Tag, FileText, Briefcase, IndianRupee } from 'lucide-react';
+import { MaterialDropdown } from '../common/MaterialDropdown';
 import { Lead, LeadSource, User as UserType } from '../../types';
 import { useModalFocusTrap } from '../../utils/useModalFocusTrap';
 
@@ -152,20 +153,22 @@ export const AddLeadModal: React.FC<AddLeadModalProps> = ({
                 Lead Source
               </label>
               <div className="relative">
-                <Tag className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <select
+                <Tag className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
+                <MaterialDropdown
                   id="select-lead-source"
                   value={source}
-                  onChange={(e) => setSource(e.target.value as LeadSource)}
-                  className="w-full pl-9 pr-3 py-2 text-xs focus:ring-[#2E6E5C] m3-select"
-                >
-                  <option value="IndiaMART">IndiaMART</option>
-                  <option value="WhatsApp">WhatsApp Inbound</option>
-                  <option value="Website">Website Form</option>
-                  <option value="Google Ads">Google Ads</option>
-                  <option value="Facebook">Facebook Ads</option>
-                  <option value="Manual">Manual Entry</option>
-                </select>
+                  onChange={(val) => setSource(val as LeadSource)}
+                  variant="form"
+                  triggerClassName="pl-9"
+                  options={[
+                    { value: 'IndiaMART', label: 'IndiaMART' },
+                    { value: 'WhatsApp', label: 'WhatsApp Inbound' },
+                    { value: 'Website', label: 'Website Form' },
+                    { value: 'Google Ads', label: 'Google Ads' },
+                    { value: 'Facebook', label: 'Facebook Ads' },
+                    { value: 'Manual', label: 'Manual Entry' },
+                  ]}
+                />
               </div>
             </div>
 
@@ -175,18 +178,20 @@ export const AddLeadModal: React.FC<AddLeadModalProps> = ({
                 SMB Vertical
               </label>
               <div className="relative">
-                <Briefcase className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                <select
+                <Briefcase className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 z-10 pointer-events-none" />
+                <MaterialDropdown
                   id="select-lead-industry"
                   value={industry}
-                  onChange={(e) => setIndustry(e.target.value)}
-                  className="w-full pl-9 pr-3 py-2 text-xs focus:ring-[#2E6E5C] m3-select"
-                >
-                  <option value="Real Estate">Real Estate (Residential/Commercial)</option>
-                  <option value="Education">Education (EdTech / Certification)</option>
-                  <option value="Lending">Lending & SME Business Loans</option>
-                  <option value="Insurance">Insurance (Health / Term / Motor)</option>
-                </select>
+                  onChange={(val) => setIndustry(val)}
+                  variant="form"
+                  triggerClassName="pl-9"
+                  options={[
+                    { value: 'Real Estate', label: 'Real Estate (Residential/Commercial)' },
+                    { value: 'Education', label: 'Education (EdTech / Certification)' },
+                    { value: 'Lending', label: 'Lending & SME Business Loans' },
+                    { value: 'Insurance', label: 'Insurance (Health / Term / Motor)' },
+                  ]}
+                />
               </div>
             </div>
           </div>
@@ -215,18 +220,13 @@ export const AddLeadModal: React.FC<AddLeadModalProps> = ({
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 Assign to Telecaller
               </label>
-              <select
+              <MaterialDropdown
                 id="select-lead-rep"
                 value={assignedRepId}
-                onChange={(e) => setAssignedRepId(e.target.value)}
-                className="w-full px-3 py-2 text-xs focus:ring-[#2E6E5C] m3-select"
-              >
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} ({u.role})
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setAssignedRepId(val)}
+                variant="form"
+                options={users.map((u) => ({ value: u.id, label: `${u.name} (${u.role})` }))}
+              />
             </div>
           </div>
 

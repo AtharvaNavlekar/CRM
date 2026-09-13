@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { MaterialDropdown } from '../common/MaterialDropdown';
 import {
   Search,
   Filter,
@@ -286,17 +287,19 @@ export const LeadsListView: React.FC<LeadsListViewProps> = ({
           {/* Left: Search with Field-Picker - Material Design 3 Pill Bar */}
           <div className={`flex items-center space-x-2 flex-1 ${isMobile ? 'min-w-0' : 'min-w-[280px] max-w-lg'}`}>
             <div className="relative flex-1 flex items-center bg-[#ECEFEC] dark:bg-[#1D201F] rounded-full border border-transparent hover:border-[#BEC9C5] dark:hover:border-[#3F4946] focus-within:border-[#00695C] focus-within:ring-2 focus-within:ring-[#00695C]/20 transition-all min-h-[46px] px-2">
-              <select
+              <MaterialDropdown
                 value={searchField}
-                onChange={(e) => setSearchField(e.target.value as any)}
-                aria-label="Filter search by field"
-                className="h-8 pl-2 pr-1 text-xs font-medium border-r border-[#BEC9C5]/60 dark:border-[#3F4946]/60 m3-select"
-              >
-                <option value="name" className="bg-[#F8FAF8] dark:bg-[#1D201F]">Name</option>
-                <option value="phone" className="bg-[#F8FAF8] dark:bg-[#1D201F]">Phone</option>
-                <option value="email" className="bg-[#F8FAF8] dark:bg-[#1D201F]">Email</option>
-                <option value="company" className="bg-[#F8FAF8] dark:bg-[#1D201F]">Company</option>
-              </select>
+                onChange={(val) => setSearchField(val as any)}
+                ariaLabel="Filter search by field"
+                variant="chip"
+                triggerClassName="h-8 pl-2 pr-1 border-r border-[#BEC9C5]/60 dark:border-[#3F4946]/60"
+                options={[
+                  { value: 'name', label: 'Name' },
+                  { value: 'phone', label: 'Phone' },
+                  { value: 'email', label: 'Email' },
+                  { value: 'company', label: 'Company' },
+                ]}
+              />
               <div className="relative flex-1 flex items-center">
                 <Search className="w-4 h-4 text-[#6F7976] dark:text-[#89938F] ml-2.5 shrink-0" />
                 <input
@@ -456,104 +459,97 @@ export const LeadsListView: React.FC<LeadsListViewProps> = ({
 
             {/* Lead Stage Filter Chip */}
             <div className="inline-flex items-center rounded-full border border-[#BEC9C5]/60 dark:border-[#3F4946]/60 bg-[#ECEFEC] dark:bg-[#1D201F] hover:bg-[#E6EAE6] dark:hover:bg-[#272B2A] px-3.5 py-1.5 min-h-[38px] transition-colors">
-              <span className="text-[11px] text-[#6F7976] dark:text-[#89938F] mr-2 font-medium">Stage:</span>
-              <select
+              <MaterialDropdown
                 id="filter-stage"
+                label="Stage:"
                 value={stageFilter}
-                onChange={(e) => {
-                  setStageFilter(e.target.value);
+                onChange={(val) => {
+                  setStageFilter(val);
                   setCurrentPage(1);
                 }}
-                className="text-xs font-medium m3-select-bare"
-              >
-                <option value="all" className="bg-[#F8FAF8] dark:bg-[#1D201F]">All Stages ({PIPELINE_STAGES.length})</option>
-                {PIPELINE_STAGES.map((st) => (
-                  <option key={st} value={st} className="bg-[#F8FAF8] dark:bg-[#1D201F]">
-                    {st}
-                  </option>
-                ))}
-              </select>
+                variant="chip"
+                options={[
+                  { value: 'all', label: `All Stages (${PIPELINE_STAGES.length})` },
+                  ...PIPELINE_STAGES.map((st) => ({ value: st, label: st })),
+                ]}
+              />
             </div>
 
             {/* Assignee Filter Chip */}
             <div className="inline-flex items-center rounded-full border border-[#BEC9C5]/60 dark:border-[#3F4946]/60 bg-[#ECEFEC] dark:bg-[#1D201F] hover:bg-[#E6EAE6] dark:hover:bg-[#272B2A] px-3.5 py-1.5 min-h-[38px] transition-colors">
-              <span className="text-[11px] text-[#6F7976] dark:text-[#89938F] mr-2 font-medium">Assignee:</span>
-              <select
+              <MaterialDropdown
                 id="filter-assignee"
+                label="Assignee:"
                 value={assigneeFilter}
-                onChange={(e) => {
-                  setAssigneeFilter(e.target.value);
+                onChange={(val) => {
+                  setAssigneeFilter(val);
                   setCurrentPage(1);
                 }}
-                className="text-xs font-medium m3-select-bare"
-              >
-                <option value="all" className="bg-[#F8FAF8] dark:bg-[#1D201F]">All Assignees</option>
-                {TEAM_MEMBERS.map((m) => (
-                  <option key={m.id} value={m.name} className="bg-[#F8FAF8] dark:bg-[#1D201F]">
-                    {m.name}
-                  </option>
-                ))}
-              </select>
+                variant="chip"
+                options={[
+                  { value: 'all', label: 'All Assignees' },
+                  ...TEAM_MEMBERS.map((m) => ({ value: m.name, label: m.name })),
+                ]}
+              />
             </div>
 
             {/* Source Filter Chip */}
             <div className="inline-flex items-center rounded-full border border-[#BEC9C5]/60 dark:border-[#3F4946]/60 bg-[#ECEFEC] dark:bg-[#1D201F] hover:bg-[#E6EAE6] dark:hover:bg-[#272B2A] px-3.5 py-1.5 min-h-[38px] transition-colors">
-              <span className="text-[11px] text-[#6F7976] dark:text-[#89938F] mr-2 font-medium">Source:</span>
-              <select
+              <MaterialDropdown
                 id="filter-source"
+                label="Source:"
                 value={sourceFilter}
-                onChange={(e) => {
-                  setSourceFilter(e.target.value);
+                onChange={(val) => {
+                  setSourceFilter(val);
                   setCurrentPage(1);
                 }}
-                className="text-xs font-medium m3-select-bare"
-              >
-                <option value="all" className="bg-[#F8FAF8] dark:bg-[#1D201F]">All Sources ({availableSources.length})</option>
-                {availableSources.map((src) => (
-                  <option key={src} value={src} className="bg-[#F8FAF8] dark:bg-[#1D201F]">
-                    {src}
-                  </option>
-                ))}
-              </select>
+                variant="chip"
+                options={[
+                  { value: 'all', label: `All Sources (${availableSources.length})` },
+                  ...availableSources.map((src) => ({ value: src, label: src })),
+                ]}
+              />
             </div>
 
             {/* Fatigue & Preference Filter Chip */}
             <div className="inline-flex items-center rounded-full border border-[#BEC9C5]/60 dark:border-[#3F4946]/60 bg-[#ECEFEC] dark:bg-[#1D201F] hover:bg-[#E6EAE6] dark:hover:bg-[#272B2A] px-3.5 py-1.5 min-h-[38px] transition-colors">
-              <span className="text-[11px] text-[#6F7976] dark:text-[#89938F] mr-2 font-medium">Compliance:</span>
-              <select
+              <MaterialDropdown
                 id="filter-compliance"
+                label="Compliance:"
                 value={complianceFilter}
-                onChange={(e) => {
-                  setComplianceFilter(e.target.value as any);
+                onChange={(val) => {
+                  setComplianceFilter(val as any);
                   setCurrentPage(1);
                 }}
-                className="text-xs font-medium m3-select-bare"
-              >
-                <option value="all" className="bg-[#F8FAF8] dark:bg-[#1D201F]">All Leads</option>
-                <option value="capped" className="bg-[#F8FAF8] dark:bg-[#1D201F]">🛑 Capped (3/3 Calls)</option>
-                <option value="at_risk" className="bg-[#F8FAF8] dark:bg-[#1D201F]">⚠️ Near Cap (2/3 Calls)</option>
-                <option value="whatsapp_only" className="bg-[#F8FAF8] dark:bg-[#1D201F]">💬 WhatsApp Only</option>
-                <option value="paused_opted_out" className="bg-[#F8FAF8] dark:bg-[#1D201F]">⏸️ Paused / Opted-out</option>
-              </select>
+                variant="chip"
+                options={[
+                  { value: 'all', label: 'All Leads' },
+                  { value: 'capped', label: 'Capped (3/3 Calls)', icon: <span>🛑</span> },
+                  { value: 'at_risk', label: 'Near Cap (2/3 Calls)', icon: <span>⚠️</span> },
+                  { value: 'whatsapp_only', label: 'WhatsApp Only', icon: <span>💬</span> },
+                  { value: 'paused_opted_out', label: 'Paused / Opted-out', icon: <span>⏸️</span> },
+                ]}
+              />
             </div>
 
             {/* Creation Date Filter Chip */}
             <div className="inline-flex items-center rounded-full border border-[#BEC9C5]/60 dark:border-[#3F4946]/60 bg-[#ECEFEC] dark:bg-[#1D201F] hover:bg-[#E6EAE6] dark:hover:bg-[#272B2A] px-3.5 py-1.5 min-h-[38px] transition-colors">
-              <span className="text-[11px] text-[#6F7976] dark:text-[#89938F] mr-2 font-medium">Created:</span>
-              <select
+              <MaterialDropdown
                 id="filter-date"
+                label="Created:"
                 value={dateFilter}
-                onChange={(e) => {
-                  setDateFilter(e.target.value);
+                onChange={(val) => {
+                  setDateFilter(val);
                   setCurrentPage(1);
                 }}
-                className="text-xs font-medium m3-select-bare"
-              >
-                <option value="all" className="bg-[#F8FAF8] dark:bg-[#1D201F]">All Time</option>
-                <option value="today" className="bg-[#F8FAF8] dark:bg-[#1D201F]">Today (&lt; 24h)</option>
-                <option value="week" className="bg-[#F8FAF8] dark:bg-[#1D201F]">Past Week</option>
-                <option value="month" className="bg-[#F8FAF8] dark:bg-[#1D201F]">Past Month</option>
-              </select>
+                variant="chip"
+                options={[
+                  { value: 'all', label: 'All Time' },
+                  { value: 'today', label: 'Today (< 24h)' },
+                  { value: 'week', label: 'Past Week' },
+                  { value: 'month', label: 'Past Month' },
+                ]}
+              />
             </div>
 
             {/* Active filters reset button */}
@@ -1125,38 +1121,34 @@ export const LeadsListView: React.FC<LeadsListViewProps> = ({
                 <label htmlFor="bulk-stage-select-input" className="block font-medium text-[#191C1B] dark:text-[#E1E3E0] mb-1.5">
                   Change Pipeline Stage
                 </label>
-                <select
+                <MaterialDropdown
                   id="bulk-stage-select-input"
                   value={bulkStatus}
-                  onChange={(e) => setBulkStatus(e.target.value)}
-                  className="w-full p-3 font-medium focus-visible:outline-none focus-visible:ring-2 m3-select"
-                >
-                  <option value="">-- Leave unchanged --</option>
-                  {PIPELINE_STAGES.map((st) => (
-                    <option key={st} value={st}>
-                      {st}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => setBulkStatus(val)}
+                  variant="form"
+                  placeholder="-- Leave unchanged --"
+                  options={[
+                    { value: '', label: '-- Leave unchanged --' },
+                    ...PIPELINE_STAGES.map((st) => ({ value: st, label: st })),
+                  ]}
+                />
               </div>
 
               <div>
                 <label htmlFor="bulk-assignee-select-input" className="block font-medium text-[#191C1B] dark:text-[#E1E3E0] mb-1.5">
                   Reassign to Teammate
                 </label>
-                <select
+                <MaterialDropdown
                   id="bulk-assignee-select-input"
                   value={bulkAssignee}
-                  onChange={(e) => setBulkAssignee(e.target.value)}
-                  className="w-full p-3 font-medium focus-visible:outline-none focus-visible:ring-2 m3-select"
-                >
-                  <option value="">-- Leave unchanged --</option>
-                  {TEAM_MEMBERS.map((m) => (
-                    <option key={m.id} value={m.name}>
-                      {m.name} ({m.role})
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => setBulkAssignee(val)}
+                  variant="form"
+                  placeholder="-- Leave unchanged --"
+                  options={[
+                    { value: '', label: '-- Leave unchanged --' },
+                    ...TEAM_MEMBERS.map((m) => ({ value: m.name, label: `${m.name} (${m.role})` })),
+                  ]}
+                />
               </div>
 
               <div>
@@ -1253,17 +1245,18 @@ export const LeadsListView: React.FC<LeadsListViewProps> = ({
                 <label htmlFor="waca-template-select-input" className="block font-medium text-[#191C1B] dark:text-[#E1E3E0] mb-1.5">
                   Select Pre-Approved HSM Template
                 </label>
-                <select
+                <MaterialDropdown
                   id="waca-template-select-input"
                   value={wacaTemplate}
-                  onChange={(e) => setWacaTemplate(e.target.value)}
-                  className="w-full p-3 font-medium focus-visible:outline-none focus-visible:ring-2 m3-select"
-                >
-                  <option value="welcome_intro">welcome_telesales_intro (Utility)</option>
-                  <option value="demo_invitation">demo_webinar_invitation (Marketing)</option>
-                  <option value="quote_followup">quotation_shared_followup (Service)</option>
-                  <option value="callback_reminder">scheduled_callback_alert (Alert)</option>
-                </select>
+                  onChange={(val) => setWacaTemplate(val)}
+                  variant="form"
+                  options={[
+                    { value: 'welcome_intro', label: 'welcome_telesales_intro (Utility)' },
+                    { value: 'demo_invitation', label: 'demo_webinar_invitation (Marketing)' },
+                    { value: 'quote_followup', label: 'quotation_shared_followup (Service)' },
+                    { value: 'callback_reminder', label: 'scheduled_callback_alert (Alert)' },
+                  ]}
+                />
               </div>
 
               {/* Template Preview */}

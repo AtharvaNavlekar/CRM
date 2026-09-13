@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, Upload, FileSpreadsheet, Download, Check, AlertCircle, ArrowRight } from 'lucide-react';
+import { MaterialDropdown } from '../common/MaterialDropdown';
 import { Lead } from '../../types';
 import { useModalFocusTrap } from '../../utils/useModalFocusTrap';
 
@@ -271,65 +272,60 @@ Bhavna Mehra,+91 98444 55667,Google Ads,Health insurance plan for senior citizen
                   <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
                     Customer Name *
                   </label>
-                  <select
+                  <MaterialDropdown
                     value={nameCol}
-                    onChange={(e) => setNameCol(e.target.value)}
-                    className="w-full p-1.5 text-xs text-slate-800 dark:text-slate-200 m3-select"
-                  >
-                    {headers.map(h => <option key={h} value={h}>{h}</option>)}
-                  </select>
+                    onChange={(val) => setNameCol(val)}
+                    variant="form"
+                    options={headers.map(h => ({ value: h, label: h }))}
+                  />
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
                     Phone / Mobile *
                   </label>
-                  <select
+                  <MaterialDropdown
                     value={phoneCol}
-                    onChange={(e) => setPhoneCol(e.target.value)}
-                    className="w-full p-1.5 text-xs text-slate-800 dark:text-slate-200 m3-select"
-                  >
-                    {headers.map(h => <option key={h} value={h}>{h}</option>)}
-                  </select>
+                    onChange={(val) => setPhoneCol(val)}
+                    variant="form"
+                    options={headers.map(h => ({ value: h, label: h }))}
+                  />
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
                     Lead Source
                   </label>
-                  <select
+                  <MaterialDropdown
                     value={sourceCol}
-                    onChange={(e) => setSourceCol(e.target.value)}
-                    className="w-full p-1.5 text-xs text-slate-800 dark:text-slate-200 m3-select"
-                  >
-                    {headers.map(h => <option key={h} value={h}>{h}</option>)}
-                  </select>
+                    onChange={(val) => setSourceCol(val)}
+                    variant="form"
+                    options={headers.map(h => ({ value: h, label: h }))}
+                  />
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
                     Notes / Requirements
                   </label>
-                  <select
+                  <MaterialDropdown
                     value={notesCol}
-                    onChange={(e) => setNotesCol(e.target.value)}
-                    className="w-full p-1.5 text-xs text-slate-800 dark:text-slate-200 m3-select"
-                  >
-                    {headers.map(h => <option key={h} value={h}>{h}</option>)}
-                  </select>
+                    onChange={(val) => setNotesCol(val)}
+                    variant="form"
+                    options={headers.map(h => ({ value: h, label: h }))}
+                  />
                 </div>
 
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
                     Deal Value (₹)
                   </label>
-                  <select
+                  <MaterialDropdown
                     value={valueCol}
-                    onChange={(e) => setValueCol(e.target.value)}
-                    className="w-full p-1.5 text-xs text-slate-800 dark:text-slate-200 m3-select"
-                  >
-                    {headers.map(h => <option key={h} value={h}>{h}</option>)}
-                  </select>
+                    onChange={(val) => setValueCol(val)}
+                    variant="form"
+                    options={headers.map(h => ({ value: h, label: h }))}
+                  />
                 </div>
               </div>
             </div>

@@ -1,6 +1,7 @@
 import React from 'react';
-import { Filter, X } from 'lucide-react';
+import { Filter } from 'lucide-react';
 import { BottomSheet } from '../common/BottomSheet';
+import { MaterialDropdown } from '../common/MaterialDropdown';
 import { PIPELINE_STAGES, TEAM_MEMBERS } from '../../data/mockSeedData';
 
 interface MobileFilterSheetProps {
@@ -48,9 +49,6 @@ export const MobileFilterSheet: React.FC<MobileFilterSheetProps> = ({
   onResetAll,
   activeFilterCount
 }) => {
-  const selectBaseClass =
-    'w-full min-h-[48px] px-4 py-3 text-sm font-medium bg-[#ECEFEC] dark:bg-[#272B2A] text-[#191C1B] dark:text-[#E1E3E0] border border-[#BEC9C5]/40 dark:border-[#3F4946]/40 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#00695C] transition-colors cursor-pointer appearance-none';
-
   return (
     <BottomSheet isOpen={isOpen} onClose={onClose} title="Filter Leads" maxHeightVh={80}>
       <div className="p-5 space-y-5">
@@ -75,100 +73,99 @@ export const MobileFilterSheet: React.FC<MobileFilterSheetProps> = ({
 
         {/* Lead Stage */}
         <div>
-          <label htmlFor="mobile-filter-stage" className="block text-xs font-medium text-[#6F7976] dark:text-[#89938F] mb-2 uppercase tracking-wider">
+          <label className="block text-xs font-medium text-[#6F7976] dark:text-[#89938F] mb-2 uppercase tracking-wider">
             Lead Stage
           </label>
-          <select
+          <MaterialDropdown
             id="mobile-filter-stage"
             value={stageFilter}
-            onChange={(e) => onStageChange(e.target.value)}
-            className="m3-select"
-          >
-            <option value="all">All Stages ({PIPELINE_STAGES.length})</option>
-            {PIPELINE_STAGES.map((st) => (
-              <option key={st} value={st}>{st}</option>
-            ))}
-          </select>
+            onChange={onStageChange}
+            variant="form"
+            options={[
+              { value: 'all', label: `All Stages (${PIPELINE_STAGES.length})` },
+              ...PIPELINE_STAGES.map((st) => ({ value: st, label: st })),
+            ]}
+          />
         </div>
 
         {/* Assignee */}
         <div>
-          <label htmlFor="mobile-filter-assignee" className="block text-xs font-medium dark:text-[#89938F] mb-2 uppercase tracking-wider m3-select">
+          <label className="block text-xs font-medium dark:text-[#89938F] mb-2 uppercase tracking-wider">
             Assignee
           </label>
-          <select
+          <MaterialDropdown
             id="mobile-filter-assignee"
             value={assigneeFilter}
-            onChange={(e) => onAssigneeChange(e.target.value)}
-            className="m3-select"
-          >
-            <option value="all">All Assignees</option>
-            {TEAM_MEMBERS.map((m) => (
-              <option key={m.id} value={m.name}>{m.name}</option>
-            ))}
-          </select>
+            onChange={onAssigneeChange}
+            variant="form"
+            options={[
+              { value: 'all', label: 'All Assignees' },
+              ...TEAM_MEMBERS.map((m) => ({ value: m.name, label: m.name })),
+            ]}
+          />
         </div>
 
         {/* Source */}
         <div>
-          <label htmlFor="mobile-filter-source" className="block text-xs font-medium dark:text-[#89938F] mb-2 uppercase tracking-wider m3-select">
+          <label className="block text-xs font-medium dark:text-[#89938F] mb-2 uppercase tracking-wider">
             Source
           </label>
-          <select
+          <MaterialDropdown
             id="mobile-filter-source"
             value={sourceFilter}
-            onChange={(e) => onSourceChange(e.target.value)}
-            className="m3-select"
-          >
-            <option value="all">All Sources ({availableSources.length})</option>
-            {availableSources.map((src) => (
-              <option key={src} value={src}>{src}</option>
-            ))}
-          </select>
+            onChange={onSourceChange}
+            variant="form"
+            options={[
+              { value: 'all', label: `All Sources (${availableSources.length})` },
+              ...availableSources.map((src) => ({ value: src, label: src })),
+            ]}
+          />
         </div>
 
         {/* Compliance */}
         <div>
-          <label htmlFor="mobile-filter-compliance" className="block text-xs font-medium dark:text-[#89938F] mb-2 uppercase tracking-wider m3-select">
+          <label className="block text-xs font-medium dark:text-[#89938F] mb-2 uppercase tracking-wider">
             Compliance
           </label>
-          <select
+          <MaterialDropdown
             id="mobile-filter-compliance"
             value={complianceFilter}
-            onChange={(e) => onComplianceChange(e.target.value)}
-            className="m3-select"
-          >
-            <option value="all">All Leads</option>
-            <option value="capped">🛑 Capped (3/3 Calls)</option>
-            <option value="at_risk">⚠️ Near Cap (2/3 Calls)</option>
-            <option value="whatsapp_only">💬 WhatsApp Only</option>
-            <option value="paused_opted_out">⏸️ Paused / Opted-out</option>
-          </select>
+            onChange={onComplianceChange}
+            variant="form"
+            options={[
+              { value: 'all', label: 'All Leads' },
+              { value: 'capped', label: 'Capped (3/3 Calls)', icon: <span>🛑</span> },
+              { value: 'at_risk', label: 'Near Cap (2/3 Calls)', icon: <span>⚠️</span> },
+              { value: 'whatsapp_only', label: 'WhatsApp Only', icon: <span>💬</span> },
+              { value: 'paused_opted_out', label: 'Paused / Opted-out', icon: <span>⏸️</span> },
+            ]}
+          />
         </div>
 
         {/* Date Range */}
         <div>
-          <label htmlFor="mobile-filter-date" className="block text-xs font-medium dark:text-[#89938F] mb-2 uppercase tracking-wider m3-select">
+          <label className="block text-xs font-medium dark:text-[#89938F] mb-2 uppercase tracking-wider">
             Created
           </label>
-          <select
+          <MaterialDropdown
             id="mobile-filter-date"
             value={dateFilter}
-            onChange={(e) => onDateChange(e.target.value)}
-            className="m3-select"
-          >
-            <option value="all">All Time</option>
-            <option value="today">Today (&lt; 24h)</option>
-            <option value="week">Past Week</option>
-            <option value="month">Past Month</option>
-          </select>
+            onChange={onDateChange}
+            variant="form"
+            options={[
+              { value: 'all', label: 'All Time' },
+              { value: 'today', label: 'Today (< 24h)' },
+              { value: 'week', label: 'Past Week' },
+              { value: 'month', label: 'Past Month' },
+            ]}
+          />
         </div>
 
         {/* Apply & Close */}
         <button
           type="button"
           onClick={onClose}
-          className="w-full min-h-[52px] rounded-full bg-[#00695C] text-white text-sm font-semibold hover:bg-[#005449] active:scale-[0.98] transition-all shadow-sm mt-2 m3-select"
+          className="w-full min-h-[52px] rounded-full bg-[#00695C] text-white text-sm font-semibold hover:bg-[#005449] active:scale-[0.98] transition-all shadow-sm mt-2"
         >
           Apply Filters
         </button>

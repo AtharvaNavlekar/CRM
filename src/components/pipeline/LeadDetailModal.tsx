@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { MaterialDropdown } from '../common/MaterialDropdown';
 import {
   X,
   Phone,
@@ -283,17 +284,13 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                 <UserCheck className="w-3.5 h-3.5 text-teal-600" />
                 <span>Assigned Telecaller</span>
               </span>
-              <select
+              <MaterialDropdown
                 value={lead.assignedRepId}
-                onChange={(e) => onAssignRep(lead.id, e.target.value)}
-                className="w-full mt-1.5 p-1 text-xs font-bold m3-select"
-              >
-                {users.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name} ({u.role})
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => onAssignRep(lead.id, val)}
+                variant="form"
+                className="mt-1.5"
+                options={users.map((u) => ({ value: u.id, label: `${u.name} (${u.role})` }))}
+              />
             </div>
 
             {/* Callback Reminder Date/Time Picker */}

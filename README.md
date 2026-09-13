@@ -95,7 +95,13 @@ The following scripts are defined in `package.json`:
 *   `server/` - Node.js Express backend logic (`auth.ts`, `db.ts`, `compliance.ts`)
 *   `security-tests/` - Automated security and compliance verification scripts
 *   `tests/` - Application logic unit and integration tests
-*   `data/` - Contains the `db.json` file used for application state persistence
+*   `data/` - Contains the `db.json` file used for application state persistence (Note: this directory is git-ignored as it contains runtime data).
+
+## Runtime Data Hygiene
+
+*   **Local State Only**: Runtime database files (`data/db.json`), backups, exports, and generated logs are local to your environment and must **never** be committed to Git.
+*   **Seed Definitions**: Development dummy data (e.g., `src/data/mockSeedData.ts` and `server/seedData.ts`) belong in source code and can be committed.
+*   **Production Data**: Genuine customer data or PII must never be stored in Git.
 
 ## Current Status & Limitations
 

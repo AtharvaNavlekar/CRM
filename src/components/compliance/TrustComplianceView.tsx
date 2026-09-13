@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { MaterialDropdown } from '../common/MaterialDropdown';
 import {
   ShieldCheck,
   PhoneCall,
@@ -510,31 +511,33 @@ export const TrustComplianceView: React.FC<TrustComplianceViewProps> = () => {
                   </div>
                   <div>
                     <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block mb-1">Pipeline Stage</label>
-                    <select
+                    <MaterialDropdown
                       value={newReasonStage}
-                      onChange={(e) => setNewReasonStage(e.target.value)}
-                      className="w-full text-xs p-2 m3-select"
-                    >
-                      <option value="Fresh Lead">Fresh Lead</option>
-                      <option value="Follow-up">Follow-up</option>
-                      <option value="Quotation Shared">Quotation Shared</option>
-                      <option value="Payment Pending">Payment Pending</option>
-                      <option value="Reheated">Reheated</option>
-                    </select>
+                      onChange={(val) => setNewReasonStage(val)}
+                      variant="form"
+                      options={[
+                        { value: 'Fresh Lead', label: 'Fresh Lead' },
+                        { value: 'Follow-up', label: 'Follow-up' },
+                        { value: 'Quotation Shared', label: 'Quotation Shared' },
+                        { value: 'Payment Pending', label: 'Payment Pending' },
+                        { value: 'Reheated', label: 'Reheated' },
+                      ]}
+                    />
                   </div>
                   <div>
                     <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block mb-1">Category</label>
-                    <select
+                    <MaterialDropdown
                       value={newReasonCategory}
-                      onChange={(e) => setNewReasonCategory(e.target.value as any)}
-                      className="w-full text-xs p-2 m3-select"
-                    >
-                      <option value="Loan Follow-up">Loan Follow-up</option>
-                      <option value="Payment & Billing">Payment & Billing</option>
-                      <option value="Product Demo">Product Demo</option>
-                      <option value="General Inquiry">General Inquiry</option>
-                      <option value="Debt Resolution & Recovery">Debt Resolution & Recovery (High Scrutiny)</option>
-                    </select>
+                      onChange={(val) => setNewReasonCategory(val as any)}
+                      variant="form"
+                      options={[
+                        { value: 'Loan Follow-up', label: 'Loan Follow-up' },
+                        { value: 'Payment & Billing', label: 'Payment & Billing' },
+                        { value: 'Product Demo', label: 'Product Demo' },
+                        { value: 'General Inquiry', label: 'General Inquiry' },
+                        { value: 'Debt Resolution & Recovery', label: 'Debt Resolution & Recovery (High Scrutiny)' },
+                      ]}
+                    />
                   </div>
                 </div>
 
@@ -896,15 +899,16 @@ export const TrustComplianceView: React.FC<TrustComplianceViewProps> = () => {
                   </div>
                   <div>
                     <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block mb-1">Primary Channel (First)</label>
-                    <select
+                    <MaterialDropdown
                       value={newRoutePrimary}
-                      onChange={(e) => setNewRoutePrimary(e.target.value as any)}
-                      className="w-full text-xs p-2 m3-select"
-                    >
-                      <option value="WhatsApp">WhatsApp (Text-first)</option>
-                      <option value="Call">Phone Call</option>
-                      <option value="SMS">SMS</option>
-                    </select>
+                      onChange={(val) => setNewRoutePrimary(val as any)}
+                      variant="form"
+                      options={[
+                        { value: 'WhatsApp', label: 'WhatsApp (Text-first)' },
+                        { value: 'Call', label: 'Phone Call' },
+                        { value: 'SMS', label: 'SMS' },
+                      ]}
+                    />
                   </div>
                   <div>
                     <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block mb-1">Wait Period</label>
@@ -922,16 +926,17 @@ export const TrustComplianceView: React.FC<TrustComplianceViewProps> = () => {
                   </div>
                   <div>
                     <label className="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block mb-1">Fallback Escalation</label>
-                    <select
+                    <MaterialDropdown
                       value={newRouteFallback}
-                      onChange={(e) => setNewRouteFallback(e.target.value as any)}
-                      className="w-full text-xs p-2 m3-select"
-                    >
-                      <option value="Call">Phone Call</option>
-                      <option value="WhatsApp">WhatsApp</option>
-                      <option value="SMS">SMS</option>
-                      <option value="None">None (Halt)</option>
-                    </select>
+                      onChange={(val) => setNewRouteFallback(val as any)}
+                      variant="form"
+                      options={[
+                        { value: 'Call', label: 'Phone Call' },
+                        { value: 'WhatsApp', label: 'WhatsApp' },
+                        { value: 'SMS', label: 'SMS' },
+                        { value: 'None', label: 'None (Halt)' },
+                      ]}
+                    />
                   </div>
                 </div>
 

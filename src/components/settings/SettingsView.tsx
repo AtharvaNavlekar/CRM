@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { MaterialDropdown } from '../common/MaterialDropdown';
 import {
   Settings,
   Shield,
@@ -707,16 +708,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onDataReset }) => {
                 onChange={(e) => setNewFieldName(e.target.value)}
                 className="px-3 py-1.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs"
               />
-              <select
+              <MaterialDropdown
                 value={newFieldType}
-                onChange={(e) => setNewFieldType(e.target.value as any)}
-                className="px-3 py-1.5 text-xs font-semibold m3-select"
-              >
-                <option value="text">Text</option>
-                <option value="number">Number</option>
-                <option value="select">Dropdown Select</option>
-                <option value="date">Date</option>
-              </select>
+                onChange={(val) => setNewFieldType(val as any)}
+                variant="form"
+                options={[
+                  { value: 'text', label: 'Text' },
+                  { value: 'number', label: 'Number' },
+                  { value: 'select', label: 'Dropdown Select' },
+                  { value: 'date', label: 'Date' },
+                ]}
+              />
               {newFieldType === 'select' ? (
                 <input
                   type="text"
@@ -894,17 +896,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onDataReset }) => {
                         </td>
 
                         <td className="p-3">
-                          <select
+                          <MaterialDropdown
                             value={rp.scope}
-                            onChange={(e) => handleChangeScope(rp.role, e.target.value as ViewScope)}
-                            className={`px-2 py-1 rounded-md text-[11px] font-bold border ${scopeBadgeColor} bg-white dark:bg-slate-900 cursor-pointer`}
-                          >
-                            <option value="SELF">SELF</option>
-                            <option value="TEAM">TEAM</option>
-                            <option value="ALL_TEAMS">ALL_TEAMS</option>
-                            <option value="SYSTEM">SYSTEM</option>
-                            <option value="COMPANY">COMPANY</option>
-                          </select>
+                            onChange={(val) => handleChangeScope(rp.role, val as ViewScope)}
+                            variant="form"
+                            triggerClassName={`px-2 py-1 rounded-md text-[11px] font-bold ${scopeBadgeColor}`}
+                            options={[
+                              { value: 'SELF', label: 'SELF' },
+                              { value: 'TEAM', label: 'TEAM' },
+                              { value: 'ALL_TEAMS', label: 'ALL_TEAMS' },
+                              { value: 'SYSTEM', label: 'SYSTEM' },
+                              { value: 'COMPANY', label: 'COMPANY' },
+                            ]}
+                          />
                         </td>
 
                         <td className="p-3 m3-select">
@@ -1004,18 +1008,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onDataReset }) => {
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 mb-1">Assigned Role *</label>
-                    <select
+                    <MaterialDropdown
                       value={newUserRole}
-                      onChange={(e) => setNewUserRole(e.target.value as UserRole)}
-                      className="w-full px-3 py-1.5 text-xs font-semibold m3-select"
-                    >
-                      <option value="telecaller">Telecaller (SELF Scope)</option>
-                      <option value="tl">Team Lead (TEAM Scope)</option>
-                      <option value="tl_head">TL Head (ALL_TEAMS Scope)</option>
-                      <option value="it">IT Admin (SYSTEM Scope)</option>
-                      <option value="owner">Owner (COMPANY Scope)</option>
-                      <option value="cto">CTO (COMPANY Scope)</option>
-                    </select>
+                      onChange={(val) => setNewUserRole(val as UserRole)}
+                      variant="form"
+                      options={[
+                        { value: 'telecaller', label: 'Telecaller (SELF Scope)' },
+                        { value: 'tl', label: 'Team Lead (TEAM Scope)' },
+                        { value: 'tl_head', label: 'TL Head (ALL_TEAMS Scope)' },
+                        { value: 'it', label: 'IT Admin (SYSTEM Scope)' },
+                        { value: 'owner', label: 'Owner (COMPANY Scope)' },
+                        { value: 'cto', label: 'CTO (COMPANY Scope)' },
+                      ]}
+                    />
                   </div>
                   <div>
                     <label className="block text-[10px] font-bold text-slate-500 mb-1">Phone Number</label>
@@ -1033,14 +1038,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onDataReset }) => {
                   {(newUserRole === 'telecaller' || newUserRole === 'tl') && (
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 mb-1">Branch Team Location *</label>
-                      <select
+                      <MaterialDropdown
                         value={newUserTeamId}
-                        onChange={(e) => setNewUserTeamId(e.target.value)}
-                        className="w-full px-3 py-1.5 text-xs font-semibold m3-select"
-                      >
-                        <option value="team-mumbai">Team Mumbai (Western Region)</option>
-                        <option value="team-delhi">Team Delhi (Northern Region)</option>
-                      </select>
+                        onChange={(val) => setNewUserTeamId(val)}
+                        variant="form"
+                        options={[
+                          { value: 'team-mumbai', label: 'Team Mumbai (Western Region)' },
+                          { value: 'team-delhi', label: 'Team Delhi (Northern Region)' },
+                        ]}
+                      />
                     </div>
                   )}
 

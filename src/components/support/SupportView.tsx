@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { MaterialDropdown } from '../common/MaterialDropdown';
 import {
   LifeBuoy,
   Plus,
@@ -253,15 +254,16 @@ export const SupportView: React.FC<SupportViewProps> = ({ leads, users }) => {
                 </div>
 
                 {/* Status selector */}
-                <select
+                <MaterialDropdown
                   value={selectedTicket.status}
-                  onChange={(e) => handleUpdateStatus(e.target.value as TicketStatus)}
-                  className="text-xs font-bold p-1.5 m3-select"
-                >
-                  <option value="Open">Open</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Resolved">Resolved</option>
-                </select>
+                  onChange={(val) => handleUpdateStatus(val as TicketStatus)}
+                  variant="form"
+                  options={[
+                    { value: 'Open', label: 'Open' },
+                    { value: 'In Progress', label: 'In Progress' },
+                    { value: 'Resolved', label: 'Resolved' },
+                  ]}
+                />
               </div>
 
               <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
@@ -366,33 +368,31 @@ export const SupportView: React.FC<SupportViewProps> = ({ leads, users }) => {
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Priority
                   </label>
-                  <select
+                  <MaterialDropdown
                     value={newPriority}
-                    onChange={(e) => setNewPriority(e.target.value as TicketPriority)}
-                    className="w-full px-3 py-2 text-xs m3-select"
-                  >
-                    <option value="High">High (Urgent Deals)</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Low">Low</option>
-                  </select>
+                    onChange={(val) => setNewPriority(val as TicketPriority)}
+                    variant="form"
+                    options={[
+                      { value: 'High', label: 'High (Urgent Deals)' },
+                      { value: 'Medium', label: 'Medium' },
+                      { value: 'Low', label: 'Low' },
+                    ]}
+                  />
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Link to Lead (Optional)
                   </label>
-                  <select
+                  <MaterialDropdown
                     value={newLeadId}
-                    onChange={(e) => setNewLeadId(e.target.value)}
-                    className="w-full px-3 py-2 text-xs truncate m3-select"
-                  >
-                    <option value="">None (General Issue)</option>
-                    {leads.map((l) => (
-                      <option key={l.id} value={l.id}>
-                        {l.name}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => setNewLeadId(val)}
+                    variant="form"
+                    options={[
+                      { value: '', label: 'None (General Issue)' },
+                      ...leads.map((l) => ({ value: l.id, label: l.name })),
+                    ]}
+                  />
                 </div>
               </div>
 
