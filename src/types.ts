@@ -66,6 +66,7 @@ export interface ImpersonationSession {
   targetUserRole: string;
   reason: string;
   startedAt: string;
+  expiresAt: string;
   endedAt?: string;
   active: boolean;
   ip: string;
@@ -123,7 +124,6 @@ export interface User {
   email: string;
   role: UserRole;
   isPlatformStaff?: boolean;   // True for platform staff accounts
-  impersonationSession?: ImpersonationSession | null; // For platform staff
   passwordHash?: string;
   avatar?: string;
   title?: string;
@@ -308,7 +308,6 @@ export interface DatabaseState {
   pipelineStages?: PipelineStageConfig[];
   autoAssignmentEnabled?: boolean;
   complianceRules?: ContactFrequencyRules;
-  impersonationSessions?: ImpersonationSession[];
   securityAlerts?: SecurityAlert[];
   billingRecords?: BillingRecord[];
   featureFlags?: FeatureFlag[];

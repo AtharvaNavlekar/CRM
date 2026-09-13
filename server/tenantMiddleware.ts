@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { User, ImpersonationSession, SecurityContext } from '../src/types';
+import { db as pgDb } from './db/client';
+import { impersonationSessions } from './db/schema';
+import { eq, and, gt } from 'drizzle-orm';
 import { getDb, logAudit } from './db';
-
 declare global {
   namespace Express {
     interface Request {
@@ -43,16 +45,23 @@ export const enforceTenantScope: RequestHandler = async (req: Request, res: Resp
   }
 
   const user = req.user;
-  const db = await getDb();
 
   // The actor is already populated by authenticateToken in req.securityContext
   const isPlatformStaff = req.securityContext.isPlatformStaff;
 
   if (isPlatformStaff) {
-    // Check if platform staff has an active impersonation session
-    const activeSession = db.impersonationSessions?.find(
-      s => s.platformUserId === user.id && s.active === true
-    );
+    // Check if platform staff has an active impersonation session in PostgreSQL
+    const activeSessions = await pgDb.select().from(impersonationSessions)
+      .where(
+        and(
+          eq(impersonationSessions.platformUserId, user.id),
+          eq(impersonationSessions.active, true),
+          gt(impersonationSessions.expiresAt, new Date().toISOString())
+        )
+      )
+      .limit(1);
+
+    const activeSession = activeSessions[0];
 
     if (activeSession) {
       req.securityContext.tenantId = activeSession.targetTenantId;

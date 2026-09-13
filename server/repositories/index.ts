@@ -119,7 +119,6 @@ export async function getLegacyState(): Promise<any> {
     securityAlerts,
     featureFlags,
     billingRecords,
-    impersonationSessions: [],
     backups: []
   };
 }

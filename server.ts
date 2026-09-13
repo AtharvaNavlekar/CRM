@@ -1,7 +1,7 @@
 import { generateOpaqueRefreshToken, hashToken } from './server/auth';
 import { db } from './server/db/client';
-import { sessions } from './server/db/schema';
-import { eq, sql } from 'drizzle-orm';
+import { sessions, impersonationSessions } from './server/db/schema';
+import { eq, sql, and, desc } from 'drizzle-orm';
 import express from 'express';
 import { can } from './server/policy';
 import path from 'path';
@@ -2006,12 +2006,19 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
        return { ...a, tenantName: t?.name || a.tenantId };
     });
 
-    res.json({ alerts, impersonationSessions: db.impersonationSessions || [] });
+    const activeSessions = await db.select().from(impersonationSessions).where(eq(impersonationSessions.active, true)).execute();
+    res.json({ alerts, impersonationSessions: activeSessions });
   });
 
   // Step 3: Impersonation
   app.post('/api/platform/impersonate', async (req, res) => {
     if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
+    
+    // Explicitly reject nested impersonation
+    if (req.securityContext?.impersonating) {
+       return res.status(403).json({ error: 'Nested impersonation is strictly forbidden. End your current session first.' });
+    }
+
     if (!(await can(req.securityContext!, 'users:impersonate_tenant'))) {
        return res.status(403).json({ error: 'Insufficient platform role to impersonate.' });
     }
@@ -2020,17 +2027,20 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     if (!targetTenantId) return res.status(400).json({ error: 'Target tenant ID required' });
     if (!reason || reason.trim() === '') return res.status(400).json({ error: 'Non-empty reason required' });
 
-    const db = await getLegacyState();
-    const t = db.tenants?.find(t => t.id === targetTenantId);
+    const legacyDb = await getLegacyState();
+    const t = legacyDb.tenants?.find(t => t.id === targetTenantId);
     if (!t) return res.status(404).json({ error: 'Target tenant not found' });
 
     let tUser;
     if (targetUserId) {
-       tUser = db.users.find(u => u.id === targetUserId && u.tenantId === targetTenantId);
+       tUser = legacyDb.users.find(u => u.id === targetUserId && u.tenantId === targetTenantId);
        if (!tUser) return res.status(404).json({ error: 'Target user not found in this tenant' });
     }
 
-    const session: any = {
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 60 * 60 * 1000); // 60 minutes expiry
+
+    const session = {
       id: `imp-${crypto.randomUUID()}`,
       platformUserId: req.user!.id,
       platformUserName: req.user!.name,
@@ -2041,20 +2051,24 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
       targetUserName: tUser?.name || 'Tenant Admin Default',
       targetUserRole: tUser?.role || 'owner',
       reason,
-      startedAt: new Date().toISOString(),
+      startedAt: now.toISOString(),
+      expiresAt: expiresAt.toISOString(),
       active: true,
       ip: getClientIp(req)
     };
 
-    if (!db.impersonationSessions) db.impersonationSessions = [];
-    
-    db.impersonationSessions.filter(s => s.platformUserId === req.user!.id && s.active).forEach(s => {
-      s.active = false;
-      s.endedAt = new Date().toISOString();
-    });
+    // Deactivate previous sessions for this user
+    await db.update(impersonationSessions)
+      .set({ active: false, endedAt: now.toISOString() })
+      .where(
+        and(
+          eq(impersonationSessions.platformUserId, req.user!.id),
+          eq(impersonationSessions.active, true)
+        )
+      );
 
-    db.impersonationSessions.push(session);
-    // saveDatabase(); // TODO: Migrate to repository write
+    // Insert new session
+    await db.insert(impersonationSessions).values(session);
 
     logAudit('IMPERSONATION_STARTED', `Started impersonating ${t.name}. Reason: ${reason}`, req.user, getClientIp(req), { tenantId: 'platform' });
     res.json({ success: true, session });
@@ -2063,12 +2077,22 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
   app.post('/api/platform/impersonate/end', async (req, res) => {
     if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
     
-    const db = await getLegacyState();
-    const active = db.impersonationSessions?.find(s => s.platformUserId === req.user!.id && s.active);
-    if (active) {
-       active.active = false;
-       active.endedAt = new Date().toISOString();
-       // saveDatabase(); // TODO: Migrate to repository write
+    // Find active session in postgres
+    const activeRecords = await db.select().from(impersonationSessions)
+      .where(
+        and(
+          eq(impersonationSessions.platformUserId, req.user!.id),
+          eq(impersonationSessions.active, true)
+        )
+      )
+      .limit(1);
+
+    if (activeRecords.length > 0) {
+       const active = activeRecords[0];
+       await db.update(impersonationSessions)
+         .set({ active: false, endedAt: new Date().toISOString() })
+         .where(eq(impersonationSessions.id, active.id));
+
        logAudit('IMPERSONATION_ENDED', `Ended impersonating ${active.targetTenantName}.`, req.user, getClientIp(req), { tenantId: 'platform' });
     }
     res.json({ success: true });
