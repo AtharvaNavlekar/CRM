@@ -3,7 +3,7 @@ import { User, ImpersonationSession, SecurityContext } from '../src/types';
 import { db as pgDb } from './db/client';
 import { impersonationSessions } from './db/schema';
 import { eq, and, gt } from 'drizzle-orm';
-import { getDb, logAudit } from './db';
+import { getDb } from './db';
 declare global {
   namespace Express {
     interface Request {

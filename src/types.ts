@@ -243,17 +243,23 @@ export interface Ticket {
 
 export interface AuditLog {
   id: string;
-  tenantId?: string; // Multi-tenant isolation scope ('platform' for platform-level actions)
-  timestamp: string;
-  userId: string;
-  userName: string;
-  userRole: string;
-  action: string;
-  details: string;
-  ip: string;
-  scope?: ViewScope;
-  actionType?: Action;
-  requiredApproval?: boolean;
+  occurredAt: string;
+  requestId: string;
+  eventType: string;
+  outcome: string;
+  actorUserId: string;
+  actorRole: string;
+  actorTenantId?: string | null;
+  actingAsUserId?: string | null;
+  impersonationSessionId?: string | null;
+  tenantId?: string | null;
+  resourceType?: string | null;
+  resourceId?: string | null;
+  action?: string | null;
+  reason?: string | null;
+  ip?: string | null;
+  userAgent?: string | null;
+  metadata?: Record<string, any> | null;
 }
 
 export interface BackupRecord {

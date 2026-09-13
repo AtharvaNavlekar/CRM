@@ -139,17 +139,31 @@ export const ticketReplies = pgTable('ticket_replies', {
 
 export const auditLogs = pgTable('audit_logs', {
   id: text('id').primaryKey(),
+  occurredAt: timestamp('occurred_at', { mode: 'string' }).notNull(),
+  requestId: text('request_id').notNull(),
+  eventType: text('event_type').notNull(),
+  outcome: text('outcome').notNull(), // 'SUCCESS' | 'DENIED' | 'FAILURE' | 'EXPIRED' | 'REVOKED'
+  actorUserId: text('actor_user_id').notNull(),
+  actorRole: text('actor_role').notNull(),
+  actorTenantId: text('actor_tenant_id'),
+  actingAsUserId: text('acting_as_user_id'),
+  impersonationSessionId: text('impersonation_session_id'),
   tenantId: text('tenant_id'),
-  timestamp: timestamp('timestamp', { mode: 'string' }).notNull(),
-  userId: text('user_id').notNull(),
-  userName: text('user_name').notNull(),
-  userRole: text('user_role').notNull(),
-  action: text('action').notNull(),
-  details: text('details').notNull(),
-  ip: text('ip').notNull(),
-  scope: text('scope'),
-  actionType: text('action_type'),
-  requiredApproval: boolean('required_approval'),
+  resourceType: text('resource_type'),
+  resourceId: text('resource_id'),
+  action: text('action'),
+  reason: text('reason'),
+  ip: text('ip'),
+  userAgent: text('user_agent'),
+  metadata: jsonb('metadata')
+}, (table) => {
+  return {
+    tenantTimeIdx: index('idx_audit_tenant_time').on(table.tenantId, table.occurredAt),
+    actorTimeIdx: index('idx_audit_actor_time').on(table.actorUserId, table.occurredAt),
+    actingAsTimeIdx: index('idx_audit_acting_as_time').on(table.actingAsUserId, table.occurredAt),
+    eventTimeIdx: index('idx_audit_event_time').on(table.eventType, table.occurredAt),
+    requestIdx: index('idx_audit_request').on(table.requestId)
+  };
 });
 
 export const impersonationSessions = pgTable('impersonation_sessions', {

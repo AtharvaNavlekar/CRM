@@ -4,7 +4,6 @@ import bcryptjs from 'bcryptjs';
 import crypto from 'crypto';
 import { UserRole, RolePermission, User, ViewScope, Action } from '../src/types';
 import { getLegacyState } from './repositories';
-import { logAudit } from './db';
 function resolveJwtSecret(): string {
   if (process.env.JWT_SECRET && process.env.JWT_SECRET.trim().length > 0) {
     return process.env.JWT_SECRET.trim();

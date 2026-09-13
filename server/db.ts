@@ -43,32 +43,6 @@ export async function getDb(): Promise<DatabaseState> {
   return await getLegacyState();
 }
 
-export async function logAudit(
-  action: string,
-  details: string,
-  user?: { id?: string; name?: string; role?: string; tenantId?: string },
-  ip: string = '127.0.0.1',
-  meta?: { scope?: any; actionType?: any; requiredApproval?: boolean; tenantId?: string }
-) {
-  const targetTenantId = meta?.tenantId || user?.tenantId || (user?.role?.startsWith('platform_') ? undefined : 'tenant-apex');
-  const log = {
-    id: `aud-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
-    tenantId: targetTenantId,
-    timestamp: new Date().toISOString(),
-    userId: user?.id || 'system',
-    userName: user?.name || 'System Auto',
-    userRole: user?.role || 'owner',
-    action,
-    details,
-    ip,
-    ...(meta?.scope ? { scope: meta.scope } : {}),
-    ...(meta?.actionType ? { actionType: meta.actionType } : {}),
-    ...(meta?.requiredApproval !== undefined ? { requiredApproval: meta.requiredApproval } : {})
-  };
-  await auditRepository.create(log as any);
-  return log;
-}
-
 export async function createBackup(name: string, autoCreated = false, user?: any) {
   return { id: 'disabled', timestamp: new Date().toISOString(), name, recordsCount: { leads: 0, calls: 0, messages: 0, tickets: 0 }, fileSizeKb: 0, autoCreated };
 }

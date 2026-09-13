@@ -76,21 +76,21 @@ export const ActivityLogsView: React.FC = () => {
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         const matchesQuery =
-          log.action.toLowerCase().includes(query) ||
-          log.details.toLowerCase().includes(query) ||
-          log.userName.toLowerCase().includes(query) ||
-          log.userRole.toLowerCase().includes(query) ||
+          log.eventTypetoLowerCase().includes(query) ||
+          log.reason.toLowerCase().includes(query) ||
+          log.actorUserId.toLowerCase().includes(query) ||
+          log.actorRole.toLowerCase().includes(query) ||
           log.ip.toLowerCase().includes(query);
         if (!matchesQuery) return false;
       }
 
       // Category filter
       if (categoryFilter !== 'all') {
-        const action = log.action.toUpperCase();
+        const action = log.eventTypetoUpperCase();
         if (categoryFilter === 'security') {
           if (!action.includes('DENIED') && !action.includes('SECURITY') && !action.includes('POLICY')) return false;
         } else if (categoryFilter === 'exports') {
-          if (!action.includes('EXPORT') && !log.requiredApproval) return false;
+          if (!action.includes('EXPORT') && !log.metadata?.requiredApproval) return false;
         } else if (categoryFilter === 'mutations') {
           if (!action.includes('LEAD') && !action.includes('UPDATE') && !action.includes('DELETE') && !action.includes('CREATE')) return false;
         } else if (categoryFilter === 'auth') {
@@ -102,17 +102,17 @@ export const ActivityLogsView: React.FC = () => {
 
       // Role filter
       if (roleFilter !== 'all') {
-        if (log.userRole.toLowerCase() !== roleFilter.toLowerCase()) return false;
+        if (log.actorRole.toLowerCase() !== roleFilter.toLowerCase()) return false;
       }
 
       // Status / Gating filter
       if (statusFilter !== 'all') {
         if (statusFilter === 'denied') {
-          if (!log.action.includes('DENIED')) return false;
+          if (!log.eventTypeincludes('DENIED')) return false;
         } else if (statusFilter === 'approval_gated') {
-          if (!log.requiredApproval && !log.action.includes('EXPORT')) return false;
+          if (!log.metadata?.requiredApproval && !log.eventTypeincludes('EXPORT')) return false;
         } else if (statusFilter === 'standard') {
-          if (log.action.includes('DENIED') || log.requiredApproval) return false;
+          if (log.eventTypeincludes('DENIED') || log.metadata?.requiredApproval) return false;
         }
       }
 
@@ -483,35 +483,35 @@ export const ActivityLogsView: React.FC = () => {
                         <tr
                           onClick={() => toggleExpand(log.id)}
                           className={`hover:bg-[#F2F5F2] dark:hover:bg-[#202322] cursor-pointer transition-colors ${
-                            log.action.includes('DENIED')
+                            log.eventTypeincludes('DENIED')
                               ? 'bg-red-50/40 dark:bg-red-950/20'
-                              : log.requiredApproval
+                              : log.metadata?.requiredApproval
                               ? 'bg-amber-50/40 dark:bg-amber-950/20'
                               : ''
                           }`}
                         >
                           {/* Timestamp */}
                           <td className="py-3.5 px-4 whitespace-nowrap text-[#6F7976] dark:text-[#89938F] font-mono text-[11px]">
-                            {formatTimestamp(log.timestamp)}
+                            {formatTimestamp(log.occurredAt)}
                           </td>
 
                           {/* Event / Action badge */}
                           <td className="py-3.5 px-4 whitespace-nowrap">
-                            {getActionBadge(log.action, log.requiredApproval)}
+                            {getActionBadge(log.action, log.metadata?.requiredApproval)}
                           </td>
 
                           {/* Actor & Role */}
                           <td className="py-3.5 px-4">
                             <div className="flex items-center space-x-2">
                               <div className="w-6 h-6 rounded-full bg-[#00695C] text-white text-[10px] font-bold flex items-center justify-center shrink-0">
-                                {log.userName.charAt(0)}
+                                {log.actorUserId.charAt(0)}
                               </div>
                               <div className="min-w-0">
                                 <p className="font-semibold text-[#191C1B] dark:text-[#E1E3E0] truncate">
-                                  {log.userName}
+                                  {log.actorUserId}
                                 </p>
                                 <p className="text-[10px] text-[#6F7976] dark:text-[#89938F] uppercase font-mono">
-                                  {log.userRole}
+                                  {log.actorRole}
                                 </p>
                               </div>
                             </div>
@@ -532,7 +532,7 @@ export const ActivityLogsView: React.FC = () => {
                           {/* Details */}
                           <td className="py-3.5 px-4">
                             <p className="text-[#191C1B] dark:text-[#E1E3E0] font-sans leading-relaxed line-clamp-2">
-                              {log.details}
+                              {log.reason}
                             </p>
                           </td>
 

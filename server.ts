@@ -1,5 +1,7 @@
 import { generateOpaqueRefreshToken, hashToken } from './server/auth';
 import { db } from './server/db/client';
+import { auditService } from './server/services/auditService';
+import { AuditEvents, AuditOutcomes } from './server/constants/auditEvents';
 import { sessions, impersonationSessions } from './server/db/schema';
 import { eq, sql, and, desc } from 'drizzle-orm';
 import express from 'express';
@@ -20,7 +22,6 @@ import {
   getLegacyState,
   getDb,
   saveDatabase,
-  logAudit,
   createBackup,
   restoreBackup,
   resetDatabase,
@@ -70,9 +71,101 @@ import {
 import { enforceTenantScope, verifyTenantActive, scopeToTenant } from './server/tenantMiddleware';
 
 // Middleware to prevent platform staff from accessing raw data without an impersonation session
+
+async function adapterLogAudit(req: express.Request, action: string, details: string, user: any, ip: string, meta: any = {}) {
+  let eventType: any = AuditEvents.UNKNOWN_EVENT;
+  let outcome: any = AuditOutcomes.SUCCESS;
+  
+  if (action === 'ACCESS_DENIED') {
+    outcome = AuditOutcomes.DENIED;
+    if (meta.actionType === 'VIEW') eventType = AuditEvents.AUTHZ_DENIED;
+    else if (meta.actionType === 'MANAGE_USERS') eventType = AuditEvents.AUTHZ_DENIED;
+    else if (meta.actionType === 'EXPORT') eventType = AuditEvents.DATA_EXPORT_DENIED;
+    else if (meta.actionType === 'MANAGE_POLICY') eventType = AuditEvents.AUTHZ_DENIED;
+    else eventType = AuditEvents.AUTHZ_DENIED;
+  } else if (action === 'USER_LOGIN') {
+    eventType = AuditEvents.AUTH_LOGIN_SUCCESS;
+  } else if (action === 'USER_LOGOUT') {
+    eventType = AuditEvents.AUTH_LOGOUT;
+  } else if (action === 'SECURITY_ALERT') {
+    eventType = AuditEvents.SECURITY_ALERT_CREATED;
+  } else if (action === 'USER_INVITED') {
+    eventType = AuditEvents.USER_CREATED;
+  } else if (action === 'DATA_EXPORT') {
+    eventType = AuditEvents.DATA_EXPORT_COMPLETED;
+  } else if (action === 'LEAD_CREATED') {
+    eventType = AuditEvents.LEAD_CREATED;
+  } else if (action === 'LEAD_REASSIGNED') {
+    eventType = AuditEvents.LEAD_REASSIGNED;
+  } else if (action === 'LEAD_STAGE_CHANGED') {
+    eventType = AuditEvents.LEAD_STAGE_CHANGED;
+  } else if (action === 'LEAD_UPDATED') {
+    eventType = AuditEvents.LEAD_UPDATED;
+  } else if (action === 'LEAD_DELETED') {
+    eventType = AuditEvents.LEAD_DELETED;
+  } else if (action === 'CSV_BULK_IMPORT') {
+    eventType = AuditEvents.CSV_BULK_IMPORT;
+  } else if (action === 'BULK_LEAD_UPDATE') {
+    eventType = AuditEvents.BULK_LEAD_UPDATE;
+  } else if (action === 'CALL_LOGGED') {
+    eventType = AuditEvents.CALL_CREATED;
+  } else if (action === 'WHATSAPP_MESSAGE_QUEUED' || action === 'WHATSAPP_INBOUND') {
+    eventType = AuditEvents.MESSAGE_CREATED;
+  } else if (action === 'COMPLIANCE_RULES_UPDATED') {
+    eventType = AuditEvents.COMPLIANCE_POLICY_UPDATED;
+  } else if (action === 'TICKET_CREATED') {
+    eventType = AuditEvents.TICKET_CREATED;
+  } else if (action === 'TICKET_REPLY' || action === 'TICKET_UPDATED') {
+    eventType = AuditEvents.TICKET_UPDATED;
+  } else if (action === 'CUSTOM_FIELDS_UPDATED') {
+    eventType = AuditEvents.CUSTOM_FIELDS_UPDATED;
+  } else if (action === 'ROLE_PERMISSIONS_UPDATED') {
+    eventType = AuditEvents.ROLE_PERMISSIONS_UPDATED;
+  } else if (action === 'PIPELINE_CONFIG_UPDATED') {
+    eventType = AuditEvents.PIPELINE_CONFIG_UPDATED;
+  } else if (action === 'AUTO_ASSIGNMENT_TOGGLED') {
+    eventType = AuditEvents.AUTO_ASSIGNMENT_TOGGLED;
+  } else if (action === 'AUDIO_TRANSCRIBED') {
+    eventType = AuditEvents.AUDIO_TRANSCRIBED;
+  } else if (action === 'TENANT_SUSPENDED') {
+    eventType = AuditEvents.TENANT_SUSPENDED;
+  } else if (action === 'TENANT_REACTIVATED') {
+    eventType = AuditEvents.TENANT_REACTIVATED;
+  } else if (action === 'IMPERSONATION_STARTED') {
+    eventType = AuditEvents.IMPERSONATION_STARTED;
+  } else if (action === 'IMPERSONATION_ENDED') {
+    eventType = AuditEvents.IMPERSONATION_ENDED;
+  } else if (action === 'INVOICE_PAID') {
+    eventType = AuditEvents.INVOICE_PAID;
+  } else if (action === 'FEATURE_FLAG_UPDATED') {
+    eventType = AuditEvents.FEATURE_FLAG_UPDATED;
+  } else {
+    eventType = (AuditEvents as any)[action] || AuditEvents.UNKNOWN_EVENT;
+  }
+
+  const secCtx = req.securityContext || {
+    requestId: 'unknown',
+    ipAddress: ip,
+    actorUserId: user?.id || 'system',
+    actorRole: user?.role || 'system',
+    isPlatformStaff: false,
+    impersonating: false
+  };
+
+  await auditService.logNormal({
+    eventType,
+    outcome,
+    securityContext: secCtx,
+    action: action,
+    reason: details,
+    metadata: meta
+  });
+}
+
+
 const enforceImpersonationForRawData = (req: express.Request, res: express.Response, next: express.NextFunction) => {
   if (req.isPlatformStaff && !req.impersonationSession) {
-    logAudit('ACCESS_DENIED', `Denied raw data access to ${req.user!.name || req.user!.id} (No active impersonation session)`, req.user, req.ip || '127.0.0.1', { actionType: 'VIEW' });
+    adapterLogAudit(req, 'ACCESS_DENIED', `Denied raw data access to ${req.user!.name || req.user!.id} (No active impersonation session)`, req.user, req.ip || '127.0.0.1', { actionType: 'VIEW' });
     return res.status(403).json({
       error: 'Platform staff must have an active impersonation session to view or modify raw tenant data.',
       code: 'IMPERSONATION_REQUIRED'
@@ -421,7 +514,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
 
     const token = signAccessToken({ id: user.id, email: user.email, role: user.role, tenantId: user.tenantId, isPlatformStaff: user.isPlatformStaff }, sessionId);
 
-    logAudit('USER_LOGIN', `${user.name} logged into DialPulse CRM`, { id: user.id, name: user.name, role: user.role }, getClientIp(req));
+    adapterLogAudit(req, 'USER_LOGIN', `${user.name} logged into DialPulse CRM`, { id: user.id, name: user.name, role: user.role }, getClientIp(req));
     
     res.cookie('refreshToken', rawRefreshToken, {
       httpOnly: true,
@@ -457,7 +550,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
         .set({ revokedAt: new Date().toISOString(), revokeReason: 'reuse_detected' })
         .where(eq(sessions.tokenFamilyId, session.tokenFamilyId));
         
-      logAudit('SECURITY_ALERT', 'Token reuse detected', { id: session.userId, name: 'Unknown', role: 'Unknown' }, getClientIp(req), { actionType: 'SECURITY' });
+      adapterLogAudit(req, 'SECURITY_ALERT', 'Token reuse detected', { id: session.userId, name: 'Unknown', role: 'Unknown' }, getClientIp(req), { actionType: 'SECURITY' });
       
       res.clearCookie('refreshToken', { path: '/api/auth' });
       return res.status(401).json({ error: 'Session invalidated due to suspicious activity', code: 'TOKEN_REVOKED' });
@@ -534,7 +627,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     }
     
     res.clearCookie('refreshToken', { path: '/api/auth' });
-    logAudit('USER_LOGOUT', `${req.user?.name} signed out`, { id: req.user?.id, name: req.user?.name, role: req.user?.role }, getClientIp(req));
+    adapterLogAudit(req, 'USER_LOGOUT', `${req.user?.name} signed out`, { id: req.user?.id, name: req.user?.name, role: req.user?.role }, getClientIp(req));
     res.json({ success: true, message: 'Successfully logged out' });
   });
 
@@ -592,7 +685,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     if (role && validRoles.includes(mappedRole)) {
       targetUser.role = mappedRole;
       // saveDatabase(); // TODO: Migrate to repository write
-      logAudit(
+      adapterLogAudit(req, 
         'ROLE_UPDATED',
         `${req.user.name} switched role of ${targetUser.name} to ${mappedRole}`,
         { id: targetUser.id, name: targetUser.name, role: targetUser.role },
@@ -600,7 +693,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
         { actionType: 'MANAGE_USERS' }
       );
     } else {
-      logAudit(
+      adapterLogAudit(req, 
         'USER_SWITCH',
         `Switched active persona to ${targetUser.name} (${targetUser.role})`,
         { id: targetUser.id, name: targetUser.name, role: targetUser.role },
@@ -637,7 +730,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
   // Account creation is gated by MANAGE_USERS permission
   app.post('/api/users', async (req, res) => {
     if (!(await can(req.securityContext!, 'users:create'))) {
-      logAudit('ACCESS_DENIED', `Denied MANAGE_USERS to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_USERS' });
+      adapterLogAudit(req, 'ACCESS_DENIED', `Denied MANAGE_USERS to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_USERS' });
       return res.status(403).json({
         error: `Forbidden: Current role '${req.user!.role}' lacks MANAGE_USERS permission.`,
         code: 'FORBIDDEN',
@@ -714,7 +807,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
 
     db.users.push(newUser);
     // saveDatabase(); // TODO: Migrate to repository write
-    logAudit('USER_INVITED', `${req.user!.name} created user ${newUser.name} with role ${newUser.role}`, req.user, getClientIp(req), { actionType: 'MANAGE_USERS' });
+    adapterLogAudit(req, 'USER_INVITED', `${req.user!.name} created user ${newUser.name} with role ${newUser.role}`, req.user, getClientIp(req), { actionType: 'MANAGE_USERS' });
     res.json(sanitizeUser(newUser));
   });
 
@@ -760,7 +853,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     }
 
     if (!(await can(req.securityContext!, 'leads:read', { teamId: lead.teamId, ownerId: lead.assignedRepId }))) {
-      logAudit('ACCESS_DENIED', `Denied VIEW for lead ${lead.id} to ${req.user!.name}`, req.user, getClientIp(req), {
+      adapterLogAudit(req, 'ACCESS_DENIED', `Denied VIEW for lead ${lead.id} to ${req.user!.name}`, req.user, getClientIp(req), {
         actionType: 'VIEW',
         scope: (await getRolePermission(req.user!.role))?.scope
       });
@@ -778,7 +871,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
   app.get('/api/leads/export', async (req, res) => {
     const db = await getLegacyState();
     if (!(await can(req.securityContext!, 'leads:export'))) {
-      logAudit('ACCESS_DENIED', `Denied EXPORT to ${req.user!.name} (${req.user!.role})`, req.user, getClientIp(req), { actionType: 'EXPORT' });
+      adapterLogAudit(req, 'ACCESS_DENIED', `Denied EXPORT to ${req.user!.name} (${req.user!.role})`, req.user, getClientIp(req), { actionType: 'EXPORT' });
       return res.status(403).json({
         error: `Forbidden: Current role '${req.user!.role}' lacks EXPORT permission.`,
         code: 'FORBIDDEN',
@@ -803,7 +896,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
 
     const format = req.query.format === 'json' ? 'json' : 'csv';
     if (format === 'json') {
-      logAudit('DATA_EXPORT', `Exported ${leads.length} leads in JSON format`, req.user, getClientIp(req), {
+      adapterLogAudit(req, 'DATA_EXPORT', `Exported ${leads.length} leads in JSON format`, req.user, getClientIp(req), {
         actionType: 'EXPORT',
         requiredApproval: requiresApproval
       });
@@ -831,7 +924,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
       ...rows.map(r => r.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
     ].join('\n');
 
-    logAudit('DATA_EXPORT', `Exported ${leads.length} leads in CSV format`, req.user, getClientIp(req), {
+    adapterLogAudit(req, 'DATA_EXPORT', `Exported ${leads.length} leads in CSV format`, req.user, getClientIp(req), {
       actionType: 'EXPORT',
       requiredApproval: requiresApproval
     });
@@ -843,7 +936,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
   app.post('/api/leads', async (req, res) => {
     const db = await getLegacyState();
     if (!(await can(req.securityContext!, 'leads:create'))) {
-      logAudit('ACCESS_DENIED', `Denied lead creation for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
+      adapterLogAudit(req, 'ACCESS_DENIED', `Denied lead creation for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
       return res.status(403).json({
         error: `Forbidden: Current role '${req.user!.role}' lacks permission to create leads.`,
         code: 'FORBIDDEN',
@@ -931,7 +1024,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     db.leads.unshift(newLead);
     // saveDatabase(); // TODO: Migrate to repository write
 
-    logAudit('LEAD_CREATED', `Added new lead: ${newLead.name} (${newLead.source}) assigned to ${newLead.assignedRepName} [${leadTeamId}]`, req.user, getClientIp(req), {
+    adapterLogAudit(req, 'LEAD_CREATED', `Added new lead: ${newLead.name} (${newLead.source}) assigned to ${newLead.assignedRepName} [${leadTeamId}]`, req.user, getClientIp(req), {
       actionType: 'EDIT'
     });
     res.json(newLead);
@@ -951,7 +1044,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
 
     // Scope & Action Check: Can user EDIT this lead?
     if (!(await can(req.securityContext!, 'leads:update', { teamId: oldLead.teamId, ownerId: oldLead.assignedRepId }))) {
-      logAudit('ACCESS_DENIED', `Denied EDIT on lead ${oldLead.id} for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
+      adapterLogAudit(req, 'ACCESS_DENIED', `Denied EDIT on lead ${oldLead.id} for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
       return res.status(403).json({
         error: `Forbidden: You do not have permission to edit lead "${oldLead.name}".`,
         code: 'FORBIDDEN',
@@ -963,7 +1056,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     const isReassigning = updates.assignedRepId && updates.assignedRepId !== oldLead.assignedRepId;
     if (isReassigning) {
       if (!(await can(req.securityContext!, 'leads:reassign', { teamId: oldLead.teamId, ownerId: oldLead.assignedRepId }))) {
-        logAudit('ACCESS_DENIED', `Denied REASSIGN on lead ${oldLead.id} for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'REASSIGN' });
+        adapterLogAudit(req, 'ACCESS_DENIED', `Denied REASSIGN on lead ${oldLead.id} for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'REASSIGN' });
         return res.status(403).json({
           error: `Forbidden: Current role '${req.user!.role}' lacks permission to reassign leads.`,
           code: 'FORBIDDEN',
@@ -977,7 +1070,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
         if (targetRep.teamId) {
           updates.teamId = targetRep.teamId;
         }
-        logAudit('LEAD_REASSIGNED', `Lead ${oldLead.name} reassigned from ${oldLead.assignedRepName} to ${targetRep.name}`, req.user, getClientIp(req), { actionType: 'REASSIGN' });
+        adapterLogAudit(req, 'LEAD_REASSIGNED', `Lead ${oldLead.name} reassigned from ${oldLead.assignedRepName} to ${targetRep.name}`, req.user, getClientIp(req), { actionType: 'REASSIGN' });
       }
     }
 
@@ -1018,7 +1111,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     }
 
     if (updates.stage && updates.stage !== oldLead.stage) {
-      logAudit('LEAD_STAGE_CHANGED', `${oldLead.name} moved from ${oldLead.stage} to ${updates.stage}`, req.user, getClientIp(req), { actionType: 'EDIT' });
+      adapterLogAudit(req, 'LEAD_STAGE_CHANGED', `${oldLead.name} moved from ${oldLead.stage} to ${updates.stage}`, req.user, getClientIp(req), { actionType: 'EDIT' });
     }
 
     const nextVersion = (oldLead.version || 1) + 1;
@@ -1035,7 +1128,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
 
     db.leads[index] = updatedLead;
     // saveDatabase(); // TODO: Migrate to repository write
-    logAudit('LEAD_UPDATED', `Lead ${oldLead.name} updated`, req.user, getClientIp(req), {
+    adapterLogAudit(req, 'LEAD_UPDATED', `Lead ${oldLead.name} updated`, req.user, getClientIp(req), {
       actionType: 'EDIT',
       requiredApproval: requiresApproval
     });
@@ -1045,7 +1138,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
   // Lead deletion gated by DELETE permission and approval workflow
   app.delete('/api/leads/:id', async (req, res) => {
     if (!(await can(req.securityContext!, 'leads:delete'))) {
-      logAudit('ACCESS_DENIED', `Denied DELETE on lead for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'DELETE' });
+      adapterLogAudit(req, 'ACCESS_DENIED', `Denied DELETE on lead for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'DELETE' });
       return res.status(403).json({
         error: `Forbidden: Current role '${req.user!.role}' lacks permission to delete leads.`,
         code: 'FORBIDDEN',
@@ -1061,7 +1154,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     }
 
     if (!(await can(req.securityContext!, 'leads:delete', { teamId: lead.teamId, ownerId: lead.assignedRepId }))) {
-      logAudit('ACCESS_DENIED', `Denied DELETE on lead ${lead.id} for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'DELETE' });
+      adapterLogAudit(req, 'ACCESS_DENIED', `Denied DELETE on lead ${lead.id} for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'DELETE' });
       return res.status(403).json({
         error: `Forbidden: Current role '${req.user!.role}' lacks DELETE permission for lead "${lead.name}".`,
         code: 'FORBIDDEN',
@@ -1081,7 +1174,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
 
     db.leads = db.leads.filter(l => l.id !== id);
     // saveDatabase(); // TODO: Migrate to repository write
-    logAudit('LEAD_DELETED', `Deleted lead record for ${lead.name}`, req.user, getClientIp(req), {
+    adapterLogAudit(req, 'LEAD_DELETED', `Deleted lead record for ${lead.name}`, req.user, getClientIp(req), {
       actionType: 'DELETE',
       requiredApproval: requiresApproval
     });
@@ -1091,7 +1184,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
   // Bulk import leads from CSV (gated by EDIT authorization)
   app.post('/api/leads/import', async (req, res) => {
     if (!(await can(req.securityContext!, 'leads:create'))) {
-      logAudit('ACCESS_DENIED', `Denied lead CSV import for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
+      adapterLogAudit(req, 'ACCESS_DENIED', `Denied lead CSV import for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
       return res.status(403).json({
         error: `Forbidden: Current role '${req.user!.role}' lacks permission to import leads.`,
         code: 'FORBIDDEN',
@@ -1167,14 +1260,14 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     });
 
     // saveDatabase(); // TODO: Migrate to repository write
-    logAudit('CSV_BULK_IMPORT', `Imported ${importedLeads.length} leads via CSV batch upload.`, req.user, getClientIp(req), { actionType: 'EDIT' });
+    adapterLogAudit(req, 'CSV_BULK_IMPORT', `Imported ${importedLeads.length} leads via CSV batch upload.`, req.user, getClientIp(req), { actionType: 'EDIT' });
     res.json({ count: importedLeads.length, importedLeads });
   });
 
   // Bulk edit (gated by EDIT & REASSIGN authorizations, restricted to Team Lead and Admin roles)
   app.post('/api/leads/bulk-update', async (req, res) => {
     if (req.user!.role === 'telecaller' || (req.user!.role as any) === 'Rep') {
-      logAudit('ACCESS_DENIED', `Denied bulk-update for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
+      adapterLogAudit(req, 'ACCESS_DENIED', `Denied bulk-update for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
       return res.status(403).json({
         error: 'Forbidden: Bulk updates are restricted to Team Lead and Admin roles.',
         code: 'FORBIDDEN'
@@ -1194,7 +1287,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     for (const l of db.leads) {
       if (leadIds.includes(l.id)) {
         if (!(await can(req.securityContext!, 'leads:update', { teamId: l.teamId, ownerId: l.assignedRepId }))) {
-          logAudit('ACCESS_DENIED', `Denied bulk EDIT on lead ${l.id} for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
+          adapterLogAudit(req, 'ACCESS_DENIED', `Denied bulk EDIT on lead ${l.id} for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
           return res.status(403).json({
             error: `Forbidden: You do not have EDIT permission for lead ${l.name}.`,
             code: 'FORBIDDEN',
@@ -1202,7 +1295,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
           });
         }
         if (isReassigning && !(await can(req.securityContext!, 'leads:reassign', { teamId: l.teamId, ownerId: l.assignedRepId }))) {
-          logAudit('ACCESS_DENIED', `Denied bulk REASSIGN on lead ${l.id} for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'REASSIGN' });
+          adapterLogAudit(req, 'ACCESS_DENIED', `Denied bulk REASSIGN on lead ${l.id} for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'REASSIGN' });
           return res.status(403).json({
             error: `Forbidden: Current role lacks REASSIGN permission for lead ${l.name}.`,
             code: 'FORBIDDEN',
@@ -1232,7 +1325,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     });
 
     // saveDatabase(); // TODO: Migrate to repository write
-    logAudit('BULK_LEAD_UPDATE', `Bulk updated ${count} leads${stage ? ' -> ' + stage : ''}${assignedUser ? ' -> Rep ' + assignedUser.name : ''}`, req.user, getClientIp(req), {
+    adapterLogAudit(req, 'BULK_LEAD_UPDATE', `Bulk updated ${count} leads${stage ? ' -> ' + stage : ''}${assignedUser ? ' -> Rep ' + assignedUser.name : ''}`, req.user, getClientIp(req), {
       actionType: isReassigning ? 'REASSIGN' : 'EDIT'
     });
     res.json({ success: true, count });
@@ -1305,7 +1398,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
 
     // Check if user has permission to log calls on this lead
     if (!(await can(req.securityContext!, 'leads:update', { teamId: lead.teamId, ownerId: lead.assignedRepId }))) {
-      logAudit('ACCESS_DENIED', `Denied call log on lead ${lead.id} by ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
+      adapterLogAudit(req, 'ACCESS_DENIED', `Denied call log on lead ${lead.id} by ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
       return res.status(403).json({
         error: 'Forbidden: You cannot log calls for leads outside your authorized scope.',
         code: 'FORBIDDEN',
@@ -1376,7 +1469,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
 
     // saveDatabase(); // TODO: Migrate to repository write
 
-    logAudit('CALL_LOGGED', `Call with ${lead.name} (${newCall.duration}s, Outcome: ${newCall.outcome})`, req.user, getClientIp(req), {
+    adapterLogAudit(req, 'CALL_LOGGED', `Call with ${lead.name} (${newCall.duration}s, Outcome: ${newCall.outcome})`, req.user, getClientIp(req), {
       actionType: 'EDIT'
     });
     res.json({ call: newCall, lead });
@@ -1437,7 +1530,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     // Scope Authorization: Check if user has EDIT permission on this lead
     if (isOutbound) {
       if (!(await can(req.securityContext!, 'leads:update', { teamId: lead.teamId, ownerId: lead.assignedRepId }))) {
-        logAudit('ACCESS_DENIED', `Denied message to lead ${lead.id} by ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
+        adapterLogAudit(req, 'ACCESS_DENIED', `Denied message to lead ${lead.id} by ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
         return res.status(403).json({
           error: 'Forbidden: You cannot send messages to leads outside your authorized scope.',
           code: 'FORBIDDEN',
@@ -1520,7 +1613,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
       }, 700);
     }
 
-    logAudit('WHATSAPP_MESSAGE_QUEUED', `${isOutbound ? 'Queued outbound' : 'Received inbound'} WhatsApp message for ${lead.name}`, { id: req.user!.id, name: req.user!.name, role: req.user!.role }, getClientIp(req));
+    adapterLogAudit(req, 'WHATSAPP_MESSAGE_QUEUED', `${isOutbound ? 'Queued outbound' : 'Received inbound'} WhatsApp message for ${lead.name}`, { id: req.user!.id, name: req.user!.name, role: req.user!.role }, getClientIp(req));
     res.json(newMessage);
   });
 
@@ -1553,7 +1646,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
 
     db.messages.push(incomingMsg);
     // saveDatabase(); // TODO: Migrate to repository write
-    logAudit('WHATSAPP_INBOUND', `Received WhatsApp reply from lead ${lead.name}`, { id: req.user!.id, name: req.user!.name, role: req.user!.role }, getClientIp(req));
+    adapterLogAudit(req, 'WHATSAPP_INBOUND', `Received WhatsApp reply from lead ${lead.name}`, { id: req.user!.id, name: req.user!.name, role: req.user!.role }, getClientIp(req));
     res.json(incomingMsg);
   });
 
@@ -1566,7 +1659,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
 
   app.put('/api/compliance/rules', async (req, res) => {
     if (!(await can(req.securityContext!, 'compliance:manage'))) {
-      logAudit('ACCESS_DENIED', `Denied MANAGE_COMPLIANCE_RULES to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_COMPLIANCE_RULES' });
+      adapterLogAudit(req, 'ACCESS_DENIED', `Denied MANAGE_COMPLIANCE_RULES to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_COMPLIANCE_RULES' });
       return res.status(403).json({
         error: `Forbidden: Current role '${req.user!.role}' lacks MANAGE_COMPLIANCE_RULES permission.`,
         code: 'FORBIDDEN',
@@ -1591,7 +1684,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
 
     try {
       const updated = await compliancePolicyRepository.upsert(tenantId, updates, req.user!.id, expectedVersion);
-      logAudit('COMPLIANCE_RULES_UPDATED', `Updated compliance policy for tenant ${tenantId}`, req.user, getClientIp(req), {
+      adapterLogAudit(req, 'COMPLIANCE_RULES_UPDATED', `Updated compliance policy for tenant ${tenantId}`, req.user, getClientIp(req), {
         actionType: 'MANAGE_COMPLIANCE_RULES',
         requiredApproval: requiresApproval,
         tenantId,
@@ -1675,7 +1768,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
 
     db.tickets.unshift(newTicket);
     // saveDatabase(); // TODO: Migrate to repository write
-    logAudit('TICKET_CREATED', `Ticket opened: "${newTicket.subject}" (Priority: ${newTicket.priority})`, { id: req.user!.id, name: req.user!.name, role: req.user!.role }, getClientIp(req));
+    adapterLogAudit(req, 'TICKET_CREATED', `Ticket opened: "${newTicket.subject}" (Priority: ${newTicket.priority})`, { id: req.user!.id, name: req.user!.name, role: req.user!.role }, getClientIp(req));
     res.json(newTicket);
   });
 
@@ -1710,7 +1803,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     }
 
     // saveDatabase(); // TODO: Migrate to repository write
-    logAudit('TICKET_REPLY', `Reply added to ticket #${ticket.id}`, { id: req.user!.id, name: req.user!.name, role: req.user!.role }, getClientIp(req));
+    adapterLogAudit(req, 'TICKET_REPLY', `Reply added to ticket #${ticket.id}`, { id: req.user!.id, name: req.user!.name, role: req.user!.role }, getClientIp(req));
     res.json(ticket);
   });
 
@@ -1728,7 +1821,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     if (assignedRepId) ticket.assignedRepId = assignedRepId;
 
     // saveDatabase(); // TODO: Migrate to repository write
-    logAudit('TICKET_UPDATED', `Ticket #${ticket.id} status updated to ${ticket.status}`, { id: req.user!.id, name: req.user!.name, role: req.user!.role }, getClientIp(req));
+    adapterLogAudit(req, 'TICKET_UPDATED', `Ticket #${ticket.id} status updated to ${ticket.status}`, { id: req.user!.id, name: req.user!.name, role: req.user!.role }, getClientIp(req));
     res.json(ticket);
   });
 
@@ -1807,7 +1900,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
 
   app.put('/api/settings/fields', async (req, res) => {
     if (!(await can(req.securityContext!, 'MANAGE_POLICY')) && req.user!.role !== 'it') {
-      logAudit('ACCESS_DENIED', `Denied custom field update to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
+      adapterLogAudit(req, 'ACCESS_DENIED', `Denied custom field update to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
       return res.status(403).json({ error: 'Forbidden: Insufficient privileges to update custom fields.', code: 'FORBIDDEN' });
     }
     const db = await getLegacyState();
@@ -1815,14 +1908,14 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     if (Array.isArray(customFields)) {
       db.customFields = customFields;
       // saveDatabase(); // TODO: Migrate to repository write
-      logAudit('CUSTOM_FIELDS_UPDATED', `Updated ${customFields.length} custom lead fields.`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
+      adapterLogAudit(req, 'CUSTOM_FIELDS_UPDATED', `Updated ${customFields.length} custom lead fields.`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
     }
     res.json({ success: true, customFields: db.customFields });
   });
 
   app.put('/api/settings/roles', async (req, res) => {
     if (!(await can(req.securityContext!, 'MANAGE_POLICY'))) {
-      logAudit('ACCESS_DENIED', `Denied MANAGE_POLICY to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
+      adapterLogAudit(req, 'ACCESS_DENIED', `Denied MANAGE_POLICY to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
       return res.status(403).json({
         error: `Forbidden: Current role '${req.user!.role}' lacks MANAGE_POLICY permission.`,
         code: 'FORBIDDEN',
@@ -1834,14 +1927,14 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     if (Array.isArray(rolePermissions)) {
       db.rolePermissions = rolePermissions;
       // saveDatabase(); // TODO: Migrate to repository write
-      logAudit('ROLE_PERMISSIONS_UPDATED', `Updated role permission matrix.`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
+      adapterLogAudit(req, 'ROLE_PERMISSIONS_UPDATED', `Updated role permission matrix.`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
     }
     res.json({ success: true, rolePermissions: db.rolePermissions });
   });
 
   app.put('/api/settings/pipeline', async (req, res) => {
     if (!(await can(req.securityContext!, 'MANAGE_POLICY')) && req.user!.role !== 'it') {
-      logAudit('ACCESS_DENIED', `Denied pipeline config update to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
+      adapterLogAudit(req, 'ACCESS_DENIED', `Denied pipeline config update to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
       return res.status(403).json({ error: 'Forbidden: Insufficient privileges to update pipeline stages.', code: 'FORBIDDEN' });
     }
     const db = await getLegacyState();
@@ -1849,21 +1942,21 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     if (Array.isArray(pipelineStages)) {
       db.pipelineStages = pipelineStages;
       // saveDatabase(); // TODO: Migrate to repository write
-      logAudit('PIPELINE_CONFIG_UPDATED', `Configured pipeline stages.`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
+      adapterLogAudit(req, 'PIPELINE_CONFIG_UPDATED', `Configured pipeline stages.`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
     }
     res.json({ success: true, pipelineStages: db.pipelineStages });
   });
 
   app.put('/api/settings/auto-assignment', async (req, res) => {
     if (!(await can(req.securityContext!, 'MANAGE_POLICY')) && req.user!.role !== 'it') {
-      logAudit('ACCESS_DENIED', `Denied auto-assignment toggle to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
+      adapterLogAudit(req, 'ACCESS_DENIED', `Denied auto-assignment toggle to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
       return res.status(403).json({ error: 'Forbidden: Insufficient privileges to toggle auto-assignment.', code: 'FORBIDDEN' });
     }
     const db = await getLegacyState();
     const { enabled } = req.body;
     db.autoAssignmentEnabled = Boolean(enabled);
     // saveDatabase(); // TODO: Migrate to repository write
-    logAudit('AUTO_ASSIGNMENT_TOGGLED', `Auto round-robin lead assignment set to ${db.autoAssignmentEnabled}`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
+    adapterLogAudit(req, 'AUTO_ASSIGNMENT_TOGGLED', `Auto round-robin lead assignment set to ${db.autoAssignmentEnabled}`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
     res.json({ success: true, autoAssignmentEnabled: db.autoAssignmentEnabled });
   });
 
@@ -1887,7 +1980,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
           "Customer inquired about site visit availability on Sunday morning. Assigned telecaller to coordinate cab arrangement and confirm time slot."
         ];
         const randomTranscript = sampleTranscripts[Math.floor(Math.random() * sampleTranscripts.length)];
-        logAudit('AUDIO_TRANSCRIBED', `Simulated audio transcription (${Math.round(cleanBase64.length / 1024)} KB audio)`, req.user, getClientIp(req));
+        adapterLogAudit(req, 'AUDIO_TRANSCRIBED', `Simulated audio transcription (${Math.round(cleanBase64.length / 1024)} KB audio)`, req.user, getClientIp(req));
         return res.json({
           text: randomTranscript,
           isSimulated: true,
@@ -1923,7 +2016,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
       });
 
       const transcribedText = response.text || '';
-      logAudit('AUDIO_TRANSCRIBED', `Transcribed audio note with model gemini-3.5-transcribe`, req.user, getClientIp(req));
+      adapterLogAudit(req, 'AUDIO_TRANSCRIBED', `Transcribed audio note with model gemini-3.5-transcribe`, req.user, getClientIp(req));
       res.json({
         text: transcribedText,
         model: 'gemini-3.5-transcribe',
@@ -2014,7 +2107,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     t.suspensionReason = reason;
 
     // saveDatabase(); // TODO: Migrate to repository write
-    logAudit('TENANT_SUSPENDED', `Suspended tenant ${t.name}. Reason: ${reason}`, req.user, getClientIp(req), { tenantId: 'platform' });
+    adapterLogAudit(req, 'TENANT_SUSPENDED', `Suspended tenant ${t.name}. Reason: ${reason}`, req.user, getClientIp(req), { tenantId: 'platform' });
     res.json({ success: true, tenant: t });
   });
 
@@ -2035,7 +2128,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     t.suspensionReason = undefined;
 
     // saveDatabase(); // TODO: Migrate to repository write
-    logAudit('TENANT_REACTIVATED', `Reactivated tenant ${t.name}.`, req.user, getClientIp(req), { tenantId: 'platform' });
+    adapterLogAudit(req, 'TENANT_REACTIVATED', `Reactivated tenant ${t.name}.`, req.user, getClientIp(req), { tenantId: 'platform' });
     res.json({ success: true, tenant: t });
   });
 
@@ -2113,7 +2206,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     // Insert new session
     await db.insert(impersonationSessions).values(session);
 
-    logAudit('IMPERSONATION_STARTED', `Started impersonating ${t.name}. Reason: ${reason}`, req.user, getClientIp(req), { tenantId: 'platform' });
+    adapterLogAudit(req, 'IMPERSONATION_STARTED', `Started impersonating ${t.name}. Reason: ${reason}`, req.user, getClientIp(req), { tenantId: 'platform' });
     res.json({ success: true, session });
   });
 
@@ -2136,7 +2229,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
          .set({ active: false, endedAt: new Date().toISOString() })
          .where(eq(impersonationSessions.id, active.id));
 
-       logAudit('IMPERSONATION_ENDED', `Ended impersonating ${active.targetTenantName}.`, req.user, getClientIp(req), { tenantId: 'platform' });
+       adapterLogAudit(req, 'IMPERSONATION_ENDED', `Ended impersonating ${active.targetTenantName}.`, req.user, getClientIp(req), { tenantId: 'platform' });
     }
     res.json({ success: true });
   });
@@ -2195,7 +2288,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     inv.paidAt = new Date().toISOString();
     // saveDatabase(); // TODO: Migrate to repository write
     
-    logAudit('INVOICE_PAID', `Marked invoice ${inv.invoiceId} for ${inv.tenantId} as paid.`, req.user, getClientIp(req), { tenantId: 'platform' });
+    adapterLogAudit(req, 'INVOICE_PAID', `Marked invoice ${inv.invoiceId} for ${inv.tenantId} as paid.`, req.user, getClientIp(req), { tenantId: 'platform' });
     res.json({ success: true, invoice: inv });
   });
 
@@ -2225,7 +2318,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
 
     // saveDatabase(); // TODO: Migrate to repository write
     
-    logAudit('FEATURE_FLAG_UPDATED', `Updated flag ${flag.key} from G:${oldState.enabledGlobally} to G:${flag.enabledGlobally}`, req.user, getClientIp(req), { tenantId: 'platform' });
+    adapterLogAudit(req, 'FEATURE_FLAG_UPDATED', `Updated flag ${flag.key} from G:${oldState.enabledGlobally} to G:${flag.enabledGlobally}`, req.user, getClientIp(req), { tenantId: 'platform' });
     res.json({ success: true, flag });
   });
 

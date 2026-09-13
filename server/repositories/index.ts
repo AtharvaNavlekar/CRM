@@ -1,4 +1,4 @@
-import { eq, and } from 'drizzle-orm';
+import { eq, and, desc } from 'drizzle-orm';
 import { db } from '../db/client';
 import * as schema from '../db/schema';
 import { Lead, Call, Message, User, Ticket, Tenant, AuditLog, SecurityAlert, ImpersonationSession, BillingRecord, FeatureFlag, BackupRecord, CustomField, RolePermission, PipelineStageConfig, ContactFrequencyRules, TicketReply } from '../../src/types';
@@ -80,11 +80,14 @@ export const auditRepository = {
   async findAll(): Promise<AuditLog[]> {
     return (await db.select().from(schema.auditLogs)) as unknown as AuditLog[];
   },
-  async create(log: AuditLog): Promise<void> {
-    await db.insert(schema.auditLogs).values(log as any);
+  async findPaginated(tenantId?: string | null, limit: number = 50, offset: number = 0): Promise<AuditLog[]> {
+    let query = db.select().from(schema.auditLogs);
+    if (tenantId) {
+      query = query.where(eq(schema.auditLogs.tenantId, tenantId)) as any;
+    }
+    return (await query.orderBy(desc(schema.auditLogs.occurredAt)).limit(limit).offset(offset)) as unknown as AuditLog[];
   }
 };
-
 // Legacy Data Fetcher for Reports and Middleware
 export async function getLegacyState(): Promise<any> {
   const tenants = await tenantRepository.findAll();

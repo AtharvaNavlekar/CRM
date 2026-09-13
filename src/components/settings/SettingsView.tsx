@@ -378,9 +378,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onDataReset }) => {
 
   const filteredLogs = auditLogs.filter(
     (log) =>
-      log.action.toLowerCase().includes(auditFilter.toLowerCase()) ||
-      log.details.toLowerCase().includes(auditFilter.toLowerCase()) ||
-      log.userName.toLowerCase().includes(auditFilter.toLowerCase())
+      log.eventTypetoLowerCase().includes(auditFilter.toLowerCase()) ||
+      log.reason.toLowerCase().includes(auditFilter.toLowerCase()) ||
+      log.actorUserId.toLowerCase().includes(auditFilter.toLowerCase())
   );
 
   return (
@@ -1311,7 +1311,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onDataReset }) => {
                   {filteredLogs.map((log) => (
                     <tr key={log.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
                       <td className="p-3 text-slate-500 whitespace-nowrap">
-                        {new Date(log.timestamp).toLocaleString('en-IN', {
+                        {new Date(log.occurredAt).toLocaleString('en-IN', {
                           month: 'short',
                           day: 'numeric',
                           hour: '2-digit',
@@ -1324,19 +1324,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onDataReset }) => {
                           <span className="font-mono font-bold text-[11px] text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/60 px-1.5 py-0.5 rounded border border-teal-200/60">
                             {log.action}
                           </span>
-                          {log.actionType && (
+                          {log.metadata?.actionType && (
                             <span className="font-mono font-bold text-[9px] text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded border border-slate-200 dark:border-slate-700">
-                              {log.actionType}
+                              {log.metadata?.actionType}
                             </span>
                           )}
                         </div>
                       </td>
                       <td className="p-3 font-semibold text-slate-900 dark:text-slate-100">
-                        {log.userName}
+                        {log.actorUserId}
                       </td>
                       <td className="p-3">
                         <div className="flex items-center space-x-1">
-                          <span className="text-slate-600 dark:text-slate-300 font-medium">{log.userRole}</span>
+                          <span className="text-slate-600 dark:text-slate-300 font-medium">{log.actorRole}</span>
                           {log.scope && (
                             <span className="text-[9px] font-bold px-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
                               {log.scope}
@@ -1346,13 +1346,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onDataReset }) => {
                       </td>
                       <td className="p-3 text-slate-700 dark:text-slate-300 max-w-md">
                         <div className="flex items-start space-x-1.5">
-                          {log.requiredApproval && (
+                          {log.metadata?.requiredApproval && (
                             <span className="inline-flex items-center space-x-0.5 px-1 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300 whitespace-nowrap">
                               <ShieldAlert className="w-2.5 h-2.5" />
                               <span>202 Accepted</span>
                             </span>
                           )}
-                          <span>{log.details}</span>
+                          <span>{log.reason}</span>
                         </div>
                       </td>
                       <td className="p-3 font-mono text-[11px] text-slate-400">{log.ip}</td>
