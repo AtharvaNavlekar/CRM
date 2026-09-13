@@ -1,4 +1,5 @@
 import express from 'express';
+import { can } from './server/policy';
 import path from 'path';
 import crypto from 'crypto';
 import helmet from 'helmet';
@@ -31,10 +32,6 @@ import {
 } from './server/compliance';
 import {
   authenticateToken,
-  checkUserPermission,
-  requirePermission,
-  requireRole,
-  authorize,
   actionRequiresApproval,
   getRolePermission,
   JWT_SECRET,
@@ -480,7 +477,7 @@ const app = express();
 
   // Account creation is gated by MANAGE_USERS permission
   app.post('/api/users', async (req, res) => {
-    if (!authorize(req.user!, 'MANAGE_USERS', {})) {
+    if (!(await can(req.securityContext!, 'users:create'))) {
       logAudit('ACCESS_DENIED', `Denied MANAGE_USERS to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_USERS' });
       return res.status(403).json({
         error: `Forbidden: Current role '${req.user!.role}' lacks MANAGE_USERS permission.`,
@@ -569,7 +566,8 @@ const app = express();
     let leads = [...db.leads];
 
     // Server-enforced scope filtering via authorize()
-    leads = leads.filter(l => authorize(req.user!, 'VIEW', { teamId: l.teamId, ownerId: l.assignedRepId }));
+    const canViewResults = await Promise.all(leads.map(l => can(req.securityContext!, 'leads:read', { teamId: l.teamId, ownerId: l.assignedRepId })));
+    leads = leads.filter((l, i) => canViewResults[i]);
 
     if (repId && typeof repId === 'string' && repId !== 'all') {
       leads = leads.filter(l => l.assignedRepId === repId);
@@ -602,10 +600,10 @@ const app = express();
       return res.status(404).json({ error: 'Lead not found' });
     }
 
-    if (!authorize(req.user!, 'VIEW', { teamId: lead.teamId, ownerId: lead.assignedRepId })) {
+    if (!(await can(req.securityContext!, 'leads:read', { teamId: lead.teamId, ownerId: lead.assignedRepId }))) {
       logAudit('ACCESS_DENIED', `Denied VIEW for lead ${lead.id} to ${req.user!.name}`, req.user, getClientIp(req), {
         actionType: 'VIEW',
-        scope: getRolePermission(req.user!.role)?.scope
+        scope: (await getRolePermission(req.user!.role))?.scope
       });
       return res.status(403).json({
         error: `Forbidden: Current role '${req.user!.role}' cannot view lead outside authorized scope.`,
@@ -620,7 +618,7 @@ const app = express();
   // Data Export API (gated by EXPORT permission and approval workflow)
   app.get('/api/leads/export', async (req, res) => {
     const db = await getLegacyState();
-    if (!authorize(req.user!, 'EXPORT', {})) {
+    if (!(await can(req.securityContext!, 'leads:export'))) {
       logAudit('ACCESS_DENIED', `Denied EXPORT to ${req.user!.name} (${req.user!.role})`, req.user, getClientIp(req), { actionType: 'EXPORT' });
       return res.status(403).json({
         error: `Forbidden: Current role '${req.user!.role}' lacks EXPORT permission.`,
@@ -629,7 +627,7 @@ const app = express();
       });
     }
 
-    const requiresApproval = actionRequiresApproval(req.user!, 'EXPORT');
+    const requiresApproval = await actionRequiresApproval(req.user!, 'EXPORT');
     if (requiresApproval && req.query.confirmed !== 'true') {
       return res.status(202).json({
         requiresApproval: true,
@@ -641,7 +639,8 @@ const app = express();
 
     let leads = [...db.leads];
     // Filter exported leads strictly to authorized view scope
-    leads = leads.filter(l => authorize(req.user!, 'VIEW', { teamId: l.teamId, ownerId: l.assignedRepId }));
+    const canViewResults = await Promise.all(leads.map(l => can(req.securityContext!, 'leads:read', { teamId: l.teamId, ownerId: l.assignedRepId })));
+    leads = leads.filter((l, i) => canViewResults[i]);
 
     const format = req.query.format === 'json' ? 'json' : 'csv';
     if (format === 'json') {
@@ -684,7 +683,7 @@ const app = express();
 
   app.post('/api/leads', async (req, res) => {
     const db = await getLegacyState();
-    if (!authorize(req.user!, 'EDIT', {})) {
+    if (!(await can(req.securityContext!, 'leads:create'))) {
       logAudit('ACCESS_DENIED', `Denied lead creation for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
       return res.status(403).json({
         error: `Forbidden: Current role '${req.user!.role}' lacks permission to create leads.`,
@@ -792,7 +791,7 @@ const app = express();
     const updates = req.body;
 
     // Scope & Action Check: Can user EDIT this lead?
-    if (!authorize(req.user!, 'EDIT', { teamId: oldLead.teamId, ownerId: oldLead.assignedRepId })) {
+    if (!(await can(req.securityContext!, 'leads:update', { teamId: oldLead.teamId, ownerId: oldLead.assignedRepId }))) {
       logAudit('ACCESS_DENIED', `Denied EDIT on lead ${oldLead.id} for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
       return res.status(403).json({
         error: `Forbidden: You do not have permission to edit lead "${oldLead.name}".`,
@@ -804,7 +803,7 @@ const app = express();
     // Reassignment Check: Can user REASSIGN this lead?
     const isReassigning = updates.assignedRepId && updates.assignedRepId !== oldLead.assignedRepId;
     if (isReassigning) {
-      if (!authorize(req.user!, 'REASSIGN', { teamId: oldLead.teamId, ownerId: oldLead.assignedRepId })) {
+      if (!(await can(req.securityContext!, 'leads:reassign', { teamId: oldLead.teamId, ownerId: oldLead.assignedRepId }))) {
         logAudit('ACCESS_DENIED', `Denied REASSIGN on lead ${oldLead.id} for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'REASSIGN' });
         return res.status(403).json({
           error: `Forbidden: Current role '${req.user!.role}' lacks permission to reassign leads.`,
@@ -824,7 +823,7 @@ const app = express();
     }
 
     // Approval check for EDIT (e.g. owner and cto roles have EDIT in requiresApproval)
-    const requiresApproval = actionRequiresApproval(req.user!, 'EDIT');
+    const requiresApproval = await actionRequiresApproval(req.user!, 'EDIT');
     if (requiresApproval && req.body.confirmed !== true) {
       return res.status(202).json({
         requiresApproval: true,
@@ -886,7 +885,7 @@ const app = express();
 
   // Lead deletion gated by DELETE permission and approval workflow
   app.delete('/api/leads/:id', async (req, res) => {
-    if (!authorize(req.user!, 'DELETE', {})) {
+    if (!(await can(req.securityContext!, 'leads:delete'))) {
       logAudit('ACCESS_DENIED', `Denied DELETE on lead for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'DELETE' });
       return res.status(403).json({
         error: `Forbidden: Current role '${req.user!.role}' lacks permission to delete leads.`,
@@ -902,7 +901,7 @@ const app = express();
       return res.status(404).json({ error: 'Lead not found' });
     }
 
-    if (!authorize(req.user!, 'DELETE', { teamId: lead.teamId, ownerId: lead.assignedRepId })) {
+    if (!(await can(req.securityContext!, 'leads:delete', { teamId: lead.teamId, ownerId: lead.assignedRepId }))) {
       logAudit('ACCESS_DENIED', `Denied DELETE on lead ${lead.id} for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'DELETE' });
       return res.status(403).json({
         error: `Forbidden: Current role '${req.user!.role}' lacks DELETE permission for lead "${lead.name}".`,
@@ -911,7 +910,7 @@ const app = express();
       });
     }
 
-    const requiresApproval = actionRequiresApproval(req.user!, 'DELETE');
+    const requiresApproval = await actionRequiresApproval(req.user!, 'DELETE');
     if (requiresApproval && req.body?.confirmed !== true && req.query?.confirmed !== 'true') {
       return res.status(202).json({
         requiresApproval: true,
@@ -932,7 +931,7 @@ const app = express();
 
   // Bulk import leads from CSV (gated by EDIT authorization)
   app.post('/api/leads/import', async (req, res) => {
-    if (!authorize(req.user!, 'EDIT', {})) {
+    if (!(await can(req.securityContext!, 'leads:create'))) {
       logAudit('ACCESS_DENIED', `Denied lead CSV import for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
       return res.status(403).json({
         error: `Forbidden: Current role '${req.user!.role}' lacks permission to import leads.`,
@@ -1011,7 +1010,7 @@ const app = express();
     // Validate permission on all targeted leads
     for (const l of db.leads) {
       if (leadIds.includes(l.id)) {
-        if (!authorize(req.user!, 'EDIT', { teamId: l.teamId, ownerId: l.assignedRepId })) {
+        if (!(await can(req.securityContext!, 'leads:update', { teamId: l.teamId, ownerId: l.assignedRepId }))) {
           logAudit('ACCESS_DENIED', `Denied bulk EDIT on lead ${l.id} for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
           return res.status(403).json({
             error: `Forbidden: You do not have EDIT permission for lead ${l.name}.`,
@@ -1019,7 +1018,7 @@ const app = express();
             action: 'EDIT'
           });
         }
-        if (isReassigning && !authorize(req.user!, 'REASSIGN', { teamId: l.teamId, ownerId: l.assignedRepId })) {
+        if (isReassigning && !(await can(req.securityContext!, 'leads:reassign', { teamId: l.teamId, ownerId: l.assignedRepId }))) {
           logAudit('ACCESS_DENIED', `Denied bulk REASSIGN on lead ${l.id} for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'REASSIGN' });
           return res.status(403).json({
             error: `Forbidden: Current role lacks REASSIGN permission for lead ${l.name}.`,
@@ -1122,7 +1121,7 @@ const app = express();
     }
 
     // Check if user has permission to log calls on this lead
-    if (!authorize(req.user!, 'EDIT', { teamId: lead.teamId, ownerId: lead.assignedRepId })) {
+    if (!(await can(req.securityContext!, 'leads:update', { teamId: lead.teamId, ownerId: lead.assignedRepId }))) {
       logAudit('ACCESS_DENIED', `Denied call log on lead ${lead.id} by ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
       return res.status(403).json({
         error: 'Forbidden: You cannot log calls for leads outside your authorized scope.',
@@ -1145,7 +1144,7 @@ const app = express();
     }
 
     // Shared Server-Side Lead Communication Compliance Enforcement
-    const compliance = validateLeadCommunicationCompliance(lead, 'Call', { db });
+    const compliance = await validateLeadCommunicationCompliance(lead, 'Call', { db });
     if (!compliance.allowed) {
       return res.status(compliance.statusCode || 403).json({
         error: compliance.reason,
@@ -1254,7 +1253,7 @@ const app = express();
 
     // Scope Authorization: Check if user has EDIT permission on this lead
     if (isOutbound) {
-      if (!authorize(req.user!, 'EDIT', { teamId: lead.teamId, ownerId: lead.assignedRepId })) {
+      if (!(await can(req.securityContext!, 'leads:update', { teamId: lead.teamId, ownerId: lead.assignedRepId }))) {
         logAudit('ACCESS_DENIED', `Denied message to lead ${lead.id} by ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
         return res.status(403).json({
           error: 'Forbidden: You cannot send messages to leads outside your authorized scope.',
@@ -1264,7 +1263,7 @@ const app = express();
       }
 
       // Shared Server-Side Lead Communication Compliance Enforcement
-      const compliance = validateLeadCommunicationCompliance(lead, 'WhatsApp', { db });
+      const compliance = await validateLeadCommunicationCompliance(lead, 'WhatsApp', { db });
       if (!compliance.allowed) {
         return res.status(compliance.statusCode || 403).json({
           error: compliance.reason,
@@ -1382,7 +1381,7 @@ const app = express();
   });
 
   app.put('/api/compliance/rules', async (req, res) => {
-    if (!authorize(req.user!, 'MANAGE_COMPLIANCE_RULES', {})) {
+    if (!(await can(req.securityContext!, 'compliance:update'))) {
       logAudit('ACCESS_DENIED', `Denied MANAGE_COMPLIANCE_RULES to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_COMPLIANCE_RULES' });
       return res.status(403).json({
         error: `Forbidden: Current role '${req.user!.role}' lacks MANAGE_COMPLIANCE_RULES permission.`,
@@ -1391,7 +1390,7 @@ const app = express();
       });
     }
 
-    const requiresApproval = actionRequiresApproval(req.user!, 'MANAGE_COMPLIANCE_RULES');
+    const requiresApproval = await actionRequiresApproval(req.user!, 'MANAGE_COMPLIANCE_RULES');
     if (requiresApproval && req.body.confirmed !== true) {
       return res.status(202).json({
         requiresApproval: true,
@@ -1606,7 +1605,7 @@ const app = express();
   });
 
   app.put('/api/settings/fields', async (req, res) => {
-    if (!authorize(req.user!, 'MANAGE_POLICY', {}) && req.user!.role !== 'it') {
+    if (!(await can(req.securityContext!, 'MANAGE_POLICY')) && req.user!.role !== 'it') {
       logAudit('ACCESS_DENIED', `Denied custom field update to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
       return res.status(403).json({ error: 'Forbidden: Insufficient privileges to update custom fields.', code: 'FORBIDDEN' });
     }
@@ -1621,7 +1620,7 @@ const app = express();
   });
 
   app.put('/api/settings/roles', async (req, res) => {
-    if (!authorize(req.user!, 'MANAGE_POLICY', {})) {
+    if (!(await can(req.securityContext!, 'MANAGE_POLICY'))) {
       logAudit('ACCESS_DENIED', `Denied MANAGE_POLICY to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
       return res.status(403).json({
         error: `Forbidden: Current role '${req.user!.role}' lacks MANAGE_POLICY permission.`,
@@ -1640,7 +1639,7 @@ const app = express();
   });
 
   app.put('/api/settings/pipeline', async (req, res) => {
-    if (!authorize(req.user!, 'MANAGE_POLICY', {}) && req.user!.role !== 'it') {
+    if (!(await can(req.securityContext!, 'MANAGE_POLICY')) && req.user!.role !== 'it') {
       logAudit('ACCESS_DENIED', `Denied pipeline config update to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
       return res.status(403).json({ error: 'Forbidden: Insufficient privileges to update pipeline stages.', code: 'FORBIDDEN' });
     }
@@ -1655,7 +1654,7 @@ const app = express();
   });
 
   app.put('/api/settings/auto-assignment', async (req, res) => {
-    if (!authorize(req.user!, 'MANAGE_POLICY', {}) && req.user!.role !== 'it') {
+    if (!(await can(req.securityContext!, 'MANAGE_POLICY')) && req.user!.role !== 'it') {
       logAudit('ACCESS_DENIED', `Denied auto-assignment toggle to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
       return res.status(403).json({ error: 'Forbidden: Insufficient privileges to toggle auto-assignment.', code: 'FORBIDDEN' });
     }
@@ -1798,7 +1797,7 @@ const app = express();
 
   app.post('/api/platform/tenants/:id/suspend', async (req, res) => {
     if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
-    if (!authorize(req.user!, 'PLATFORM_ADMIN', {})) {
+    if (!(await can(req.securityContext!, 'platform:manage'))) {
       return res.status(403).json({ error: 'Forbidden: Requires PLATFORM_ADMIN' });
     }
     const { reason, confirmed } = req.body;
@@ -1820,7 +1819,7 @@ const app = express();
 
   app.post('/api/platform/tenants/:id/reactivate', async (req, res) => {
     if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
-    if (!authorize(req.user!, 'PLATFORM_ADMIN', {})) {
+    if (!(await can(req.securityContext!, 'platform:manage'))) {
       return res.status(403).json({ error: 'Forbidden: Requires PLATFORM_ADMIN' });
     }
     const { confirmed } = req.body;
@@ -1855,7 +1854,7 @@ const app = express();
   // Step 3: Impersonation
   app.post('/api/platform/impersonate', async (req, res) => {
     if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
-    if (!authorize(req.user!, 'PLATFORM_IMPERSONATE', {})) {
+    if (!(await can(req.securityContext!, 'users:impersonate_tenant'))) {
        return res.status(403).json({ error: 'Insufficient platform role to impersonate.' });
     }
 
@@ -1959,7 +1958,7 @@ const app = express();
 
   app.post('/api/platform/billing/:id/mark-paid', async (req, res) => {
     if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
-    if (!authorize(req.user!, 'PLATFORM_ADMIN', {})) {
+    if (!(await can(req.securityContext!, 'platform:manage'))) {
       return res.status(403).json({ error: 'Forbidden: Requires PLATFORM_ADMIN' });
     }
 
@@ -1984,7 +1983,7 @@ const app = express();
 
   app.put('/api/platform/features/:id', async (req, res) => {
     if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
-    if (!authorize(req.user!, 'PLATFORM_ADMIN', {})) {
+    if (!(await can(req.securityContext!, 'platform:manage'))) {
       return res.status(403).json({ error: 'Forbidden: Requires PLATFORM_ADMIN' });
     }
 

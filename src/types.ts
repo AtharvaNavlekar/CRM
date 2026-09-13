@@ -10,7 +10,22 @@ export type Action =
   | 'MANAGE_POLICY'
   | 'MANAGE_COMPLIANCE_RULES'
   | 'PLATFORM_ADMIN'
-  | 'PLATFORM_IMPERSONATE';
+  | 'PLATFORM_IMPERSONATE'
+  // Domain actions
+  | 'users:create'
+  | 'users:impersonate_tenant'
+  | 'leads:read'
+  | 'leads:create'
+  | 'leads:update'
+  | 'leads:reassign'
+  | 'leads:export'
+  | 'leads:delete'
+  | 'leads:import'
+  | 'calls:read'
+  | 'calls:create'
+  | 'messages:create'
+  | 'compliance:update'
+  | 'platform:manage';
 
 export type UserRole =
   | 'telecaller'
@@ -60,6 +75,8 @@ export interface SecurityContext {
   actorUserId: string;
   actorRole: UserRole | string;
   actorTenantId?: string;
+  actorTeamId?: string;
+  actorManagesTeamIds?: string[];
   isPlatformStaff: boolean;
 
   tenantId?: string;

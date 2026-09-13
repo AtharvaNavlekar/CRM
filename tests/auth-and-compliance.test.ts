@@ -459,7 +459,7 @@ async function runTests() {
     }
   };
 
-  const directCheck = validateLeadCommunicationCompliance(mockOptedOutLead, 'Call', {
+  const directCheck = await validateLeadCommunicationCompliance(mockOptedOutLead, 'Call', {
     timestamp: new Date('2026-09-07T14:00:00+05:30') // During working hours
   });
   results.push({

@@ -84,7 +84,7 @@ export async function checkCompliance(
     db?: DatabaseState;
     skipQuietHours?: boolean; // For explicit testing overrides if needed
   }
-): ComplianceCheckResult {
+): Promise<ComplianceCheckResult> {
   if (!lead) {
     return {
       allowed: false,

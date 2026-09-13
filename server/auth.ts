@@ -94,7 +94,7 @@ export async function authorize(
   user: User,
   action: Action,
   targetScope: { tenantId?: string; teamId?: string; ownerId?: string } = {}
-): boolean {
+): Promise<boolean> {
   // Normalize legacy roles if needed
   let normalizedRole = user.role;
   if (normalizedRole === ('Admin' as any)) normalizedRole = 'owner';
@@ -144,7 +144,7 @@ export async function authorize(
 }
 
 // Approval Gating Checker (Step 5)
-export async function actionRequiresApproval(user: User, action: Action): boolean {
+export async function actionRequiresApproval(user: User, action: Action): Promise<boolean> {
   let normalizedRole = user.role;
   if (normalizedRole === ('Admin' as any)) normalizedRole = 'owner';
   else if (normalizedRole === ('Team Lead' as any)) normalizedRole = 'tl';
@@ -157,7 +157,7 @@ export async function actionRequiresApproval(user: User, action: Action): boolea
 // Express Authentication Middleware
 // Validates JWT tokens in the Authorization header.
 // Applied globally to all API routes except /api/auth/login.
-export const authenticateToken: express.RequestHandler = (req, res, next) => {
+export const authenticateToken: express.RequestHandler = async (req, res, next) => {
   const path = req.originalUrl ? req.originalUrl.split('?')[0] : req.path;
   const isPublic =
     path === '/api/health' ||
@@ -204,7 +204,7 @@ export const authenticateToken: express.RequestHandler = (req, res, next) => {
       });
     }
 
-    const db = getLegacyState();
+    const db = await getLegacyState();
     const user = db.users.find(u => u.id === decoded.id);
 
     if (!user) {
@@ -223,6 +223,8 @@ export const authenticateToken: express.RequestHandler = (req, res, next) => {
       req.securityContext.actorUserId = user.id;
       req.securityContext.actorRole = user.role;
       req.securityContext.actorTenantId = user.tenantId;
+      req.securityContext.actorTeamId = user.teamId;
+      req.securityContext.actorManagesTeamIds = user.managesTeamIds;
       req.securityContext.isPlatformStaff = Boolean(
         user.isPlatformStaff ||
         ['platform_admin', 'platform_support', 'platform_security'].includes(user.role)
@@ -244,98 +246,8 @@ export const authenticateToken: express.RequestHandler = (req, res, next) => {
   }
 };
 
-// Server-side helper to check user permissions against their assigned role
-export async function checkUserPermission(
-  userRole: UserRole | string,
-  permission: keyof RolePermission | 'admin' | 'canExportData' | 'canManageSettings' | 'canManageUsers' | 'canViewAllLeads' | 'canManageTemplates' | 'canManagePolicy',
-  rolePermissions?: RolePermission[]
-): boolean {
-  if (userRole === 'owner' || userRole === 'Admin') {
-    return true;
-  }
 
-  let normalizedRole = userRole;
-  if (normalizedRole === 'Team Lead') normalizedRole = 'tl';
-  if (normalizedRole === 'Rep') normalizedRole = 'telecaller';
 
-  const perms = rolePermissions || getLegacyState().rolePermissions || [];
-  const userPerm = perms.find(p => p.role === normalizedRole);
-  if (!userPerm) {
-    return false;
-  }
 
-  if (permission === 'admin' || permission === 'canManageSettings' || permission === 'canManagePolicy') {
-    return userPerm.actions?.includes('MANAGE_POLICY') ?? false;
-  }
-  if (permission === 'canManageUsers') {
-    return userPerm.actions?.includes('MANAGE_USERS') ?? false;
-  }
-  if (permission === 'canExportData') {
-    return userPerm.actions?.includes('EXPORT') ?? false;
-  }
-  if (permission === 'canViewAllLeads') {
-    return userPerm.scope !== 'SELF';
-  }
-  if (permission === 'canManageTemplates') {
-    return userPerm.actions?.includes('EDIT') ?? false;
-  }
 
-  if (permission in userPerm) {
-    return Boolean((userPerm as any)[permission]);
-  }
 
-  return false;
-}
-
-// Middleware: Require specific user permissions
-export function requirePermission(permission: keyof RolePermission | 'admin' | 'canExportData' | 'canManageSettings' | 'canManageUsers' | 'canManagePolicy') {
-  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    if (!req.user) {
-      return res.status(401).json({
-        error: 'Unauthorized: User identity not established.',
-        code: 'UNAUTHORIZED'
-      });
-    }
-
-    const hasPermission = checkUserPermission(req.user.role, permission);
-    if (!hasPermission) {
-      return res.status(403).json({
-        error: `Forbidden: Current role '${req.user.role}' lacks the required '${String(permission)}' permission.`,
-        code: 'FORBIDDEN',
-        requiredPermission: permission,
-        userRole: req.user.role
-      });
-    }
-
-    next();
-  };
-}
-
-// Middleware: Require specific role(s)
-export function requireRole(...allowedRoles: UserRole[]) {
-  return (req: express.Request, res: express.Response, next: express.NextFunction) => {
-    if (!req.user) {
-      return res.status(401).json({
-        error: 'Unauthorized: User identity not established.',
-        code: 'UNAUTHORIZED'
-      });
-    }
-
-    let userRole = req.user.role;
-    // Map legacy
-    const matching = allowedRoles.includes(userRole) ||
-      (userRole === 'owner' && (allowedRoles.includes('Admin' as any) || allowedRoles.includes('owner'))) ||
-      (userRole === 'cto' && (allowedRoles.includes('Admin' as any) || allowedRoles.includes('cto'))) ||
-      (userRole === 'tl' && (allowedRoles.includes('Team Lead' as any) || allowedRoles.includes('tl'))) ||
-      (userRole === 'telecaller' && (allowedRoles.includes('Rep' as any) || allowedRoles.includes('telecaller')));
-
-    if (!matching) {
-      return res.status(403).json({
-        error: `Forbidden: Action requires one of [${allowedRoles.join(', ')}] roles. Current role: ${req.user.role}`,
-        code: 'FORBIDDEN'
-      });
-    }
-
-    next();
-  };
-}
