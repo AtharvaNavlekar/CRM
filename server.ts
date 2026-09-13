@@ -1,7 +1,7 @@
 import { generateOpaqueRefreshToken, hashToken } from './server/auth';
 import { db } from './server/db/client';
 import { sessions } from './server/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import express from 'express';
 import { can } from './server/policy';
 import path from 'path';
@@ -9,6 +9,8 @@ import crypto from 'crypto';
 import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
+import { RedisStore } from 'rate-limit-redis';
+import { redisService, createSafeKey } from './server/infrastructure/redis';
 import jwt from 'jsonwebtoken';
 import bcryptjs from 'bcryptjs';
 import { createServer as createViteServer } from 'vite';
@@ -274,10 +276,29 @@ const app = express();
     standardHeaders: true,
     legacyHeaders: false,
     skipSuccessfulRequests: true,
+    // Use Redis for rate limiting if available, otherwise it falls back to memory if store is omitted
+    // rate-limit-redis handles fallback behavior somewhat, but explicitly failing open/closed needs care.
+    // For now we pass the client; if Redis is down, we want to ensure the app doesn't crash.
+    store: new RedisStore({
+      // @ts-expect-error - rate-limit-redis types are slightly mismatched with ioredis but perfectly compatible
+      sendCommand: async (...args: string[]) => {
+        const client = redisService.getClient();
+        if (client && args.length > 0) {
+          const command = args[0];
+          const commandArgs = args.slice(1);
+          return client.call(command, ...commandArgs);
+        }
+        // If Redis is down, we fail OPEN (let request through) to avoid total denial of service.
+        // Returning a mock successful reply to rate-limit-redis bypasses the limit.
+        return null;
+      },
+    }),
     keyGenerator: (req) => {
-      const ip = req.socket.remoteAddress || '127.0.0.1';
+      // Use standard IP extraction
+      const ip = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
       const email = req.body?.email ? String(req.body.email).toLowerCase().trim() : 'unknown';
-      return `${ip}|${email}`;
+      // Hash to prevent raw PII in redis
+      return createSafeKey('rate-limit:login', 'global', `${ip}|${email}`);
     },
     message: { error: 'Too many login attempts. Please try again in 15 minutes.' }
   });
@@ -293,14 +314,50 @@ const app = express();
   app.use('/api/messages', enforceImpersonationForRawData);
   app.use('/api/tickets', enforceImpersonationForRawData);
 
-  // Health API
-  app.get('/api/health', async (req, res) => {
+  // Liveness Probe (process is running)
+  app.get('/api/health/liveness', (req, res) => {
     res.json({
       status: 'ok',
       service: 'DialPulse CRM API',
       timestamp: new Date().toISOString(),
       uptime: process.uptime()
     });
+  });
+
+  // Readiness Probe (dependencies are connected)
+  app.get('/api/health/readiness', async (req, res) => {
+    try {
+      // 1. Check PostgreSQL
+      await db.execute(sql`SELECT 1`);
+      
+      // 2. Check Redis (if configured)
+      let redisOk = true;
+      if (process.env.REDIS_URL) {
+        redisOk = await redisService.ping();
+      }
+
+      if (!redisOk) {
+        return res.status(503).json({
+          status: 'error',
+          error: 'Redis unavailable',
+          timestamp: new Date().toISOString()
+        });
+      }
+
+      res.json({
+        status: 'ok',
+        service: 'DialPulse CRM API',
+        timestamp: new Date().toISOString(),
+        database: 'connected',
+        redis: process.env.REDIS_URL ? 'connected' : 'disabled'
+      });
+    } catch (err: any) {
+      res.status(503).json({
+        status: 'error',
+        error: 'Database unavailable',
+        timestamp: new Date().toISOString()
+      });
+    }
   });
 
   
