@@ -54,7 +54,7 @@ function run() {
     name,
     role: 'platform_admin',
     isPlatformStaff: true,
-    createdAt: new Date().toISOString()
+    createdDate: new Date().toISOString()
   };
 
   db.users.push(newUser);

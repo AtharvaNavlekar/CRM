@@ -1,3 +1,4 @@
+import { getLegacyState } from './repositories';
 import { Lead, ContactFrequencyRules, DatabaseState } from '../src/types';
 import { getComplianceRules, DEFAULT_FREQUENCY_RULES, getDb } from './db';
 
@@ -75,7 +76,7 @@ export function isQuietHours(rules: ContactFrequencyRules, date: Date = new Date
  * Must be invoked by ALL outbound communication channels (/api/calls, /api/messages, etc.)
  * before recording any customer outreach.
  */
-export function checkCompliance(
+export async function checkCompliance(
   lead: Lead,
   channel: 'Call' | 'WhatsApp' | 'SMS',
   options?: {
@@ -95,7 +96,7 @@ export function checkCompliance(
 
   const targetDate = options?.timestamp || new Date();
   const db = options?.db || getDb();
-  const rules = db.complianceRules || getComplianceRules() || DEFAULT_FREQUENCY_RULES;
+  const rules = (await getLegacyState()).complianceRules || getComplianceRules() || DEFAULT_FREQUENCY_RULES;
 
   // 1. Explicit Do-Not-Disturb / Global Opt-Out Check
   console.log('LEAD PREFS:', lead.preferences); const isOptedOut = Boolean(lead.preferences?.isOptedOut || (lead as any).isOptedOut);
@@ -201,7 +202,7 @@ export function checkCompliance(
     const windowMs = (rules.callCapDays || 7) * 24 * 60 * 60 * 1000;
     const cutoff = nowMs - windowMs;
     // Count database calls within window
-    const recentDbCalls = (db.calls || []).filter(c => c.leadId === lead.id && new Date(c.timestamp).getTime() >= cutoff).length;
+    const recentDbCalls = ((await getLegacyState()).calls || []).filter(c => c.leadId === lead.id && new Date(c.timestamp).getTime() >= cutoff).length;
     const recordedAttempts = lead.contactAttempts7d?.calls || 0;
     const totalAttempts = Math.max(recentDbCalls, recordedAttempts);
 
@@ -225,7 +226,7 @@ export function checkCompliance(
   } else if (channel === 'WhatsApp') {
     const windowMs = (rules.whatsAppCapDays || 30) * 24 * 60 * 60 * 1000;
     const cutoff = nowMs - windowMs;
-    const recentDbMessages = (db.messages || []).filter(
+    const recentDbMessages = ((await getLegacyState()).messages || []).filter(
       m => m.leadId === lead.id && m.direction === 'outbound' && new Date(m.timestamp).getTime() >= cutoff
     ).length;
     const recordedAttempts = lead.contactAttempts7d?.whatsapp || 0;

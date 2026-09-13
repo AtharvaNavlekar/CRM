@@ -3,8 +3,8 @@ import jwt from 'jsonwebtoken';
 import bcryptjs from 'bcryptjs';
 import crypto from 'crypto';
 import { UserRole, RolePermission, User, ViewScope, Action } from '../src/types';
-import { getDb, DEFAULT_ROLE_PERMISSIONS } from './db';
-
+import { getLegacyState } from './repositories';
+import { logAudit } from './db';
 function resolveJwtSecret(): string {
   if (process.env.JWT_SECRET && process.env.JWT_SECRET.trim().length > 0) {
     return process.env.JWT_SECRET.trim();
@@ -83,14 +83,14 @@ export function signRefreshToken(user: { id: string; email: string; tenantId?: s
 }
 
 // Centralized RBAC Role Permission Resolver
-export function getRolePermission(role: string): RolePermission | undefined {
-  const db = getDb();
-  const perms = db.rolePermissions || DEFAULT_ROLE_PERMISSIONS;
-  return perms.find(p => p.role === role) || DEFAULT_ROLE_PERMISSIONS.find(p => p.role === role);
+export async function getRolePermission(role: string): Promise<RolePermission | undefined> {
+  const db = await getLegacyState();
+  const perms = (await getLegacyState()).rolePermissions || [];
+  return perms.find(p => p.role === role) || [] /* [] */.find(p => p.role === role);
 }
 
 // Centralized Authorization Function (Strict Tenant Isolation + Multi-Tier RBAC)
-export function authorize(
+export async function authorize(
   user: User,
   action: Action,
   targetScope: { tenantId?: string; teamId?: string; ownerId?: string } = {}
@@ -101,7 +101,7 @@ export function authorize(
   else if (normalizedRole === ('Team Lead' as any)) normalizedRole = 'tl';
   else if (normalizedRole === ('Rep' as any)) normalizedRole = 'telecaller';
 
-  const perm = getRolePermission(normalizedRole);
+  const perm = await getRolePermission(normalizedRole);
   if (!perm || !perm.actions.includes(action)) return false;
 
   // 1. PLATFORM Scope: Platform staff can administer the platform.
@@ -144,13 +144,13 @@ export function authorize(
 }
 
 // Approval Gating Checker (Step 5)
-export function actionRequiresApproval(user: User, action: Action): boolean {
+export async function actionRequiresApproval(user: User, action: Action): boolean {
   let normalizedRole = user.role;
   if (normalizedRole === ('Admin' as any)) normalizedRole = 'owner';
   else if (normalizedRole === ('Team Lead' as any)) normalizedRole = 'tl';
   else if (normalizedRole === ('Rep' as any)) normalizedRole = 'telecaller';
 
-  const perm = getRolePermission(normalizedRole);
+  const perm = await getRolePermission(normalizedRole);
   return Boolean(perm?.requiresApproval?.includes(action));
 }
 
@@ -204,7 +204,7 @@ export const authenticateToken: express.RequestHandler = (req, res, next) => {
       });
     }
 
-    const db = getDb();
+    const db = getLegacyState();
     const user = db.users.find(u => u.id === decoded.id);
 
     if (!user) {
@@ -235,7 +235,7 @@ export const authenticateToken: express.RequestHandler = (req, res, next) => {
 };
 
 // Server-side helper to check user permissions against their assigned role
-export function checkUserPermission(
+export async function checkUserPermission(
   userRole: UserRole | string,
   permission: keyof RolePermission | 'admin' | 'canExportData' | 'canManageSettings' | 'canManageUsers' | 'canViewAllLeads' | 'canManageTemplates' | 'canManagePolicy',
   rolePermissions?: RolePermission[]
@@ -248,7 +248,7 @@ export function checkUserPermission(
   if (normalizedRole === 'Team Lead') normalizedRole = 'tl';
   if (normalizedRole === 'Rep') normalizedRole = 'telecaller';
 
-  const perms = rolePermissions || getDb().rolePermissions || DEFAULT_ROLE_PERMISSIONS;
+  const perms = rolePermissions || getLegacyState().rolePermissions || [];
   const userPerm = perms.find(p => p.role === normalizedRole);
   if (!userPerm) {
     return false;

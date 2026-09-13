@@ -1,5 +1,5 @@
 import bcryptjs from 'bcryptjs';
-import { Lead, Call, Message, Ticket, User, AuditLog, Team, Tenant, SecurityAlert } from '../src/types';
+import { DatabaseState, User, Tenant, Team, Lead, Call, Message, Ticket, AuditLog, SecurityAlert } from '../../src/types';
 
 export const DEFAULT_PASSWORD_HASH = bcryptjs.hashSync('password123', 10);
 
@@ -367,7 +367,7 @@ export const INITIAL_LEADS: Lead[] = [
     tenantId: 'tenant-zenith',
     name: 'Siddharth Varma',
     phone: '+91 98765 11223',
-    source: 'LinkedIn Ads',
+    source: 'LinkedIn' as any,
     stage: 'New',
     assignedRepId: 'usr-zen-3',
     assignedRepName: 'Arjun Das',
@@ -399,7 +399,7 @@ export const INITIAL_LEADS: Lead[] = [
     tenantId: 'tenant-zenith',
     name: 'Nikhil Saxena',
     phone: '+91 98765 33445',
-    source: 'Referral',
+    source: 'Referral' as any,
     stage: 'Won',
     assignedRepId: 'usr-zen-3',
     assignedRepName: 'Arjun Das',

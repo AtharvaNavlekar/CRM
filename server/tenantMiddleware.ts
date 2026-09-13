@@ -24,7 +24,7 @@ declare global {
  *
  * Automatically attaches `req.tenantId` and `req.isPlatformStaff`.
  */
-export const enforceTenantScope: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+export const enforceTenantScope: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
   // Public/exempt routes (health, unauthenticated login/refresh)
   const path = req.originalUrl ? req.originalUrl.split('?')[0] : req.path;
   if (
@@ -42,7 +42,7 @@ export const enforceTenantScope: RequestHandler = (req: Request, res: Response, 
   }
 
   const user = req.user;
-  const db = getDb();
+  const db = await getDb();
 
   // Check if user is platform staff
   const isPlatformStaff = Boolean(
@@ -91,7 +91,7 @@ export function scopeToTenant<T extends { tenantId?: string }>(
 /**
  * Middleware to reject requests if target tenant is suspended
  */
-export const verifyTenantActive: RequestHandler = (req: Request, res: Response, next: NextFunction) => {
+export const verifyTenantActive: RequestHandler = async (req: Request, res: Response, next: NextFunction) => {
   if (req.isPlatformStaff && !req.tenantId) {
     return next();
   }
@@ -101,7 +101,7 @@ export const verifyTenantActive: RequestHandler = (req: Request, res: Response, 
     return next();
   }
 
-  const db = getDb();
+  const db = await getDb();
   const tenant = db.tenants?.find(t => t.id === tenantId);
 
   if (tenant && tenant.status === 'suspended') {

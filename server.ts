@@ -10,6 +10,7 @@ import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import {
   loadDatabase,
+  getLegacyState,
   getDb,
   saveDatabase,
   logAudit,
@@ -56,7 +57,7 @@ import {
   ContactFrequencyRules,
   Team
 } from './src/types';
-import { TEAMS } from './server/seedData';
+
 import {
   AI_CRAWLER_USER_AGENTS,
   isAiCrawler,
@@ -136,7 +137,8 @@ const sanitizeFormula = (val: any): string => {
 loadDatabase();
 
 async function startServer() {
-  const app = express();
+  const TEAMS: any[] = [];
+const app = express();
   const PORT = 3000;
 
   // Trust proxy for reverse proxy environments (Cloud Run, Nginx)
@@ -227,7 +229,7 @@ async function startServer() {
   });
 
   // Explicit robots.txt route (synchronized with AI_CRAWLER_USER_AGENTS)
-  app.get('/robots.txt', (req, res) => {
+  app.get('/robots.txt', async (req, res) => {
     res.type('text/plain').send(generateRobotsTxtContent());
   });
 
@@ -280,7 +282,7 @@ async function startServer() {
   app.use('/api/tickets', enforceImpersonationForRawData);
 
   // Health API
-  app.get('/api/health', (req, res) => {
+  app.get('/api/health', async (req, res) => {
     res.json({
       status: 'ok',
       service: 'DialPulse CRM API',
@@ -290,7 +292,7 @@ async function startServer() {
   });
 
   // 3. Auth Routes
-  app.post('/api/auth/login', loginLimiter, (req, res) => {
+  app.post('/api/auth/login', loginLimiter, async (req, res) => {
     const { email, password } = req.body;
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
@@ -300,7 +302,7 @@ async function startServer() {
       return res.status(400).json({ error: 'Invalid email address format' });
     }
 
-    const db = getDb();
+    const db = await getLegacyState();
     const user = db.users.find(u => u.email.toLowerCase() === String(email).trim().toLowerCase());
 
     if (!user || !user.passwordHash) {
@@ -328,7 +330,7 @@ async function startServer() {
     res.json({ user: sanitizeUser(user), token, refreshToken, expiresIn: 3600 });
   });
 
-  app.post('/api/auth/refresh', (req, res) => {
+  app.post('/api/auth/refresh', async (req, res) => {
     const { refreshToken } = req.body;
     if (!refreshToken || typeof refreshToken !== 'string') {
       return res.status(400).json({ error: 'Refresh token is required', code: 'REFRESH_TOKEN_REQUIRED' });
@@ -344,7 +346,7 @@ async function startServer() {
         return res.status(401).json({ error: 'Invalid token type. Expected refresh token.', code: 'INVALID_TOKEN' });
       }
 
-      const db = getDb();
+      const db = await getLegacyState();
       const user = db.users.find(u => u.id === decoded.id);
       if (!user) {
         return res.status(401).json({ error: 'User account not found or deactivated.', code: 'USER_NOT_FOUND' });
@@ -365,8 +367,8 @@ async function startServer() {
     }
   });
 
-  app.get('/api/auth/me', (req, res) => {
-    const db = getDb();
+  app.get('/api/auth/me', async (req, res) => {
+    const db = await getLegacyState();
     const user = db.users.find(u => u.id === req.user!.id);
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
@@ -378,7 +380,7 @@ async function startServer() {
     res.json({ user: sanitized });
   });
 
-  app.post('/api/auth/logout', (req, res) => {
+  app.post('/api/auth/logout', async (req, res) => {
     if (req.user?.token) {
       revokedTokens.add(req.user.token);
     }
@@ -391,7 +393,7 @@ async function startServer() {
 
   // User Switching / Role Updating
   // Persona switching and testing (supports all 6 RBAC roles: telecaller, tl, tl_head, it, owner, cto)
-  app.post('/api/auth/switch-user', (req, res) => {
+  app.post('/api/auth/switch-user', async (req, res) => {
     if (!req.user) {
       return res.status(401).json({ error: 'Authentication required to switch user.', code: 'UNAUTHORIZED' });
     }
@@ -401,7 +403,7 @@ async function startServer() {
     }
 
     const { userId, role } = req.body;
-    const db = getDb();
+    const db = await getLegacyState();
     let targetUser = userId ? db.users.find(u => u.id === userId) : db.users.find(u => u.id === req.user!.id);
     if (!targetUser) {
       targetUser = db.users[0];
@@ -419,7 +421,7 @@ async function startServer() {
 
     if (role && validRoles.includes(mappedRole)) {
       targetUser.role = mappedRole;
-      saveDatabase();
+      // saveDatabase(); // TODO: Migrate to repository write
       logAudit(
         'ROLE_UPDATED',
         `${req.user.name} switched role of ${targetUser.name} to ${mappedRole}`,
@@ -452,18 +454,18 @@ async function startServer() {
   });
 
   // Teams Directory API (Mumbai & Delhi)
-  app.get('/api/teams', (req, res) => {
+  app.get('/api/teams', async (req, res) => {
     res.json(TEAMS);
   });
 
   // 4. User Directory APIs
-  app.get('/api/users', (req, res) => {
-    const db = getDb();
+  app.get('/api/users', async (req, res) => {
+    const db = await getLegacyState();
     res.json(db.users.map(sanitizeUser));
   });
 
   // Account creation is gated by MANAGE_USERS permission
-  app.post('/api/users', (req, res) => {
+  app.post('/api/users', async (req, res) => {
     if (!authorize(req.user!, 'MANAGE_USERS', {})) {
       logAudit('ACCESS_DENIED', `Denied MANAGE_USERS to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_USERS' });
       return res.status(403).json({
@@ -474,7 +476,7 @@ async function startServer() {
     }
 
     const { name, email, role, title, phone, password, teamId, managesTeamIds } = req.body;
-    const db = getDb();
+    const db = await getLegacyState();
 
     if (!name || !email) {
       return res.status(400).json({ error: 'Name and email are required' });
@@ -519,7 +521,7 @@ async function startServer() {
       return res.status(400).json({ error: 'A user with this email already exists' });
     }
 
-    const defaultTitle: Record<UserRole, string> = {
+    const defaultTitle: Record<string, string> = {
       owner: 'Owner & Managing Director',
       cto: 'Chief Technology Officer',
       it: 'IT Administrator',
@@ -541,14 +543,14 @@ async function startServer() {
     };
 
     db.users.push(newUser);
-    saveDatabase();
+    // saveDatabase(); // TODO: Migrate to repository write
     logAudit('USER_INVITED', `${req.user!.name} created user ${newUser.name} with role ${newUser.role}`, req.user, getClientIp(req), { actionType: 'MANAGE_USERS' });
     res.json(sanitizeUser(newUser));
   });
 
   // 5. Leads APIs
-  app.get('/api/leads', (req, res) => {
-    const db = getDb();
+  app.get('/api/leads', async (req, res) => {
+    const db = await getLegacyState();
     const { repId, source, stage, search } = req.query;
     let leads = [...db.leads];
 
@@ -578,8 +580,8 @@ async function startServer() {
   });
 
   // Single Lead Inspection (gated by VIEW authorization on lead scope)
-  app.get('/api/leads/:id', (req, res) => {
-    const db = getDb();
+  app.get('/api/leads/:id', async (req, res) => {
+    const db = await getLegacyState();
     const { id } = req.params;
     const lead = db.leads.find(l => l.id === id);
     if (!lead) {
@@ -602,8 +604,8 @@ async function startServer() {
   });
 
   // Data Export API (gated by EXPORT permission and approval workflow)
-  app.get('/api/leads/export', (req, res) => {
-    const db = getDb();
+  app.get('/api/leads/export', async (req, res) => {
+    const db = await getLegacyState();
     if (!authorize(req.user!, 'EXPORT', {})) {
       logAudit('ACCESS_DENIED', `Denied EXPORT to ${req.user!.name} (${req.user!.role})`, req.user, getClientIp(req), { actionType: 'EXPORT' });
       return res.status(403).json({
@@ -666,8 +668,8 @@ async function startServer() {
     res.send(csvContent);
   });
 
-  app.post('/api/leads', (req, res) => {
-    const db = getDb();
+  app.post('/api/leads', async (req, res) => {
+    const db = await getLegacyState();
     if (!authorize(req.user!, 'EDIT', {})) {
       logAudit('ACCESS_DENIED', `Denied lead creation for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
       return res.status(403).json({
@@ -755,7 +757,7 @@ async function startServer() {
     };
 
     db.leads.unshift(newLead);
-    saveDatabase();
+    // saveDatabase(); // TODO: Migrate to repository write
 
     logAudit('LEAD_CREATED', `Added new lead: ${newLead.name} (${newLead.source}) assigned to ${newLead.assignedRepName} [${leadTeamId}]`, req.user, getClientIp(req), {
       actionType: 'EDIT'
@@ -764,8 +766,8 @@ async function startServer() {
   });
 
   // Optimistic Concurrency Update with Scope Authorization & Reassignment Control
-  app.put('/api/leads/:id', (req, res) => {
-    const db = getDb();
+  app.put('/api/leads/:id', async (req, res) => {
+    const db = await getLegacyState();
     const { id } = req.params;
     const index = db.leads.findIndex(l => l.id === id);
     if (index === -1) {
@@ -860,7 +862,7 @@ async function startServer() {
     };
 
     db.leads[index] = updatedLead;
-    saveDatabase();
+    // saveDatabase(); // TODO: Migrate to repository write
     logAudit('LEAD_UPDATED', `Lead ${oldLead.name} updated`, req.user, getClientIp(req), {
       actionType: 'EDIT',
       requiredApproval: requiresApproval
@@ -869,7 +871,7 @@ async function startServer() {
   });
 
   // Lead deletion gated by DELETE permission and approval workflow
-  app.delete('/api/leads/:id', (req, res) => {
+  app.delete('/api/leads/:id', async (req, res) => {
     if (!authorize(req.user!, 'DELETE', {})) {
       logAudit('ACCESS_DENIED', `Denied DELETE on lead for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'DELETE' });
       return res.status(403).json({
@@ -879,7 +881,7 @@ async function startServer() {
       });
     }
 
-    const db = getDb();
+    const db = await getLegacyState();
     const { id } = req.params;
     const lead = db.leads.find(l => l.id === id);
     if (!lead) {
@@ -906,7 +908,7 @@ async function startServer() {
     }
 
     db.leads = db.leads.filter(l => l.id !== id);
-    saveDatabase();
+    // saveDatabase(); // TODO: Migrate to repository write
     logAudit('LEAD_DELETED', `Deleted lead record for ${lead.name}`, req.user, getClientIp(req), {
       actionType: 'DELETE',
       requiredApproval: requiresApproval
@@ -915,7 +917,7 @@ async function startServer() {
   });
 
   // Bulk import leads from CSV (gated by EDIT authorization)
-  app.post('/api/leads/import', (req, res) => {
+  app.post('/api/leads/import', async (req, res) => {
     if (!authorize(req.user!, 'EDIT', {})) {
       logAudit('ACCESS_DENIED', `Denied lead CSV import for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
       return res.status(403).json({
@@ -925,7 +927,7 @@ async function startServer() {
       });
     }
 
-    const db = getDb();
+    const db = await getLegacyState();
     const { leads: rawLeads } = req.body;
     if (!Array.isArray(rawLeads) || rawLeads.length === 0) {
       return res.status(400).json({ error: 'No valid leads provided for import' });
@@ -968,13 +970,13 @@ async function startServer() {
       db.leads.unshift(newLead);
     });
 
-    saveDatabase();
+    // saveDatabase(); // TODO: Migrate to repository write
     logAudit('CSV_BULK_IMPORT', `Imported ${importedLeads.length} leads via CSV batch upload.`, req.user, getClientIp(req), { actionType: 'EDIT' });
     res.json({ count: importedLeads.length, importedLeads });
   });
 
   // Bulk edit (gated by EDIT & REASSIGN authorizations, restricted to Team Lead and Admin roles)
-  app.post('/api/leads/bulk-update', (req, res) => {
+  app.post('/api/leads/bulk-update', async (req, res) => {
     if (req.user!.role === 'telecaller' || (req.user!.role as any) === 'Rep') {
       logAudit('ACCESS_DENIED', `Denied bulk-update for ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'EDIT' });
       return res.status(403).json({
@@ -983,7 +985,7 @@ async function startServer() {
       });
     }
 
-    const db = getDb();
+    const db = await getLegacyState();
     const { leadIds, stage, assignedRepId } = req.body;
     if (!Array.isArray(leadIds) || leadIds.length === 0) {
       return res.status(400).json({ error: 'leadIds array is required' });
@@ -1033,7 +1035,7 @@ async function startServer() {
       }
     });
 
-    saveDatabase();
+    // saveDatabase(); // TODO: Migrate to repository write
     logAudit('BULK_LEAD_UPDATE', `Bulk updated ${count} leads${stage ? ' -> ' + stage : ''}${assignedUser ? ' -> Rep ' + assignedUser.name : ''}`, req.user, getClientIp(req), {
       actionType: isReassigning ? 'REASSIGN' : 'EDIT'
     });
@@ -1041,14 +1043,14 @@ async function startServer() {
   });
 
   // 6. Calls APIs
-  app.get('/api/calls', (req, res) => {
-    const db = getDb();
+  app.get('/api/calls', async (req, res) => {
+    const db = await getLegacyState();
     const { leadId, repId } = req.query;
     let calls = [...db.calls];
 
     // Scope-aware call log filtering based on user RBAC scope
     const userRole = req.user!.role;
-    const perm = getRolePermission(userRole);
+    const perm = await getRolePermission(userRole);
     if (perm?.scope === 'SELF') {
       if (repId && repId !== 'all' && repId !== req.user!.id) {
         return res.status(403).json({
@@ -1096,8 +1098,8 @@ async function startServer() {
     res.json(calls);
   });
 
-  app.post('/api/calls', (req, res) => {
-    const db = getDb();
+  app.post('/api/calls', async (req, res) => {
+    const db = await getLegacyState();
     const { leadId, duration, outcome, notes, callbackReminder, repId, repName } = req.body;
 
     const lead = db.leads.find(l => l.id === leadId);
@@ -1176,7 +1178,7 @@ async function startServer() {
     lead.version = (lead.version || 1) + 1;
     lead.updatedAt = new Date().toISOString();
 
-    saveDatabase();
+    // saveDatabase(); // TODO: Migrate to repository write
 
     logAudit('CALL_LOGGED', `Call with ${lead.name} (${newCall.duration}s, Outcome: ${newCall.outcome})`, req.user, getClientIp(req), {
       actionType: 'EDIT'
@@ -1185,8 +1187,8 @@ async function startServer() {
   });
 
   // 7. WhatsApp Messaging APIs
-  app.get('/api/messages', (req, res) => {
-    const db = getDb();
+  app.get('/api/messages', async (req, res) => {
+    const db = await getLegacyState();
     const { leadId } = req.query;
     let messages = [...db.messages];
 
@@ -1198,8 +1200,8 @@ async function startServer() {
     res.json(messages);
   });
 
-  app.get('/api/messages/health', (req, res) => {
-    const db = getDb();
+  app.get('/api/messages/health', async (req, res) => {
+    const db = await getLegacyState();
     const outbound = db.messages.filter(m => m.direction === 'outbound');
     const delivered = outbound.filter(m => m.deliveryStatus === 'Delivered').length;
     const queued = outbound.filter(m => m.deliveryStatus === 'Queued').length;
@@ -1217,8 +1219,8 @@ async function startServer() {
     });
   });
 
-  app.post('/api/messages', (req, res) => {
-    const db = getDb();
+  app.post('/api/messages', async (req, res) => {
+    const db = await getLegacyState();
     const { leadId, text, direction } = req.body;
 
     if (!leadId || !text) {
@@ -1281,7 +1283,7 @@ async function startServer() {
       lead.updatedAt = new Date().toISOString();
     }
 
-    saveDatabase();
+    // saveDatabase(); // TODO: Migrate to repository write
 
     // Outbound state progression
     if (isOutbound) {
@@ -1289,7 +1291,7 @@ async function startServer() {
         const msg = db.messages.find(m => m.id === newMessage.id);
         if (msg && msg.deliveryStatus === 'Queued') {
           msg.deliveryStatus = 'Sent';
-          saveDatabase();
+          // saveDatabase(); // TODO: Migrate to repository write
 
           if (willSimulateFailure) {
             setTimeout(() => {
@@ -1297,14 +1299,14 @@ async function startServer() {
               if (fMsg) {
                 fMsg.deliveryStatus = 'Failed-Retrying';
                 fMsg.retryCount = 1;
-                saveDatabase();
+                // saveDatabase(); // TODO: Migrate to repository write
 
                 setTimeout(() => {
                   const rMsg = db.messages.find(m => m.id === newMessage.id);
                   if (rMsg) {
                     rMsg.deliveryStatus = 'Delivered';
                     rMsg.retryCount = 1;
-                    saveDatabase();
+                    // saveDatabase(); // TODO: Migrate to repository write
                   }
                 }, 2500);
               }
@@ -1314,7 +1316,7 @@ async function startServer() {
               const sMsg = db.messages.find(m => m.id === newMessage.id);
               if (sMsg && sMsg.deliveryStatus === 'Sent') {
                 sMsg.deliveryStatus = 'Delivered';
-                saveDatabase();
+                // saveDatabase(); // TODO: Migrate to repository write
               }
             }, 1200);
           }
@@ -1326,8 +1328,8 @@ async function startServer() {
     res.json(newMessage);
   });
 
-  app.post('/api/messages/simulate-reply', (req, res) => {
-    const db = getDb();
+  app.post('/api/messages/simulate-reply', async (req, res) => {
+    const db = await getLegacyState();
     const { leadId, customText } = req.body;
     const lead = db.leads.find(l => l.id === leadId);
     if (!lead) {
@@ -1354,18 +1356,18 @@ async function startServer() {
     };
 
     db.messages.push(incomingMsg);
-    saveDatabase();
+    // saveDatabase(); // TODO: Migrate to repository write
     logAudit('WHATSAPP_INBOUND', `Received WhatsApp reply from lead ${lead.name}`, { id: req.user!.id, name: req.user!.name, role: req.user!.role }, getClientIp(req));
     res.json(incomingMsg);
   });
 
   // 8. Compliance Rules & Verification APIs
-  app.get('/api/compliance/rules', (req, res) => {
+  app.get('/api/compliance/rules', async (req, res) => {
     const rules = getComplianceRules();
     res.json(rules);
   });
 
-  app.put('/api/compliance/rules', (req, res) => {
+  app.put('/api/compliance/rules', async (req, res) => {
     if (!authorize(req.user!, 'MANAGE_COMPLIANCE_RULES', {})) {
       logAudit('ACCESS_DENIED', `Denied MANAGE_COMPLIANCE_RULES to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_COMPLIANCE_RULES' });
       return res.status(403).json({
@@ -1394,13 +1396,13 @@ async function startServer() {
     res.json({ success: true, rules: updated });
   });
 
-  app.get('/api/compliance/check', (req, res) => {
+  app.get('/api/compliance/check', async (req, res) => {
     const { leadId, channel } = req.query;
     if (!leadId || typeof leadId !== 'string') {
       return res.status(400).json({ error: 'leadId query parameter is required' });
     }
     const targetChannel = (channel as 'Call' | 'WhatsApp' | 'SMS') || 'Call';
-    const db = getDb();
+    const db = await getLegacyState();
     const lead = db.leads.find(l => l.id === leadId);
     if (!lead) {
       return res.status(404).json({ error: 'Lead not found' });
@@ -1410,14 +1412,14 @@ async function startServer() {
   });
 
   // 9. Support Tickets APIs
-  app.get('/api/tickets', (req, res) => {
-    const db = getDb();
+  app.get('/api/tickets', async (req, res) => {
+    const db = await getLegacyState();
     const tickets = [...db.tickets].sort((a, b) => new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime());
     res.json(tickets);
   });
 
-  app.post('/api/tickets', (req, res) => {
-    const db = getDb();
+  app.post('/api/tickets', async (req, res) => {
+    const db = await getLegacyState();
     const { subject, priority, leadId, initialMessage, assignedRepId } = req.body;
 
     if (!subject) {
@@ -1458,13 +1460,13 @@ async function startServer() {
     };
 
     db.tickets.unshift(newTicket);
-    saveDatabase();
+    // saveDatabase(); // TODO: Migrate to repository write
     logAudit('TICKET_CREATED', `Ticket opened: "${newTicket.subject}" (Priority: ${newTicket.priority})`, { id: req.user!.id, name: req.user!.name, role: req.user!.role }, getClientIp(req));
     res.json(newTicket);
   });
 
-  app.post('/api/tickets/:id/replies', (req, res) => {
-    const db = getDb();
+  app.post('/api/tickets/:id/replies', async (req, res) => {
+    const db = await getLegacyState();
     const { id } = req.params;
     const { text, updateStatus } = req.body;
 
@@ -1493,13 +1495,13 @@ async function startServer() {
       ticket.status = 'In Progress';
     }
 
-    saveDatabase();
+    // saveDatabase(); // TODO: Migrate to repository write
     logAudit('TICKET_REPLY', `Reply added to ticket #${ticket.id}`, { id: req.user!.id, name: req.user!.name, role: req.user!.role }, getClientIp(req));
     res.json(ticket);
   });
 
-  app.put('/api/tickets/:id', (req, res) => {
-    const db = getDb();
+  app.put('/api/tickets/:id', async (req, res) => {
+    const db = await getLegacyState();
     const { id } = req.params;
     const ticket = db.tickets.find(t => t.id === id);
     if (!ticket) {
@@ -1511,25 +1513,25 @@ async function startServer() {
     if (priority) ticket.priority = priority;
     if (assignedRepId) ticket.assignedRepId = assignedRepId;
 
-    saveDatabase();
+    // saveDatabase(); // TODO: Migrate to repository write
     logAudit('TICKET_UPDATED', `Ticket #${ticket.id} status updated to ${ticket.status}`, { id: req.user!.id, name: req.user!.name, role: req.user!.role }, getClientIp(req));
     res.json(ticket);
   });
 
   // 10. Reports & Analytics
-  app.get('/api/reports', (req, res) => {
+  app.get('/api/reports', async (req, res) => {
     const stats = calculateReports();
     res.json(stats);
   });
 
   // 11. Audit Logs (Business actions)
-  app.get('/api/audit-logs', (req, res) => {
-    const db = getDb();
+  app.get('/api/audit-logs', async (req, res) => {
+    const db = await getLegacyState();
     res.json(db.auditLogs || []);
   });
 
   // Dedicated Infrastructure Telemetry: Blocked AI Crawler attempts (separate from business audit log)
-  app.get('/api/crawler-telemetry', (req, res) => {
+  app.get('/api/crawler-telemetry', async (req, res) => {
     if (!['owner', 'cto', 'it', 'Admin'].includes(req.user!.role)) {
       return res.status(403).json({ error: 'Forbidden: Insufficient privileges to view infrastructure telemetry.' });
     }
@@ -1538,12 +1540,12 @@ async function startServer() {
   });
 
   // 12. Automated Backups & Snapshots
-  app.get('/api/backups', (req, res) => {
-    const db = getDb();
+  app.get('/api/backups', async (req, res) => {
+    const db = await getLegacyState();
     res.json(db.backups || []);
   });
 
-  app.post('/api/backups', (req, res) => {
+  app.post('/api/backups', async (req, res) => {
     if (!['owner', 'cto', 'it', 'tl_head', 'tl'].includes(req.user!.role)) {
       return res.status(403).json({ error: 'Forbidden: Insufficient privileges to create system backups.', code: 'FORBIDDEN' });
     }
@@ -1557,7 +1559,7 @@ async function startServer() {
   });
 
   // Admin & IT restore
-  app.post('/api/backups/:id/restore', (req, res) => {
+  app.post('/api/backups/:id/restore', async (req, res) => {
     if (!['owner', 'cto', 'it'].includes(req.user!.role)) {
       return res.status(403).json({ error: 'Forbidden: Only Owner, CTO, or IT administrators can restore backups.', code: 'FORBIDDEN' });
     }
@@ -1570,7 +1572,7 @@ async function startServer() {
   });
 
   // Database Reset (Owner, CTO, IT only)
-  app.post('/api/reset-data', (req, res) => {
+  app.post('/api/reset-data', async (req, res) => {
     if (!['owner', 'cto', 'it'].includes(req.user!.role)) {
       return res.status(403).json({ error: 'Forbidden: Only Owner, CTO, or IT administrators can reset database.', code: 'FORBIDDEN' });
     }
@@ -1579,8 +1581,8 @@ async function startServer() {
   });
 
   // 14. Settings APIs (Custom Fields, Role Permissions, Pipeline, Auto-Assignment)
-  app.get('/api/settings', (req, res) => {
-    const db = getDb();
+  app.get('/api/settings', async (req, res) => {
+    const db = await getLegacyState();
     res.json({
       customFields: db.customFields || [],
       rolePermissions: db.rolePermissions || [],
@@ -1589,22 +1591,22 @@ async function startServer() {
     });
   });
 
-  app.put('/api/settings/fields', (req, res) => {
+  app.put('/api/settings/fields', async (req, res) => {
     if (!authorize(req.user!, 'MANAGE_POLICY', {}) && req.user!.role !== 'it') {
       logAudit('ACCESS_DENIED', `Denied custom field update to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
       return res.status(403).json({ error: 'Forbidden: Insufficient privileges to update custom fields.', code: 'FORBIDDEN' });
     }
-    const db = getDb();
+    const db = await getLegacyState();
     const { customFields } = req.body;
     if (Array.isArray(customFields)) {
       db.customFields = customFields;
-      saveDatabase();
+      // saveDatabase(); // TODO: Migrate to repository write
       logAudit('CUSTOM_FIELDS_UPDATED', `Updated ${customFields.length} custom lead fields.`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
     }
     res.json({ success: true, customFields: db.customFields });
   });
 
-  app.put('/api/settings/roles', (req, res) => {
+  app.put('/api/settings/roles', async (req, res) => {
     if (!authorize(req.user!, 'MANAGE_POLICY', {})) {
       logAudit('ACCESS_DENIED', `Denied MANAGE_POLICY to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
       return res.status(403).json({
@@ -1613,40 +1615,40 @@ async function startServer() {
         action: 'MANAGE_POLICY'
       });
     }
-    const db = getDb();
+    const db = await getLegacyState();
     const { rolePermissions } = req.body;
     if (Array.isArray(rolePermissions)) {
       db.rolePermissions = rolePermissions;
-      saveDatabase();
+      // saveDatabase(); // TODO: Migrate to repository write
       logAudit('ROLE_PERMISSIONS_UPDATED', `Updated role permission matrix.`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
     }
     res.json({ success: true, rolePermissions: db.rolePermissions });
   });
 
-  app.put('/api/settings/pipeline', (req, res) => {
+  app.put('/api/settings/pipeline', async (req, res) => {
     if (!authorize(req.user!, 'MANAGE_POLICY', {}) && req.user!.role !== 'it') {
       logAudit('ACCESS_DENIED', `Denied pipeline config update to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
       return res.status(403).json({ error: 'Forbidden: Insufficient privileges to update pipeline stages.', code: 'FORBIDDEN' });
     }
-    const db = getDb();
+    const db = await getLegacyState();
     const { pipelineStages } = req.body;
     if (Array.isArray(pipelineStages)) {
       db.pipelineStages = pipelineStages;
-      saveDatabase();
+      // saveDatabase(); // TODO: Migrate to repository write
       logAudit('PIPELINE_CONFIG_UPDATED', `Configured pipeline stages.`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
     }
     res.json({ success: true, pipelineStages: db.pipelineStages });
   });
 
-  app.put('/api/settings/auto-assignment', (req, res) => {
+  app.put('/api/settings/auto-assignment', async (req, res) => {
     if (!authorize(req.user!, 'MANAGE_POLICY', {}) && req.user!.role !== 'it') {
       logAudit('ACCESS_DENIED', `Denied auto-assignment toggle to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
       return res.status(403).json({ error: 'Forbidden: Insufficient privileges to toggle auto-assignment.', code: 'FORBIDDEN' });
     }
-    const db = getDb();
+    const db = await getLegacyState();
     const { enabled } = req.body;
     db.autoAssignmentEnabled = Boolean(enabled);
-    saveDatabase();
+    // saveDatabase(); // TODO: Migrate to repository write
     logAudit('AUTO_ASSIGNMENT_TOGGLED', `Auto round-robin lead assignment set to ${db.autoAssignmentEnabled}`, req.user, getClientIp(req), { actionType: 'MANAGE_POLICY' });
     res.json({ success: true, autoAssignmentEnabled: db.autoAssignmentEnabled });
   });
@@ -1728,9 +1730,9 @@ async function startServer() {
   // ==========================================
 
   // Step 1: Tenant directory and lifecycle control
-  app.get('/api/platform/tenants', (req, res) => {
+  app.get('/api/platform/tenants', async (req, res) => {
     if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
-    const db = getDb();
+    const db = await getLegacyState();
     const result = db.tenants?.map(t => {
       const tUsers = db.users.filter(u => u.tenantId === t.id).length;
       const tLeads = db.leads.filter(l => l.tenantId === t.id).length;
@@ -1748,9 +1750,9 @@ async function startServer() {
     res.json(result);
   });
 
-  app.get('/api/platform/tenants/:id', (req, res) => {
+  app.get('/api/platform/tenants/:id', async (req, res) => {
     if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
-    const db = getDb();
+    const db = await getLegacyState();
     const t = db.tenants?.find(t => t.id === req.params.id);
     if (!t) return res.status(404).json({ error: 'Tenant not found' });
 
@@ -1780,7 +1782,7 @@ async function startServer() {
     });
   });
 
-  app.post('/api/platform/tenants/:id/suspend', (req, res) => {
+  app.post('/api/platform/tenants/:id/suspend', async (req, res) => {
     if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
     if (!authorize(req.user!, 'PLATFORM_ADMIN', {})) {
       return res.status(403).json({ error: 'Forbidden: Requires PLATFORM_ADMIN' });
@@ -1789,7 +1791,7 @@ async function startServer() {
     if (!confirmed) return res.status(400).json({ error: 'Must explicitly confirm suspension' });
     if (!reason) return res.status(400).json({ error: 'Reason required for suspension' });
 
-    const db = getDb();
+    const db = await getLegacyState();
     const t = db.tenants?.find(t => t.id === req.params.id);
     if (!t) return res.status(404).json({ error: 'Tenant not found' });
 
@@ -1797,12 +1799,12 @@ async function startServer() {
     t.suspendedAt = new Date().toISOString();
     t.suspensionReason = reason;
 
-    saveDatabase();
+    // saveDatabase(); // TODO: Migrate to repository write
     logAudit('TENANT_SUSPENDED', `Suspended tenant ${t.name}. Reason: ${reason}`, req.user, getClientIp(req), { tenantId: 'platform' });
     res.json({ success: true, tenant: t });
   });
 
-  app.post('/api/platform/tenants/:id/reactivate', (req, res) => {
+  app.post('/api/platform/tenants/:id/reactivate', async (req, res) => {
     if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
     if (!authorize(req.user!, 'PLATFORM_ADMIN', {})) {
       return res.status(403).json({ error: 'Forbidden: Requires PLATFORM_ADMIN' });
@@ -1810,7 +1812,7 @@ async function startServer() {
     const { confirmed } = req.body;
     if (!confirmed) return res.status(400).json({ error: 'Must explicitly confirm reactivation' });
 
-    const db = getDb();
+    const db = await getLegacyState();
     const t = db.tenants?.find(t => t.id === req.params.id);
     if (!t) return res.status(404).json({ error: 'Tenant not found' });
 
@@ -1818,15 +1820,15 @@ async function startServer() {
     t.suspendedAt = undefined;
     t.suspensionReason = undefined;
 
-    saveDatabase();
+    // saveDatabase(); // TODO: Migrate to repository write
     logAudit('TENANT_REACTIVATED', `Reactivated tenant ${t.name}.`, req.user, getClientIp(req), { tenantId: 'platform' });
     res.json({ success: true, tenant: t });
   });
 
   // Step 2: Cross-tenant Security Operations Center
-  app.get('/api/platform/soc/alerts', (req, res) => {
+  app.get('/api/platform/soc/alerts', async (req, res) => {
     if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
-    const db = getDb();
+    const db = await getLegacyState();
     
     const alerts = (db.securityAlerts || []).map(a => {
        const t = db.tenants?.find(t => t.id === a.tenantId);
@@ -1837,7 +1839,7 @@ async function startServer() {
   });
 
   // Step 3: Impersonation
-  app.post('/api/platform/impersonate', (req, res) => {
+  app.post('/api/platform/impersonate', async (req, res) => {
     if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
     if (!authorize(req.user!, 'PLATFORM_IMPERSONATE', {})) {
        return res.status(403).json({ error: 'Insufficient platform role to impersonate.' });
@@ -1847,7 +1849,7 @@ async function startServer() {
     if (!targetTenantId) return res.status(400).json({ error: 'Target tenant ID required' });
     if (!reason || reason.trim() === '') return res.status(400).json({ error: 'Non-empty reason required' });
 
-    const db = getDb();
+    const db = await getLegacyState();
     const t = db.tenants?.find(t => t.id === targetTenantId);
     if (!t) return res.status(404).json({ error: 'Target tenant not found' });
 
@@ -1881,30 +1883,30 @@ async function startServer() {
     });
 
     db.impersonationSessions.push(session);
-    saveDatabase();
+    // saveDatabase(); // TODO: Migrate to repository write
 
     logAudit('IMPERSONATION_STARTED', `Started impersonating ${t.name}. Reason: ${reason}`, req.user, getClientIp(req), { tenantId: 'platform' });
     res.json({ success: true, session });
   });
 
-  app.post('/api/platform/impersonate/end', (req, res) => {
+  app.post('/api/platform/impersonate/end', async (req, res) => {
     if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
     
-    const db = getDb();
+    const db = await getLegacyState();
     const active = db.impersonationSessions?.find(s => s.platformUserId === req.user!.id && s.active);
     if (active) {
        active.active = false;
        active.endedAt = new Date().toISOString();
-       saveDatabase();
+       // saveDatabase(); // TODO: Migrate to repository write
        logAudit('IMPERSONATION_ENDED', `Ended impersonating ${active.targetTenantName}.`, req.user, getClientIp(req), { tenantId: 'platform' });
     }
     res.json({ success: true });
   });
 
   // Step 4: Billing across tenants
-  app.get('/api/platform/billing', (req, res) => {
+  app.get('/api/platform/billing', async (req, res) => {
     if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
-    const db = getDb();
+    const db = await getLegacyState();
     
     const tenants = db.tenants || [];
     const rates: Record<string, number> = {
@@ -1941,38 +1943,38 @@ async function startServer() {
     });
   });
 
-  app.post('/api/platform/billing/:id/mark-paid', (req, res) => {
+  app.post('/api/platform/billing/:id/mark-paid', async (req, res) => {
     if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
     if (!authorize(req.user!, 'PLATFORM_ADMIN', {})) {
       return res.status(403).json({ error: 'Forbidden: Requires PLATFORM_ADMIN' });
     }
 
-    const db = getDb();
+    const db = await getLegacyState();
     const inv = db.billingRecords?.find(b => b.id === req.params.id);
     if (!inv) return res.status(404).json({ error: 'Invoice not found' });
     
     inv.status = 'paid';
     inv.paidAt = new Date().toISOString();
-    saveDatabase();
+    // saveDatabase(); // TODO: Migrate to repository write
     
     logAudit('INVOICE_PAID', `Marked invoice ${inv.invoiceId} for ${inv.tenantId} as paid.`, req.user, getClientIp(req), { tenantId: 'platform' });
     res.json({ success: true, invoice: inv });
   });
 
   // Step 5: Feature-flag / release control
-  app.get('/api/platform/features', (req, res) => {
+  app.get('/api/platform/features', async (req, res) => {
     if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
-    const db = getDb();
+    const db = await getLegacyState();
     res.json(db.featureFlags || []);
   });
 
-  app.put('/api/platform/features/:id', (req, res) => {
+  app.put('/api/platform/features/:id', async (req, res) => {
     if (!req.isPlatformStaff) return res.status(403).json({ error: 'Forbidden' });
     if (!authorize(req.user!, 'PLATFORM_ADMIN', {})) {
       return res.status(403).json({ error: 'Forbidden: Requires PLATFORM_ADMIN' });
     }
 
-    const db = getDb();
+    const db = await getLegacyState();
     const flag = db.featureFlags?.find(f => f.id === req.params.id);
     if (!flag) return res.status(404).json({ error: 'Feature flag not found' });
 
@@ -1983,18 +1985,18 @@ async function startServer() {
     if (enabledForTenantIds !== undefined) flag.enabledForTenantIds = enabledForTenantIds;
     if (rolloutPercentage !== undefined) flag.rolloutPercentage = rolloutPercentage;
 
-    saveDatabase();
+    // saveDatabase(); // TODO: Migrate to repository write
     
     logAudit('FEATURE_FLAG_UPDATED', `Updated flag ${flag.key} from G:${oldState.enabledGlobally} to G:${flag.enabledGlobally}`, req.user, getClientIp(req), { tenantId: 'platform' });
     res.json({ success: true, flag });
   });
 
   // Helper endpoint to check a flag for a specific tenant (can be called by frontend)
-  app.get('/api/features/check', (req, res) => {
+  app.get('/api/features/check', async (req, res) => {
     const { key, tenantId } = req.query;
     if (!key || !tenantId) return res.status(400).json({ error: 'key and tenantId required' });
     
-    const db = getDb();
+    const db = await getLegacyState();
     const flag = db.featureFlags?.find(f => f.key === key);
     if (!flag) return res.json({ enabled: false });
 
@@ -2026,7 +2028,7 @@ async function startServer() {
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    app.get('*', (req, res) => {
+    app.get('*', async (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }
