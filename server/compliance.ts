@@ -304,7 +304,9 @@ export function evaluateCompliance(input: ComplianceEvaluationInput): Compliance
 // to the complianceService yet.
 // ────────────────────────────────────────────────────────
 
-import { getLegacyState } from './repositories';
+import { db } from './db/client';
+import { calls, messages } from './db/schema';
+import { eq, and, gte, sql } from 'drizzle-orm';
 import { getComplianceRules, DEFAULT_FREQUENCY_RULES } from './db';
 
 /**
@@ -321,21 +323,20 @@ export async function checkCompliance(
   }
 ): Promise<ComplianceCheckResult> {
   const targetDate = options?.timestamp || new Date();
-  const dbState = options?.db || await getLegacyState();
-  const rules = dbState.complianceRules || await getComplianceRules() || DEFAULT_FREQUENCY_RULES;
+  const rules = await getComplianceRules();
 
   // Count recent interactions
   const callWindowMs = (rules.callCapDays || 7) * 24 * 60 * 60 * 1000;
-  const callCutoff = targetDate.getTime() - callWindowMs;
-  const recentCallCount = (dbState.calls || []).filter(
-    (c: any) => c.leadId === lead.id && new Date(c.timestamp).getTime() >= callCutoff
-  ).length;
+  const callCutoff = new Date(targetDate.getTime() - callWindowMs).toISOString();
+  const callRes = await db.select({ count: sql<number>`count(*)` }).from(calls)
+    .where(and(eq(calls.leadId, lead.id), gte(calls.timestamp, callCutoff)));
+  const recentCallCount = callRes[0]?.count || 0;
 
   const msgWindowMs = (rules.whatsAppCapDays || 30) * 24 * 60 * 60 * 1000;
-  const msgCutoff = targetDate.getTime() - msgWindowMs;
-  const recentMessageCount = (dbState.messages || []).filter(
-    (m: any) => m.leadId === lead.id && m.direction === 'outbound' && new Date(m.timestamp).getTime() >= msgCutoff
-  ).length;
+  const msgCutoff = new Date(targetDate.getTime() - msgWindowMs).toISOString();
+  const msgRes = await db.select({ count: sql<number>`count(*)` }).from(messages)
+    .where(and(eq(messages.leadId, lead.id), eq(messages.direction, 'outbound'), gte(messages.timestamp, msgCutoff)));
+  const recentMessageCount = msgRes[0]?.count || 0;
 
   const recentSmsCount = lead.contactAttempts7d?.sms || 0;
 

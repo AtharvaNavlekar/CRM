@@ -1,6 +1,8 @@
 import { DatabaseState, ReportStats, User, ContactFrequencyRules, HourlyCallActivity, RepLeaderboardItem, Lead } from '../src/types';
-import { getLegacyState, auditRepository } from './repositories';
-export { getLegacyState } from './repositories';
+import { auditRepository } from './repositories';
+import { db } from './db/client';
+import { leads, calls, messages, users} from './db/schema';
+import { eq } from 'drizzle-orm';
 
 export const DEFAULT_FREQUENCY_RULES: ContactFrequencyRules = {
   callCapMaxAttempts: 3,
@@ -21,13 +23,12 @@ export const DEFAULT_FREQUENCY_RULES: ContactFrequencyRules = {
   version: 1,
 };
 
-export async function loadDatabase(): Promise<DatabaseState> {
-  return await getLegacyState();
-}
+export async function loadDatabase(): Promise<DatabaseState> { return {} as any; }
 
 export async function getComplianceRules(): Promise<ContactFrequencyRules> {
-  const dbState = await getLegacyState();
-  return dbState.complianceRules || { ...DEFAULT_FREQUENCY_RULES };
+  // Ideally fetch from tenantSettings or a default
+  // For now return defaults as it was centralized in legacy
+  return { ...DEFAULT_FREQUENCY_RULES };
 }
 
 export function sanitizeUser(user: User): User {
@@ -39,9 +40,7 @@ export async function saveDatabase() {
   // Deprecated. Writes should go through repositories.
 }
 
-export async function getDb(): Promise<DatabaseState> {
-  return await getLegacyState();
-}
+export async function getDb(): Promise<DatabaseState> { return {} as any; }
 
 export async function createBackup(name: string, autoCreated = false, user?: any) {
   return { id: 'disabled', timestamp: new Date().toISOString(), name, recordsCount: { leads: 0, calls: 0, messages: 0, tickets: 0 }, fileSizeKb: 0, autoCreated };
@@ -51,29 +50,30 @@ export async function restoreBackup(backupId: string, user?: any): Promise<boole
   return false;
 }
 
-export async function resetDatabase(user?: any) {
-  return await getLegacyState();
-}
+export async function resetDatabase(user?: any) { return {} as any; }
 
 // Compute real report metrics from database records scoped to tenant
 export async function calculateReports(tenantId?: string): Promise<ReportStats> {
-  const dbState = await getLegacyState();
-  const leads = tenantId ? dbState.leads.filter((l: Lead) => l.tenantId === tenantId) : dbState.leads;
-  const calls = tenantId ? dbState.calls.filter((c: any) => c.tenantId === tenantId) : dbState.calls;
-  const users = tenantId ? dbState.users.filter((u: any) => u.tenantId === tenantId) : dbState.users;
+  const leadsData = tenantId ? await db.select().from(leads).where(eq(leads.tenantId, tenantId)) : await db.select().from(leads);
+  const callsData = tenantId ? await db.select().from(calls).where(eq(calls.tenantId, tenantId)) : await db.select().from(calls);
+  const usersData = tenantId ? await db.select().from(users).where(eq(users.tenantId, tenantId)) : await db.select().from(users);
+  
+  const leadsObj = leadsData as unknown as Lead[];
+  const callsObj = callsData as any[];
+  const usersObj = usersData as any[];
 
-  const totalLeads = leads.length;
-  const leadsWon = leads.filter((l: Lead) => l.stage === 'Won').length;
-  const leadsLost = leads.filter((l: Lead) => l.stage === 'Lost').length;
+  const totalLeads = leadsObj.length;
+  const leadsWon = leadsObj.filter((l: Lead) => l.stage === 'Won').length;
+  const leadsLost = leadsObj.filter((l: Lead) => l.stage === 'Lost').length;
   const conversionRate = totalLeads > 0 ? Math.round((leadsWon / totalLeads) * 100) : 0;
 
   // Calls made today (in Indian local time or last 24h)
   const oneDayAgo = Date.now() - 24 * 3600 * 1000;
-  const callsMadeToday = calls.filter((c: any) => new Date(c.timestamp).getTime() >= oneDayAgo).length;
+  const callsMadeToday = callsObj.filter((c: any) => new Date(c.timestamp).getTime() >= oneDayAgo).length;
 
   // Source breakdown
   const sourceMap: Record<string, number> = {};
-  leads.forEach((l: Lead) => {
+  leadsObj.forEach((l: Lead) => {
     sourceMap[l.source] = (sourceMap[l.source] || 0) + 1;
   });
   const leadsBySource = Object.entries(sourceMap).map(([source, count]) => ({
@@ -86,13 +86,13 @@ export async function calculateReports(tenantId?: string): Promise<ReportStats> 
   const stages: Array<Lead['stage']> = ['New', 'Contacted', 'Follow-up', 'Negotiation', 'Won', 'Lost'];
   const leadsByStage = stages.map(st => ({
     stage: st,
-    count: leads.filter((l: Lead) => l.stage === st).length
+    count: leadsObj.filter((l: Lead) => l.stage === st).length
   }));
 
   // Calls per rep
-  const repList = users.filter((u: User) => u.role === 'telecaller' || u.role === 'tl');
+  const repList = usersObj.filter((u: User) => u.role === 'telecaller' || u.role === 'tl');
   const callsPerRep = repList.map((rep: User) => {
-    const repCalls = calls.filter((c: any) => c.repId === rep.id || c.repName === rep.name);
+    const repCalls = callsObj.filter((c: any) => c.repId === rep.id || c.repName === rep.name);
     const converted = repCalls.filter((c: any) => c.outcome === 'Converted').length;
     const totalSecs = repCalls.reduce((acc: number, curr: any) => acc + (curr.duration || 0), 0);
     return {
@@ -111,7 +111,7 @@ export async function calculateReports(tenantId?: string): Promise<ReportStats> 
     const dayStart = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
     const dayEnd = dayStart + 24 * 3600 * 1000;
 
-    const dayLeads = leads.filter((l: Lead) => {
+    const dayLeads = leadsObj.filter((l: Lead) => {
       const t = new Date(l.createdDate).getTime();
       return t >= dayStart && t < dayEnd;
     });
@@ -125,7 +125,8 @@ export async function calculateReports(tenantId?: string): Promise<ReportStats> 
   }
 
   // WhatsApp delivery rate computation
-  const allMessages = tenantId ? dbState.messages.filter((m: any) => m.tenantId === tenantId) : dbState.messages;
+  const allMessagesData = tenantId ? await db.select().from(messages).where(eq(messages.tenantId, tenantId)) : await db.select().from(messages);
+  const allMessages = allMessagesData as any[];
   const outboundMessages = allMessages.filter((m: any) => m.direction === 'outbound');
   const deliveredCount = outboundMessages.filter((m: any) => m.deliveryStatus === 'Delivered').length;
   const whatsappDeliveryRate = outboundMessages.length > 0
@@ -138,7 +139,7 @@ export async function calculateReports(tenantId?: string): Promise<ReportStats> 
     hourlyMap[h] = { calls: 0, conversions: 0, followUps: 0, missedFollowUps: 0 };
   }
 
-  calls.forEach((c: any) => {
+  callsObj.forEach((c: any) => {
     const d = new Date(c.timestamp);
     const hour = d.getHours();
     if (hourlyMap[hour]) {
@@ -150,7 +151,7 @@ export async function calculateReports(tenantId?: string): Promise<ReportStats> 
 
   // Calculate missed followups per hour
   const now = Date.now();
-  leads.forEach((l: Lead) => {
+  leadsObj.forEach((l: Lead) => {
     if (l.callbackReminder) {
       const cbTime = new Date(l.callbackReminder).getTime();
       if (cbTime < now && l.stage !== 'Won' && l.stage !== 'Lost') {
@@ -178,9 +179,9 @@ export async function calculateReports(tenantId?: string): Promise<ReportStats> 
 
   // Real-time rep leaderboard
   const repLeaderboard: RepLeaderboardItem[] = repList.map((rep: User) => {
-    const repCalls = calls.filter((c: any) => c.repId === rep.id || c.repName === rep.name);
-    const repWon = leads.filter((l: Lead) => l.assignedRepId === rep.id && l.stage === 'Won').length;
-    const repTotalLeads = leads.filter((l: Lead) => l.assignedRepId === rep.id).length;
+    const repCalls = callsObj.filter((c: any) => c.repId === rep.id || c.repName === rep.name);
+    const repWon = leadsObj.filter((l: Lead) => l.assignedRepId === rep.id && l.stage === 'Won').length;
+    const repTotalLeads = leadsObj.filter((l: Lead) => l.assignedRepId === rep.id).length;
     const convRate = repTotalLeads > 0 ? Math.round((repWon / repTotalLeads) * 100) : 0;
     const totalSecs = repCalls.reduce((acc: number, c: any) => acc + (c.duration || 0), 0);
     return {

@@ -70,10 +70,11 @@ export const leads = pgTable('leads', {
   source: text('source').notNull(),
   stage: text('stage').notNull(),
   assignedRepId: text('assigned_rep_id').notNull(),
-  assignedRepName: text('assigned_rep_name').notNull(),
+  assignedRepName: text('assigned_rep_name'),
   teamId: text('team_id'),
   createdDate: timestamp('created_date', { mode: 'string' }).notNull(),
-  notes: text('notes').notNull(),
+  lastContactDate: timestamp('last_contact_date', { mode: 'string' }),
+  notes: text('notes'),
   industry: text('industry'),
   value: real('value'),
   callbackReminder: timestamp('callback_reminder', { mode: 'string' }),
@@ -87,21 +88,36 @@ export const leads = pgTable('leads', {
   version: integer('version').default(1),
   updatedAt: timestamp('updated_at', { mode: 'string' }),
   customFields: jsonb('custom_fields'),
+}, (table) => {
+  return {
+    tenantStageIdx: index('idx_leads_tenant_stage').on(table.tenantId, table.stage),
+    tenantRepIdx: index('idx_leads_tenant_rep').on(table.tenantId, table.assignedRepId),
+    tenantCreatedIdx: index('idx_leads_tenant_created').on(table.tenantId, table.createdDate),
+    tenantTeamIdx: index('idx_leads_tenant_team').on(table.tenantId, table.teamId)
+  };
 });
 
 export const calls = pgTable('calls', {
   id: text('id').primaryKey(),
   tenantId: text('tenant_id'),
   leadId: text('lead_id').notNull(),
-  leadName: text('lead_name').notNull(),
-  leadPhone: text('lead_phone').notNull(),
+  leadName: text('lead_name'),
+  leadPhone: text('lead_phone'),
   repId: text('rep_id').notNull(),
-  repName: text('rep_name').notNull(),
+  repName: text('rep_name'),
   timestamp: timestamp('timestamp', { mode: 'string' }).notNull(),
   duration: integer('duration').notNull(),
   outcome: text('outcome').notNull(),
+  teamId: text('team_id'),
+  complianceFlags: jsonb('compliance_flags'),
   notes: text('notes').notNull(),
   recordingSimulated: boolean('recording_simulated'),
+}, (table) => {
+  return {
+    tenantLeadIdx: index('idx_calls_tenant_lead').on(table.tenantId, table.leadId),
+    tenantRepIdx: index('idx_calls_tenant_rep').on(table.tenantId, table.repId),
+    tenantTimeIdx: index('idx_calls_tenant_time').on(table.tenantId, table.timestamp)
+  };
 });
 
 export const messages = pgTable('messages', {
@@ -109,10 +125,19 @@ export const messages = pgTable('messages', {
   tenantId: text('tenant_id'),
   leadId: text('lead_id').notNull(),
   direction: text('direction').notNull(),
+  repId: text('rep_id'),
+  teamId: text('team_id'),
+  channel: text('channel'),
   text: text('text').notNull(),
   timestamp: timestamp('timestamp', { mode: 'string' }).notNull(),
-  deliveryStatus: text('delivery_status').notNull(),
+  deliveryStatus: text('delivery_status'),
+  status: text('status'),
   retryCount: integer('retry_count'),
+}, (table) => {
+  return {
+    tenantLeadIdx: index('idx_messages_tenant_lead').on(table.tenantId, table.leadId),
+    tenantTimeIdx: index('idx_messages_tenant_time').on(table.tenantId, table.timestamp)
+  };
 });
 
 export const tickets = pgTable('tickets', {
@@ -126,6 +151,12 @@ export const tickets = pgTable('tickets', {
   leadId: text('lead_id'),
   leadName: text('lead_name'),
   assignedRepId: text('assigned_rep_id'),
+}, (table) => {
+  return {
+    tenantStatusIdx: index('idx_tickets_tenant_status').on(table.tenantId, table.status),
+    tenantRepIdx: index('idx_tickets_tenant_rep').on(table.tenantId, table.assignedRepId),
+    tenantLeadIdx: index('idx_tickets_tenant_lead').on(table.tenantId, table.leadId)
+  };
 });
 
 export const ticketReplies = pgTable('ticket_replies', {
@@ -287,6 +318,12 @@ export const jobs = pgTable('jobs', {
   startedAt: timestamp('started_at', { mode: 'string' }),
   completedAt: timestamp('completed_at', { mode: 'string' }),
   failedAt: timestamp('failed_at', { mode: 'string' })
+}, (table) => {
+  return {
+    tenantStatusIdx: index('idx_jobs_tenant_status').on(table.tenantId, table.status),
+    tenantTypeIdx: index('idx_jobs_tenant_type').on(table.tenantId, table.type),
+    queueJobIdIdx: index('idx_jobs_queue_job_id').on(table.queueJobId)
+  };
 });
 
 export const aiUsage = pgTable('ai_usage', {
@@ -302,4 +339,9 @@ export const aiUsage = pgTable('ai_usage', {
   return {
     tenantTimeIdx: index('idx_ai_usage_tenant_time').on(table.tenantId, table.occurredAt)
   };
+});
+
+export const tenantSettings = pgTable('tenant_settings', {
+  tenantId: text('tenant_id').primaryKey(),
+  settings: jsonb('settings').notNull(),
 });

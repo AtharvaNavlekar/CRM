@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { SecurityContext, Action, RolePermission } from '../src/types';
-import { getLegacyState } from './repositories';
+import { db } from './db/client';
+import { rolePermissions } from './db/schema';
+import { eq } from 'drizzle-orm';
 
 // Temporary mapping for Phase 2 Dual-Execution
 const actionMap: Record<Action, Action> = {
@@ -34,10 +36,9 @@ const actionMap: Record<Action, Action> = {
   'PLATFORM_IMPERSONATE': 'PLATFORM_IMPERSONATE'
 };
 
-async function getRolePermission(role: string): Promise<RolePermission | undefined> {
-  const db = await getLegacyState();
-  const perms = db.rolePermissions || [];
-  return perms.find(p => p.role === role);
+export async function getRolePermission(role: string): Promise<RolePermission | undefined> {
+  const records = await db.select().from(rolePermissions).where(eq(rolePermissions.role, role)).limit(1);
+  return records[0] as RolePermission | undefined;
 }
 
 export async function can(
@@ -95,6 +96,16 @@ export async function can(
     default:
       return false;
   }
+}
+
+export async function getScope(context: SecurityContext) {
+  let normalizedRole = context.actorRole as string;
+  if (normalizedRole === 'Admin') normalizedRole = 'owner';
+  else if (normalizedRole === 'Team Lead') normalizedRole = 'tl';
+  else if (normalizedRole === 'Rep') normalizedRole = 'telecaller';
+
+  const perm = await getRolePermission(normalizedRole);
+  return perm ? perm.scope : 'DENY';
 }
 
 // Express Middleware for Policy Enforcement

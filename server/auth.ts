@@ -3,7 +3,9 @@ import jwt from 'jsonwebtoken';
 import bcryptjs from 'bcryptjs';
 import crypto from 'crypto';
 import { UserRole, RolePermission, User, ViewScope, Action } from '../src/types';
-import { getLegacyState } from './repositories';
+import { db } from './db/client';
+import { users, rolePermissions } from './db/schema';
+import { eq } from 'drizzle-orm';
 function resolveJwtSecret(): string {
   if (process.env.JWT_SECRET && process.env.JWT_SECRET.trim().length > 0) {
     return process.env.JWT_SECRET.trim();
@@ -70,9 +72,8 @@ export function signAccessToken(user: { id: string; email: string; role: UserRol
 
 // Centralized RBAC Role Permission Resolver
 export async function getRolePermission(role: string): Promise<RolePermission | undefined> {
-  const db = await getLegacyState();
-  const perms = (await getLegacyState()).rolePermissions || [];
-  return perms.find(p => p.role === role) || [] /* [] */.find(p => p.role === role);
+  const records = await db.select().from(rolePermissions).where(eq(rolePermissions.role, role)).limit(1);
+  return records[0] as RolePermission | undefined;
 }
 
 // Centralized Authorization Function (Strict Tenant Isolation + Multi-Tier RBAC)
@@ -186,8 +187,8 @@ export const authenticateToken: express.RequestHandler = async (req, res, next) 
       });
     }
 
-    const db = await getLegacyState();
-    const user = db.users.find(u => u.id === decoded.id);
+    const usersData = await db.select().from(users).where(eq(users.id, decoded.id)).limit(1);
+    const user = usersData[0] as unknown as User;
 
     if (!user) {
       return res.status(401).json({
