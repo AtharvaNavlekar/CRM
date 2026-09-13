@@ -25,6 +25,7 @@ export type Action =
   | 'calls:create'
   | 'messages:create'
   | 'compliance:update'
+  | 'compliance:manage'
   | 'platform:manage';
 
 export type UserRole =
@@ -52,6 +53,7 @@ export interface Tenant {
   primaryContactEmail?: string;
   leadCap?: number;
   userCap?: number;
+  timezone?: string; // IANA timezone, e.g. 'Asia/Kolkata'
 }
 
 export interface ImpersonationSession {
@@ -420,6 +422,14 @@ export interface ContactFrequencyRules {
   quietHoursStart: string; // '19:00'
   quietHoursEnd: string; // '09:00'
   enforceTimezone: string;
+  timezone?: string; // IANA timezone, e.g. 'Asia/Kolkata'
+  dncEnforcement?: boolean;
+  optOutEnforcement?: boolean;
+  pauseEnforcement?: boolean;
+  preferredChannelEnforcement?: boolean;
+  updatedAt?: string;
+  updatedBy?: string;
+  version?: number;
 }
 
 export interface ChannelRoutingRule {

@@ -37,6 +37,7 @@ export const tenants = pgTable('tenants', {
   primaryContactEmail: text('primary_contact_email'),
   leadCap: integer('lead_cap'),
   userCap: integer('user_cap'),
+  timezone: text('timezone').default('Asia/Kolkata'), // IANA timezone for compliance
 });
 
 export const users = pgTable('users', {
@@ -236,7 +237,7 @@ export const pipelineStages = pgTable('pipeline_stages', {
 
 export const complianceRules = pgTable('compliance_rules', {
   id: text('id').primaryKey(),
-  tenantId: text('tenant_id'),
+  tenantId: text('tenant_id').notNull(),
   callCapMaxAttempts: integer('call_cap_max_attempts').notNull(),
   callCapDays: integer('call_cap_days').notNull(),
   whatsAppCapMaxAttempts: integer('whats_app_cap_max_attempts').notNull(),
@@ -247,4 +248,12 @@ export const complianceRules = pgTable('compliance_rules', {
   quietHoursStart: text('quiet_hours_start').notNull(),
   quietHoursEnd: text('quiet_hours_end').notNull(),
   enforceTimezone: text('enforce_timezone').notNull(),
+  timezone: text('timezone').notNull().default('Asia/Kolkata'), // IANA timezone
+  dncEnforcement: boolean('dnc_enforcement').notNull().default(true),
+  optOutEnforcement: boolean('opt_out_enforcement').notNull().default(true),
+  pauseEnforcement: boolean('pause_enforcement').notNull().default(true),
+  preferredChannelEnforcement: boolean('preferred_channel_enforcement').notNull().default(true),
+  updatedAt: timestamp('updated_at', { mode: 'string' }),
+  updatedBy: text('updated_by'),
+  version: integer('version').notNull().default(1),
 });

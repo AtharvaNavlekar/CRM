@@ -12,7 +12,13 @@ export const DEFAULT_FREQUENCY_RULES: ContactFrequencyRules = {
   quietHoursEnabled: true,
   quietHoursStart: '19:00',
   quietHoursEnd: '09:00',
-  enforceTimezone: 'Asia/Kolkata (IST)'
+  enforceTimezone: 'Asia/Kolkata (IST)',
+  timezone: 'Asia/Kolkata',
+  dncEnforcement: true,
+  optOutEnforcement: true,
+  pauseEnforcement: true,
+  preferredChannelEnforcement: true,
+  version: 1,
 };
 
 export async function loadDatabase(): Promise<DatabaseState> {
@@ -22,15 +28,6 @@ export async function loadDatabase(): Promise<DatabaseState> {
 export async function getComplianceRules(): Promise<ContactFrequencyRules> {
   const dbState = await getLegacyState();
   return dbState.complianceRules || { ...DEFAULT_FREQUENCY_RULES };
-}
-
-export async function updateComplianceRules(updates: Partial<ContactFrequencyRules>): Promise<ContactFrequencyRules> {
-  // TODO: Move to repository
-  const dbState = await getLegacyState();
-  return {
-    ...(dbState.complianceRules || DEFAULT_FREQUENCY_RULES),
-    ...updates
-  };
 }
 
 export function sanitizeUser(user: User): User {

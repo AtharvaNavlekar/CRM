@@ -1,6 +1,5 @@
-import { getLegacyState } from './repositories';
-import { Lead, ContactFrequencyRules, DatabaseState } from '../src/types';
-import { getComplianceRules, DEFAULT_FREQUENCY_RULES, getDb } from './db';
+import { Lead, ContactFrequencyRules, SecurityContext } from '../src/types';
+import { compliancePolicyRepository, SYSTEM_DEFAULT_POLICY } from './repositories/compliancePolicyRepository';
 
 export interface ComplianceCheckResult {
   allowed: boolean;
@@ -15,17 +14,26 @@ export interface ComplianceCheckResult {
     attemptCount?: number;
     capLimit?: number;
     timeWindowDays?: number;
-    currentTimeIST?: string;
+    currentLocalTime?: string;
     quietHoursWindow?: string;
   };
 }
 
 /**
- * Returns the current time in India Standard Time (Asia/Kolkata, UTC+5:30)
+ * Returns the current time in the specified IANA timezone.
+ * Falls back to 'Asia/Kolkata' if the timezone is invalid.
  */
-export function getISTTime(date: Date = new Date()): { hours: number; minutes: number; timeString: string } {
+export function getLocalTime(date: Date = new Date(), timezone: string = 'Asia/Kolkata'): { hours: number; minutes: number; timeString: string } {
+  let tz = timezone;
+  try {
+    // Validate the timezone by attempting to use it
+    new Intl.DateTimeFormat('en-GB', { timeZone: tz }).format(date);
+  } catch {
+    tz = 'Asia/Kolkata'; // Safe fallback
+  }
+
   const formatter = new Intl.DateTimeFormat('en-GB', {
-    timeZone: 'Asia/Kolkata',
+    timeZone: tz,
     hour: '2-digit',
     minute: '2-digit',
     hour12: false
@@ -40,14 +48,20 @@ export function getISTTime(date: Date = new Date()): { hours: number; minutes: n
 }
 
 /**
- * Checks whether the specified timestamp falls within configured quiet hours.
+ * Checks whether the specified timestamp falls within configured quiet hours
+ * using the tenant's timezone.
  */
-export function isQuietHours(rules: ContactFrequencyRules, date: Date = new Date()): { isQuiet: boolean; currentIST: string; window: string } {
+export function isQuietHours(
+  rules: ContactFrequencyRules,
+  date: Date = new Date(),
+  timezone?: string
+): { isQuiet: boolean; currentLocalTime: string; window: string } {
   if (!rules.quietHoursEnabled) {
-    return { isQuiet: false, currentIST: '', window: '' };
+    return { isQuiet: false, currentLocalTime: '', window: '' };
   }
 
-  const { hours, minutes, timeString } = getISTTime(date);
+  const tz = timezone || rules.timezone || 'Asia/Kolkata';
+  const { hours, minutes, timeString } = getLocalTime(date, tz);
   const currentMinutes = hours * 60 + minutes;
 
   const [startH, startM] = (rules.quietHoursStart || '19:00').split(':').map(Number);
@@ -66,25 +80,36 @@ export function isQuietHours(rules: ContactFrequencyRules, date: Date = new Date
 
   return {
     isQuiet,
-    currentIST: timeString,
-    window: `${rules.quietHoursStart || '19:00'} - ${rules.quietHoursEnd || '09:00'} IST`
+    currentLocalTime: timeString,
+    window: `${rules.quietHoursStart || '19:00'} - ${rules.quietHoursEnd || '09:00'} (${tz})`
   };
 }
 
 /**
- * Single shared compliance verification engine.
- * Must be invoked by ALL outbound communication channels (/api/calls, /api/messages, etc.)
- * before recording any customer outreach.
+ * Pure compliance evaluation function.
+ * 
+ * IMPORTANT: This function has NO side effects and makes NO database calls.
+ * All inputs are explicit. This makes it deterministic, testable, and reviewable.
+ * 
+ * The separation of concerns is:
+ *   CompliancePolicyRepository → fetches policy
+ *   ComplianceService → counts recent activity
+ *   evaluateCompliance() → pure decision
  */
-export async function checkCompliance(
-  lead: Lead,
-  channel: 'Call' | 'WhatsApp' | 'SMS',
-  options?: {
-    timestamp?: Date;
-    db?: DatabaseState;
-    skipQuietHours?: boolean; // For explicit testing overrides if needed
-  }
-): Promise<ComplianceCheckResult> {
+export interface ComplianceEvaluationInput {
+  lead: Lead;
+  channel: 'Call' | 'WhatsApp' | 'SMS';
+  policy: ContactFrequencyRules;
+  recentCallCount: number;
+  recentMessageCount: number;
+  recentSmsCount: number;
+  timestamp?: Date;
+}
+
+export function evaluateCompliance(input: ComplianceEvaluationInput): ComplianceCheckResult {
+  const { lead, channel, policy, recentCallCount, recentMessageCount, recentSmsCount } = input;
+  const targetDate = input.timestamp || new Date();
+
   if (!lead) {
     return {
       allowed: false,
@@ -94,47 +119,46 @@ export async function checkCompliance(
     };
   }
 
-  const targetDate = options?.timestamp || new Date();
-  const db = options?.db || getDb();
-  const rules = (await getLegacyState()).complianceRules || getComplianceRules() || DEFAULT_FREQUENCY_RULES;
+  const timezone = policy.timezone || 'Asia/Kolkata';
 
-  // 1. Explicit Do-Not-Disturb / Global Opt-Out Check
-  console.log('LEAD PREFS:', lead.preferences); const isOptedOut = Boolean(lead.preferences?.isOptedOut || (lead as any).isOptedOut);
-  if (isOptedOut) {
+  // 1. Explicit Do-Not-Contact / Global Opt-Out Check
+  // This is a system-level safety rule that cannot be overridden
+  const isOptedOut = Boolean(lead.preferences?.isOptedOut || (lead as any).isOptedOut);
+  if (isOptedOut && (policy.optOutEnforcement !== false)) {
     const optOutReason = lead.preferences?.optOutReason ? ` Reason: ${lead.preferences.optOutReason}` : '';
     return {
       allowed: false,
       statusCode: 403,
-      code: 'LEAD_OPTED_OUT',
+      code: 'OPT_OUT',
       reason: `Outreach blocked: Lead has explicitly opted out of communications.${optOutReason}`,
       details: {
         channel,
         leadId: lead.id,
         leadName: lead.name,
-        ruleViolated: 'LEAD_PREFERENCES_OPT_OUT'
+        ruleViolated: 'OPT_OUT'
       }
     };
   }
 
-  // 2. Explicit Blocked Reason on Lead
+  // 2. Explicit Blocked / DNC Reason on Lead
   const blockedReason = lead.blockedReason || lead.preferences?.blockedReason;
-  if (blockedReason && blockedReason.trim().length > 0) {
+  if (blockedReason && blockedReason.trim().length > 0 && (policy.dncEnforcement !== false)) {
     return {
       allowed: false,
       statusCode: 403,
-      code: 'LEAD_BLOCKED',
-      reason: `Outreach blocked: ${blockedReason}`,
+      code: 'DNC',
+      reason: `Outreach blocked: Contact is on do-not-contact list.`,
       details: {
         channel,
         leadId: lead.id,
         leadName: lead.name,
-        ruleViolated: 'LEAD_BLOCKED_REASON'
+        ruleViolated: 'DNC'
       }
     };
   }
 
   // 3. 30-Day Temporary Pause / Snooze
-  if (lead.preferences?.isPaused30Days) {
+  if (lead.preferences?.isPaused30Days && (policy.pauseEnforcement !== false)) {
     let isStillPaused = true;
     if (lead.preferences.pausedUntil) {
       const pausedUntilDate = new Date(lead.preferences.pausedUntil);
@@ -147,154 +171,190 @@ export async function checkCompliance(
       return {
         allowed: false,
         statusCode: 403,
-        code: 'CONTACT_PAUSED',
-        reason: `Outreach blocked: Lead communications are temporarily snoozed/paused${pausedUntilMsg}.`,
+        code: 'PAUSED',
+        reason: `Outreach blocked: Lead communications are temporarily paused${pausedUntilMsg}.`,
         details: {
           channel,
           leadId: lead.id,
           leadName: lead.name,
-          ruleViolated: 'LEAD_PREFERENCES_PAUSED_30_DAYS'
+          ruleViolated: 'PAUSED'
         }
       };
     }
   }
 
   // 4. Preferred Channel Enforcement
-  if (lead.preferences?.preferredChannel && lead.preferences.preferredChannel !== 'Any') {
+  if (lead.preferences?.preferredChannel && lead.preferences.preferredChannel !== 'Any' && (policy.preferredChannelEnforcement !== false)) {
     const preferred = lead.preferences.preferredChannel;
     if (preferred !== channel) {
       return {
         allowed: false,
         statusCode: 403,
         code: 'CHANNEL_RESTRICTED',
-        reason: `Channel violation: Lead explicitly requested outreach via ${preferred} only. Attempted channel '${channel}' is restricted.`,
+        reason: `Channel violation: Lead requested outreach via ${preferred} only.`,
         details: {
           channel,
           leadId: lead.id,
           leadName: lead.name,
-          ruleViolated: 'LEAD_PREFERRED_CHANNEL_MISMATCH'
+          ruleViolated: 'CHANNEL_RESTRICTED'
         }
       };
     }
   }
 
-  // 5. Fatigue Status Hard-Cap (capped status)
+  // 5. Fatigue Status Hard-Cap
   const isFatigueCapped = lead.fatigueStatus === 'capped' || (lead.preferences as any)?.fatigueStatus === 'capped';
   if (isFatigueCapped) {
     return {
       allowed: false,
       statusCode: 429,
-      code: 'FATIGUE_CAP_EXCEEDED',
-      reason: `Fatigue guardrail: Lead has reached maximum contact frequency cap (status: 'capped'). Further attempts risk severe spam flags or regulatory penalties.`,
+      code: 'FATIGUE_CAPPED',
+      reason: `Fatigue guardrail: Lead has reached maximum contact frequency cap.`,
       details: {
         channel,
         leadId: lead.id,
         leadName: lead.name,
-        ruleViolated: 'FATIGUE_STATUS_CAPPED'
+        ruleViolated: 'FATIGUE_CAPPED'
       }
     };
   }
 
   // 6. Rolling Window Frequency Caps per Channel
-  const nowMs = targetDate.getTime();
-
   if (channel === 'Call') {
-    const windowMs = (rules.callCapDays || 7) * 24 * 60 * 60 * 1000;
-    const cutoff = nowMs - windowMs;
-    // Count database calls within window
-    const recentDbCalls = ((await getLegacyState()).calls || []).filter(c => c.leadId === lead.id && new Date(c.timestamp).getTime() >= cutoff).length;
-    const recordedAttempts = lead.contactAttempts7d?.calls || 0;
-    const totalAttempts = Math.max(recentDbCalls, recordedAttempts);
-
-    if (totalAttempts >= rules.callCapMaxAttempts) {
+    if (recentCallCount >= policy.callCapMaxAttempts) {
       return {
         allowed: false,
         statusCode: 429,
-        code: 'CALL_CAP_EXCEEDED',
-        reason: `Contact frequency cap reached: Maximum ${rules.callCapMaxAttempts} voice calls per ${rules.callCapDays} rolling days exceeded (Current attempts: ${totalAttempts}).`,
+        code: 'FREQUENCY_CAP',
+        reason: `Contact frequency cap reached: Maximum ${policy.callCapMaxAttempts} calls per ${policy.callCapDays} days exceeded.`,
         details: {
           channel,
           leadId: lead.id,
           leadName: lead.name,
-          ruleViolated: 'CONTACT_FREQUENCY_CALL_CAP',
-          attemptCount: totalAttempts,
-          capLimit: rules.callCapMaxAttempts,
-          timeWindowDays: rules.callCapDays
+          ruleViolated: 'FREQUENCY_CAP',
+          attemptCount: recentCallCount,
+          capLimit: policy.callCapMaxAttempts,
+          timeWindowDays: policy.callCapDays
         }
       };
     }
   } else if (channel === 'WhatsApp') {
-    const windowMs = (rules.whatsAppCapDays || 30) * 24 * 60 * 60 * 1000;
-    const cutoff = nowMs - windowMs;
-    const recentDbMessages = ((await getLegacyState()).messages || []).filter(
-      m => m.leadId === lead.id && m.direction === 'outbound' && new Date(m.timestamp).getTime() >= cutoff
-    ).length;
-    const recordedAttempts = lead.contactAttempts7d?.whatsapp || 0;
-    const totalAttempts = Math.max(recentDbMessages, recordedAttempts);
-
-    if (totalAttempts >= rules.whatsAppCapMaxAttempts) {
+    if (recentMessageCount >= policy.whatsAppCapMaxAttempts) {
       return {
         allowed: false,
         statusCode: 429,
-        code: 'WHATSAPP_CAP_EXCEEDED',
-        reason: `Contact frequency cap reached: Maximum ${rules.whatsAppCapMaxAttempts} WhatsApp messages per ${rules.whatsAppCapDays} rolling days exceeded (Current attempts: ${totalAttempts}).`,
+        code: 'FREQUENCY_CAP',
+        reason: `Contact frequency cap reached: Maximum ${policy.whatsAppCapMaxAttempts} WhatsApp messages per ${policy.whatsAppCapDays} days exceeded.`,
         details: {
           channel,
           leadId: lead.id,
           leadName: lead.name,
-          ruleViolated: 'CONTACT_FREQUENCY_WHATSAPP_CAP',
-          attemptCount: totalAttempts,
-          capLimit: rules.whatsAppCapMaxAttempts,
-          timeWindowDays: rules.whatsAppCapDays
+          ruleViolated: 'FREQUENCY_CAP',
+          attemptCount: recentMessageCount,
+          capLimit: policy.whatsAppCapMaxAttempts,
+          timeWindowDays: policy.whatsAppCapDays
         }
       };
     }
   } else if (channel === 'SMS') {
-    const windowMs = (rules.smsCapDays || 14) * 24 * 60 * 60 * 1000;
-    const recordedAttempts = lead.contactAttempts7d?.sms || 0;
-    if (recordedAttempts >= rules.smsCapMaxAttempts) {
+    if (recentSmsCount >= policy.smsCapMaxAttempts) {
       return {
         allowed: false,
         statusCode: 429,
-        code: 'SMS_CAP_EXCEEDED',
-        reason: `Contact frequency cap reached: Maximum ${rules.smsCapMaxAttempts} SMS messages per ${rules.smsCapDays} rolling days exceeded.`,
+        code: 'FREQUENCY_CAP',
+        reason: `Contact frequency cap reached: Maximum ${policy.smsCapMaxAttempts} SMS per ${policy.smsCapDays} days exceeded.`,
         details: {
           channel,
           leadId: lead.id,
           leadName: lead.name,
-          ruleViolated: 'CONTACT_FREQUENCY_SMS_CAP',
-          attemptCount: recordedAttempts,
-          capLimit: rules.smsCapMaxAttempts,
-          timeWindowDays: rules.smsCapDays
+          ruleViolated: 'FREQUENCY_CAP',
+          attemptCount: recentSmsCount,
+          capLimit: policy.smsCapMaxAttempts,
+          timeWindowDays: policy.smsCapDays
         }
       };
     }
   }
 
-  // 7. Quiet Hours Restrictions (TRAI / TCPA telecom regulation)
-  if (!options?.skipQuietHours) {
-    const quietCheck = isQuietHours(rules, targetDate);
-    if (quietCheck.isQuiet) {
-      return {
-        allowed: false,
-        statusCode: 403,
-        code: 'QUIET_HOURS_RESTRICTION',
-        reason: `Quiet hours active in India (${quietCheck.window}). Current IST: ${quietCheck.currentIST}. Commercial outreach during quiet hours is restricted by TRAI / TCPA regulations.`,
-        details: {
-          channel,
-          leadId: lead.id,
-          leadName: lead.name,
-          ruleViolated: 'QUIET_HOURS_WINDOW',
-          currentTimeIST: quietCheck.currentIST,
-          quietHoursWindow: quietCheck.window
-        }
-      };
-    }
+  // 7. Quiet Hours Restrictions (using tenant timezone)
+  const quietCheck = isQuietHours(policy, targetDate, timezone);
+  if (quietCheck.isQuiet) {
+    return {
+      allowed: false,
+      statusCode: 403,
+      code: 'QUIET_HOURS',
+      reason: `Quiet hours active (${quietCheck.window}). Current time: ${quietCheck.currentLocalTime}. Commercial outreach during quiet hours is restricted.`,
+      details: {
+        channel,
+        leadId: lead.id,
+        leadName: lead.name,
+        ruleViolated: 'QUIET_HOURS',
+        currentLocalTime: quietCheck.currentLocalTime,
+        quietHoursWindow: quietCheck.window
+      }
+    };
   }
 
   return { allowed: true };
 }
 
-// Shared server-side function to validate lead communication compliance
+// ────────────────────────────────────────────────────────
+// Backward-compatible exports
+// These wrap the pure evaluator for callers that haven't migrated
+// to the complianceService yet.
+// ────────────────────────────────────────────────────────
+
+import { getLegacyState } from './repositories';
+import { getComplianceRules, DEFAULT_FREQUENCY_RULES } from './db';
+
+/**
+ * Legacy wrapper: fetches policy and counts internally, then calls the pure evaluator.
+ * New code should use complianceService.checkLeadCompliance() instead.
+ */
+export async function checkCompliance(
+  lead: Lead,
+  channel: 'Call' | 'WhatsApp' | 'SMS',
+  options?: {
+    timestamp?: Date;
+    db?: any;
+    skipQuietHours?: boolean;
+  }
+): Promise<ComplianceCheckResult> {
+  const targetDate = options?.timestamp || new Date();
+  const dbState = options?.db || await getLegacyState();
+  const rules = dbState.complianceRules || await getComplianceRules() || DEFAULT_FREQUENCY_RULES;
+
+  // Count recent interactions
+  const callWindowMs = (rules.callCapDays || 7) * 24 * 60 * 60 * 1000;
+  const callCutoff = targetDate.getTime() - callWindowMs;
+  const recentCallCount = (dbState.calls || []).filter(
+    (c: any) => c.leadId === lead.id && new Date(c.timestamp).getTime() >= callCutoff
+  ).length;
+
+  const msgWindowMs = (rules.whatsAppCapDays || 30) * 24 * 60 * 60 * 1000;
+  const msgCutoff = targetDate.getTime() - msgWindowMs;
+  const recentMessageCount = (dbState.messages || []).filter(
+    (m: any) => m.leadId === lead.id && m.direction === 'outbound' && new Date(m.timestamp).getTime() >= msgCutoff
+  ).length;
+
+  const recentSmsCount = lead.contactAttempts7d?.sms || 0;
+
+  return evaluateCompliance({
+    lead,
+    channel,
+    policy: rules,
+    recentCallCount: Math.max(recentCallCount, lead.contactAttempts7d?.calls || 0),
+    recentMessageCount: Math.max(recentMessageCount, lead.contactAttempts7d?.whatsapp || 0),
+    recentSmsCount,
+    timestamp: targetDate,
+  });
+}
+
+// Preserve original export names
 export const validateLeadCommunicationCompliance = checkCompliance;
 export const validateLeadCompliance = checkCompliance;
+
+// Re-export for backward compatibility
+export function getISTTime(date: Date = new Date()) {
+  return getLocalTime(date, 'Asia/Kolkata');
+}

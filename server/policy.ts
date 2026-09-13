@@ -17,6 +17,7 @@ const actionMap: Record<Action, Action> = {
   'calls:create': 'EDIT',
   'messages:create': 'EDIT',
   'compliance:update': 'MANAGE_COMPLIANCE_RULES',
+  'compliance:manage': 'MANAGE_COMPLIANCE_RULES',
   'platform:manage': 'PLATFORM_ADMIN',
   
   // Identity mappings for backward compatibility

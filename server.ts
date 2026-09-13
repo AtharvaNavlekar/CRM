@@ -27,7 +27,6 @@ import {
   calculateReports,
   sanitizeUser,
   getComplianceRules,
-  updateComplianceRules,
   DEFAULT_FREQUENCY_RULES
 } from './server/db';
 import {
@@ -36,6 +35,8 @@ import {
   isQuietHours,
   ComplianceCheckResult
 } from './server/compliance';
+import { complianceService } from './server/services/complianceService';
+import { compliancePolicyRepository } from './server/repositories/compliancePolicyRepository';
 import {
   authenticateToken,
   actionRequiresApproval,
@@ -1120,6 +1121,18 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     rawLeads.forEach((item: any, idx: number) => {
       if (!item.name && !item.phone) return;
       const rep = reps[idx % reps.length] || defaultRep;
+
+      // Check if a lead with this phone already exists — never downgrade opt-out/DNC
+      const existingLead = db.leads.find((l: Lead) => l.phone === (item.phone || '').trim());
+      const existingOptOut = existingLead?.preferences?.isOptedOut === true;
+      const existingBlocked = existingLead?.blockedReason?.trim();
+      const existingPaused = existingLead?.preferences?.isPaused30Days === true;
+
+      // Preserve imported compliance state, but never weaken existing restrictions
+      const importedOptOut = item.isOptedOut === true || item.optedOut === true;
+      const importedBlocked = item.blockedReason?.trim() || '';
+      const importedPaused = item.isPaused30Days === true || item.paused === true;
+
       const newLead: Lead = {
         id: `lead-${Date.now()}-${idx}`,
         name: sanitizeFormula((item.name || 'Unnamed Lead').trim()),
@@ -1135,7 +1148,19 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
         notes: sanitizeFormula(item.notes || 'Imported via CSV batch upload.'),
         industry: item.industry || 'Real Estate',
         value: Number(item.value) || 1000000,
-        callbackReminder: null
+        callbackReminder: null,
+        // Preserve opt-out: never downgrade from true to false
+        blockedReason: existingBlocked || importedBlocked || undefined,
+        preferences: {
+          preferredChannel: item.preferredChannel || 'Any',
+          preferredTimeWindow: 'Anytime',
+          allowedTopics: [],
+          isPaused30Days: existingPaused || importedPaused,
+          isOptedOut: existingOptOut || importedOptOut,
+          optOutReason: item.optOutReason || existingLead?.preferences?.optOutReason,
+          blockedReason: existingBlocked || importedBlocked || undefined,
+          updatedAt: nowIso,
+        },
       };
       importedLeads.push(newLead);
       db.leads.unshift(newLead);
@@ -1301,8 +1326,8 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
       callerRepName = repName || db.users.find(u => u.id === repId)?.name || req.user!.name;
     }
 
-    // Shared Server-Side Lead Communication Compliance Enforcement
-    const compliance = await validateLeadCommunicationCompliance(lead, 'Call', { db });
+    // Tenant-scoped compliance enforcement
+    const compliance = await complianceService.checkLeadCompliance(lead, 'Call', req.securityContext!, req.tenantId);
     if (!compliance.allowed) {
       return res.status(compliance.statusCode || 403).json({
         error: compliance.reason,
@@ -1420,8 +1445,8 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
         });
       }
 
-      // Shared Server-Side Lead Communication Compliance Enforcement
-      const compliance = await validateLeadCommunicationCompliance(lead, 'WhatsApp', { db });
+      // Tenant-scoped compliance enforcement
+      const compliance = await complianceService.checkLeadCompliance(lead, 'WhatsApp', req.securityContext!, req.tenantId);
       if (!compliance.allowed) {
         return res.status(compliance.statusCode || 403).json({
           error: compliance.reason,
@@ -1534,12 +1559,13 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
 
   // 8. Compliance Rules & Verification APIs
   app.get('/api/compliance/rules', async (req, res) => {
-    const rules = getComplianceRules();
+    const tenantId = req.tenantId || req.securityContext?.tenantId || 'tenant-apex';
+    const rules = await compliancePolicyRepository.getEffectivePolicy(tenantId);
     res.json(rules);
   });
 
   app.put('/api/compliance/rules', async (req, res) => {
-    if (!(await can(req.securityContext!, 'compliance:update'))) {
+    if (!(await can(req.securityContext!, 'compliance:manage'))) {
       logAudit('ACCESS_DENIED', `Denied MANAGE_COMPLIANCE_RULES to ${req.user!.name}`, req.user, getClientIp(req), { actionType: 'MANAGE_COMPLIANCE_RULES' });
       return res.status(403).json({
         error: `Forbidden: Current role '${req.user!.role}' lacks MANAGE_COMPLIANCE_RULES permission.`,
@@ -1553,18 +1579,35 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
       return res.status(202).json({
         requiresApproval: true,
         action: 'MANAGE_COMPLIANCE_RULES',
-        message: 'Updating calling compliance rules affects company-wide TRAI frequency caps and quiet hours. Confirm update?',
+        message: 'Updating calling compliance rules affects company-wide frequency caps and quiet hours. Confirm update?',
         warning: 'Compliance rule update requires explicit confirmation.'
       });
     }
 
-    const updates = req.body;
-    const updated = updateComplianceRules(updates);
-    logAudit('COMPLIANCE_RULES_UPDATED', `Updated compliance frequency & quiet hours rules`, req.user, getClientIp(req), {
-      actionType: 'MANAGE_COMPLIANCE_RULES',
-      requiredApproval: requiresApproval
-    });
-    res.json({ success: true, rules: updated });
+    const tenantId = req.tenantId || req.securityContext?.tenantId || 'tenant-apex';
+    const { confirmed, ...updates } = req.body;
+    const expectedVersion = updates.version;
+    delete updates.version;
+
+    try {
+      const updated = await compliancePolicyRepository.upsert(tenantId, updates, req.user!.id, expectedVersion);
+      logAudit('COMPLIANCE_RULES_UPDATED', `Updated compliance policy for tenant ${tenantId}`, req.user, getClientIp(req), {
+        actionType: 'MANAGE_COMPLIANCE_RULES',
+        requiredApproval: requiresApproval,
+        tenantId,
+      });
+      res.json({ success: true, rules: updated });
+    } catch (err: any) {
+      if (err?.code === 'POLICY_VERSION_CONFLICT') {
+        return res.status(409).json({
+          error: err.message,
+          code: 'POLICY_VERSION_CONFLICT',
+          currentVersion: err.currentVersion,
+          expectedVersion: err.expectedVersion,
+        });
+      }
+      throw err;
+    }
   });
 
   app.get('/api/compliance/check', async (req, res) => {
@@ -1574,11 +1617,11 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     }
     const targetChannel = (channel as 'Call' | 'WhatsApp' | 'SMS') || 'Call';
     const db = await getLegacyState();
-    const lead = db.leads.find(l => l.id === leadId);
+    const lead = db.leads.find((l: Lead) => l.id === leadId);
     if (!lead) {
       return res.status(404).json({ error: 'Lead not found' });
     }
-    const result = checkCompliance(lead, targetChannel, { db });
+    const result = await complianceService.checkLeadCompliance(lead, targetChannel, req.securityContext!, req.tenantId);
     res.json(result);
   });
 
