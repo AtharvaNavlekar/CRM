@@ -20,13 +20,6 @@ import bcryptjs from 'bcryptjs';
 import { createServer as createViteServer } from 'vite';
 import { aiService } from './server/services/ai/aiService';
 import {
-  loadDatabase,
-
-  getDb,
-  saveDatabase,
-  createBackup,
-  restoreBackup,
-  resetDatabase,
   calculateReports,
   sanitizeUser,
   getComplianceRules,
@@ -236,8 +229,6 @@ const sanitizeFormula = (val: any): string => {
   return trimmed;
 };
 
-// Initialize in-memory/file-backed database
-loadDatabase();
 
 // Export app for testing
 export const app = express();
@@ -389,22 +380,20 @@ async function startServer() {
     legacyHeaders: false,
     skipSuccessfulRequests: true,
     // Use Redis for rate limiting if available, otherwise it falls back to memory if store is omitted
-    // rate-limit-redis handles fallback behavior somewhat, but explicitly failing open/closed needs care.
-    // For now we pass the client; if Redis is down, we want to ensure the app doesn't crash.
-    store: new RedisStore({
-      // @ts-expect-error - rate-limit-redis types are slightly mismatched with ioredis but perfectly compatible
-      sendCommand: async (...args: string[]) => {
-        const client = redisService.getClient();
-        if (client && args.length > 0) {
-          const command = args[0];
-          const commandArgs = args.slice(1);
-          return client.call(command, ...commandArgs);
-        }
-        // If Redis is down, we fail OPEN (let request through) to avoid total denial of service.
-        // Returning a mock successful reply to rate-limit-redis bypasses the limit.
-        return null;
-      },
-    }),
+    ...(process.env.REDIS_URL ? {
+      store: new RedisStore({
+        // @ts-expect-error - rate-limit-redis types are slightly mismatched with ioredis but perfectly compatible
+        sendCommand: async (...args: string[]) => {
+          const client = redisService.getClient();
+          if (client && args.length > 0) {
+            const command = args[0];
+            const commandArgs = args.slice(1);
+            return client.call(command, ...commandArgs);
+          }
+          return null;
+        },
+      })
+    } : {}),
     keyGenerator: (req) => {
       // Use standard IP extraction
       const ip = (req.headers['x-forwarded-for'] as string) || req.socket.remoteAddress || '127.0.0.1';
@@ -1536,6 +1525,11 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     const tenantId = req.securityContext!.tenantId;
     if (!tenantId) return res.status(403).json({ error: 'Tenant context required' });
     res.json({ ok: true });
+  });
+
+  // Health check for testing
+  app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok' });
   });
 
   app.listen(Number(PORT) || 3000, () => { console.log('[INIT] Server running on port', PORT); });

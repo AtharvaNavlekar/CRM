@@ -442,39 +442,7 @@ export const api = {
     return res.json();
   },
 
-  // Backups
-  async getBackups(): Promise<BackupRecord[]> {
-    const res = await authFetch('/api/backups');
-    return res.json();
-  },
 
-  async createBackup(name?: string, userName?: string, userRole?: string): Promise<BackupRecord> {
-    const res = await authFetch('/api/backups', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, userName, userRole })
-    });
-    return res.json();
-  },
-
-  async restoreBackup(backupId: string, userName?: string, userRole?: string): Promise<{ success: boolean; message: string }> {
-    const res = await authFetch(`/api/backups/${backupId}/restore`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userName, userRole })
-    });
-    return res.json();
-  },
-
-  // Reset Data
-  async resetData(userName?: string, userRole?: string): Promise<{ success: boolean; message: string }> {
-    const res = await authFetch('/api/reset-data', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userName, userRole })
-    });
-    return res.json();
-  },
 
   // Message Queue & Health
   async getMessageHealth(): Promise<{

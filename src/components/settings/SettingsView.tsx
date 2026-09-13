@@ -31,7 +31,6 @@ import {
 import {
   User,
   AuditLog,
-  BackupRecord,
   UserRole,
   CustomField,
   RolePermission,
@@ -97,10 +96,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onDataReset }) => {
   const [newUserPassword, setNewUserPassword] = useState('');
 
   // Backups State
-  const [backups, setBackups] = useState<BackupRecord[]>([]);
-  const [isCreatingBackup, setIsCreatingBackup] = useState(false);
-  const [backupFeedback, setBackupFeedback] = useState('');
-
   // Audit Logs State
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [auditFilter, setAuditFilter] = useState('');
@@ -134,15 +129,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onDataReset }) => {
     }
   };
 
-  const fetchBackups = async () => {
-    try {
-      const data = await api.getBackups();
-      setBackups(data);
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
   const fetchAuditLogs = async () => {
     try {
       const data = await api.getAuditLogs();
@@ -154,7 +140,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onDataReset }) => {
 
   useEffect(() => {
     fetchSettings();
-    fetchBackups();
     fetchAuditLogs();
   }, [activeTab]);
 
@@ -292,39 +277,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onDataReset }) => {
       showNotification('Failed to save pipeline configuration', 'error');
     } finally {
       setIsSavingPipeline(false);
-    }
-  };
-
-  // Backup handlers
-  const handleCreateBackup = async () => {
-    setIsCreatingBackup(true);
-    try {
-      const snap = await api.createBackup(
-        `Manual Snapshot ${new Date().toLocaleTimeString('en-IN')}`,
-        currentUser?.name,
-        currentUser?.role
-      );
-      setBackups((prev) => [snap, ...prev]);
-      showNotification('Backup snapshot created successfully!');
-      fetchAuditLogs();
-    } catch (e) {
-      showNotification('Failed to create snapshot', 'error');
-    } finally {
-      setIsCreatingBackup(false);
-    }
-  };
-
-  const handleRestoreBackup = async (id: string) => {
-    if (!confirm('Are you sure you want to restore this database snapshot? Current leads will be replaced with the snapshot data.')) {
-      return;
-    }
-    try {
-      await api.restoreBackup(id, currentUser?.name, currentUser?.role);
-      showNotification('Database successfully restored from snapshot!');
-      onDataReset();
-      fetchAuditLogs();
-    } catch (e) {
-      showNotification('Failed to restore snapshot', 'error');
     }
   };
 
@@ -476,19 +428,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onDataReset }) => {
         >
           <Shield className="w-4 h-4 text-emerald-600" />
           <span>Role Permissions (RBAC)</span>
-        </button>
-
-        <button
-          id="tab-backups"
-          onClick={() => setActiveTab('backups')}
-          className={`pb-3 text-xs font-bold border-b-2 transition-all whitespace-nowrap flex items-center space-x-2 ${
-            activeTab === 'backups'
-              ? 'border-[#2E6E5C] text-[#2E6E5C] dark:text-teal-400'
-              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-          }`}
-        >
-          <HardDrive className="w-4 h-4" />
-          <span>Backups ({backups.length})</span>
         </button>
 
         <button
@@ -1182,92 +1121,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onDataReset }) => {
                       </tr>
                     );
                   })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* TAB 5: Automated Data Backups */}
-      {activeTab === 'backups' && (
-        <div className="space-y-5">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                Automated Database Snapshot Service
-              </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Hourly automated snapshots maintain disaster recovery checkpoints for leads, calls, WhatsApp threads, tickets, and pipeline configurations.
-              </p>
-            </div>
-
-            <button
-              id="btn-create-backup-snapshot"
-              onClick={handleCreateBackup}
-              disabled={isCreatingBackup}
-              className="px-4 py-2 rounded-xl text-xs font-bold bg-[#2E6E5C] text-white hover:bg-[#255e4e] disabled:opacity-50 transition-colors shadow-xs flex items-center space-x-1.5"
-            >
-              <HardDrive className="w-4 h-4" />
-              <span>{isCreatingBackup ? 'Saving Snapshot...' : 'Create Instant Backup'}</span>
-            </button>
-          </div>
-
-          {/* Backup Snapshots Table */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
-            <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
-                Available Snapshot Versions
-              </span>
-              <span className="text-xs text-emerald-600 font-semibold">
-                Auto-Backups Active (Hourly)
-              </span>
-            </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-600 dark:text-slate-300 font-semibold border-b border-slate-200 dark:border-slate-700">
-                  <tr>
-                    <th className="p-3">Snapshot Name</th>
-                    <th className="p-3">Created Date & Time</th>
-                    <th className="p-3">Stored Records</th>
-                    <th className="p-3">Size (KB)</th>
-                    <th className="p-3">Type</th>
-                    <th className="p-3 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {backups.map((b) => (
-                    <tr key={b.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40">
-                      <td className="p-3 font-bold text-slate-900 dark:text-slate-100">
-                        {b.name}
-                      </td>
-                      <td className="p-3 text-slate-500">
-                        {new Date(b.timestamp).toLocaleString('en-IN')}
-                      </td>
-                      <td className="p-3 text-slate-600 dark:text-slate-400">
-                        {b.recordsCount.leads} leads • {b.recordsCount.calls} calls • {b.recordsCount.messages} msgs
-                      </td>
-                      <td className="p-3 font-mono">{b.fileSizeKb} KB</td>
-                      <td className="p-3">
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                          b.autoCreated
-                            ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/80 dark:text-blue-300 border-blue-200'
-                            : 'bg-teal-50 text-teal-700 dark:bg-teal-950/80 dark:text-teal-300 border-teal-200'
-                        }`}>
-                          {b.autoCreated ? 'Auto-Snapshot' : 'Manual Snapshot'}
-                        </span>
-                      </td>
-                      <td className="p-3 text-right">
-                        <button
-                          onClick={() => handleRestoreBackup(b.id)}
-                          className="px-2.5 py-1 text-xs font-bold text-[#1F3A5F] dark:text-teal-300 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg border border-slate-300 dark:border-slate-700"
-                        >
-                          Restore
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
                 </tbody>
               </table>
             </div>

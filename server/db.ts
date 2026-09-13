@@ -23,8 +23,6 @@ export const DEFAULT_FREQUENCY_RULES: ContactFrequencyRules = {
   version: 1,
 };
 
-export async function loadDatabase(): Promise<DatabaseState> { return {} as any; }
-
 export async function getComplianceRules(): Promise<ContactFrequencyRules> {
   // Ideally fetch from tenantSettings or a default
   // For now return defaults as it was centralized in legacy
@@ -35,22 +33,6 @@ export function sanitizeUser(user: User): User {
   const { passwordHash, ...safe } = user;
   return safe;
 }
-
-export async function saveDatabase() {
-  // Deprecated. Writes should go through repositories.
-}
-
-export async function getDb(): Promise<DatabaseState> { return {} as any; }
-
-export async function createBackup(name: string, autoCreated = false, user?: any) {
-  return { id: 'disabled', timestamp: new Date().toISOString(), name, recordsCount: { leads: 0, calls: 0, messages: 0, tickets: 0 }, fileSizeKb: 0, autoCreated };
-}
-
-export async function restoreBackup(backupId: string, user?: any): Promise<boolean> {
-  return false;
-}
-
-export async function resetDatabase(user?: any) { return {} as any; }
 
 // Compute real report metrics from database records scoped to tenant
 export async function calculateReports(tenantId?: string): Promise<ReportStats> {

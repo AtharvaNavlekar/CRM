@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import { User, ImpersonationSession, SecurityContext } from '../src/types';
 import { db as pgDb } from './db/client';
-import { impersonationSessions } from './db/schema';
+import { impersonationSessions, tenants } from './db/schema';
 import { eq, and, gt } from 'drizzle-orm';
-import { getDb } from './db';
 declare global {
   namespace Express {
     interface Request {
@@ -125,8 +124,8 @@ export const verifyTenantActive: RequestHandler = async (req: Request, res: Resp
     return next();
   }
 
-  const db = await getDb();
-  const tenant = db.tenants?.find(t => t.id === tenantId);
+  const dbResult = await pgDb.select().from(tenants).where(eq(tenants.id, tenantId)).limit(1);
+  const tenant = dbResult[0];
 
   if (tenant && tenant.status === 'suspended') {
     // If platform staff is impersonating, allow read-only investigation
