@@ -10,7 +10,7 @@ export async function processBulkUpdate(job: Job<BulkUpdateLeadsPayload>) {
   const { tenantId, securityContext, leadIds, stage, assignedRepId, jobId } = job.data;
 
   // 1. Execution-time Authorization Re-check
-  if (!(await can(securityContext, 'leads:edit'))) {
+  if (!(await can(securityContext, 'leads:update'))) {
     throw new Error('Authorization denied at execution time for EDIT');
   }
 
@@ -58,14 +58,13 @@ export async function processBulkUpdate(job: Job<BulkUpdateLeadsPayload>) {
     .set(actualUpdateData)
     .where(and(inArray(leads.id, targetLeads.map(l => l.id)), eq(leads.tenantId, tenantId)));
 
-  // 4. Log completion to Audit Service
-  await auditService.logEvent({
-    event: 'BULK_LEAD_UPDATE',
+  // 4. Audit logging
+  await auditService.logNormal({
+    eventType: 'BULK_LEAD_UPDATE' as any,
     outcome: 'SUCCESS',
-    message: `Background job updated ${targetLeads.length} leads.`,
     securityContext,
-    ipAddress: 'worker-node',
-    metadata: { jobId, actionType: 'EDIT' }
+    reason: `Background job updated ${targetLeads.length} leads.`,
+    metadata: { leadIds, stage, assignedRepId }
   });
 
   return {

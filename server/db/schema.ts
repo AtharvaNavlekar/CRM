@@ -288,3 +288,18 @@ export const jobs = pgTable('jobs', {
   completedAt: timestamp('completed_at', { mode: 'string' }),
   failedAt: timestamp('failed_at', { mode: 'string' })
 });
+
+export const aiUsage = pgTable('ai_usage', {
+  id: text('id').primaryKey(),
+  tenantId: text('tenant_id').notNull(),
+  userId: text('user_id').notNull(),
+  model: text('model').notNull(),
+  action: text('action').notNull(),
+  cost: real('cost').notNull().default(0), // Approximation
+  tokens: integer('tokens').notNull().default(0),
+  occurredAt: timestamp('occurred_at', { mode: 'string' }).notNull(),
+}, (table) => {
+  return {
+    tenantTimeIdx: index('idx_ai_usage_tenant_time').on(table.tenantId, table.occurredAt)
+  };
+});

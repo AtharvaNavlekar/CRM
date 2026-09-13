@@ -19,6 +19,7 @@ const actionMap: Record<Action, Action> = {
   'compliance:update': 'MANAGE_COMPLIANCE_RULES',
   'compliance:manage': 'MANAGE_COMPLIANCE_RULES',
   'platform:manage': 'PLATFORM_ADMIN',
+  'ai:use': 'EDIT',
   
   // Identity mappings for backward compatibility
   'VIEW': 'VIEW',

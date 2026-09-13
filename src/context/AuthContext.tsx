@@ -190,6 +190,7 @@ export const usePolicy = () => {
       'compliance:update': 'MANAGE_COMPLIANCE_RULES',
       'compliance:manage': 'MANAGE_COMPLIANCE_RULES',
       'platform:manage': 'PLATFORM_ADMIN',
+      'ai:use': 'EDIT',
     };
 
     const mappedAction = actionMap[action] || action;

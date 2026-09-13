@@ -16,7 +16,7 @@ import { redisService, createSafeKey } from './server/infrastructure/redis';
 import jwt from 'jsonwebtoken';
 import bcryptjs from 'bcryptjs';
 import { createServer as createViteServer } from 'vite';
-import { GoogleGenAI } from '@google/genai';
+import { aiService } from './server/services/ai/aiService';
 import {
   loadDatabase,
   getLegacyState,
@@ -926,8 +926,8 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
       }
 
       // Allow users to see jobs created by themselves, or admins/tl to see team jobs
-      const isCreator = job.createdBy === req.securityContext!.userId;
-      const isAdminOrTL = ['admin', 'tl'].includes(req.user!.role);
+      const isCreator = job.createdBy === req.securityContext!.actorUserId;
+      const isAdminOrTL = ['admin', 'tl', 'owner'].includes(req.securityContext!.actorRole as string);
       
       if (!isCreator && !isAdminOrTL) {
         return res.status(403).json({ error: 'Forbidden: Cannot view this job' });
@@ -1858,74 +1858,38 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     res.json({ success: true, autoAssignmentEnabled: db.autoAssignmentEnabled });
   });
 
-  // 15. Audio Transcription API with model gemini-3.5-transcribe
+  // 15. Audio Transcription API via aiService
   app.post('/api/transcribe', async (req, res) => {
     const { audioBase64, mimeType } = req.body;
     if (!audioBase64 || typeof audioBase64 !== 'string') {
       return res.status(400).json({ error: 'audioBase64 string is required.' });
     }
 
+    if (!req.securityContext) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
     const cleanBase64 = audioBase64.replace(/^data:[^;]+;base64,/, '');
     const audioMime = mimeType || 'audio/webm';
 
     try {
-      if (!GEMINI_API_KEY) {
-        // Fallback when GEMINI_API_KEY is not configured
-        const sampleTranscripts = [
-          "Spoke with the lead regarding the premium 3-BHK configuration. Customer requested the cost breakdown and WhatsApp brochure. Follow-up scheduled for tomorrow at 4 PM.",
-          "Lead answered while travelling; confirmed interest in commercial retail floor plan. Requested loan eligibility check and callback over the weekend.",
-          "Call completed: Discussed discounted payment milestones. Client agrees in principle, requested formal agreement copy to be shared via WhatsApp.",
-          "Customer inquired about site visit availability on Sunday morning. Assigned telecaller to coordinate cab arrangement and confirm time slot."
-        ];
-        const randomTranscript = sampleTranscripts[Math.floor(Math.random() * sampleTranscripts.length)];
-        adapterLogAudit(req, 'AUDIO_TRANSCRIBED', `Simulated audio transcription (${Math.round(cleanBase64.length / 1024)} KB audio)`, req.user, getClientIp(req));
-        return res.json({
-          text: randomTranscript,
-          isSimulated: true,
-          model: 'gemini-3.5-transcribe',
-          note: 'GEMINI_API_KEY is not set in environment; returned realistic telecalling transcript.'
-        });
-      }
+      const transcribedText = await aiService.transcribeAudio(
+        req.securityContext,
+        cleanBase64,
+        audioMime
+      );
 
-      const ai = new GoogleGenAI({
-        apiKey: GEMINI_API_KEY,
-        httpOptions: {
-          headers: {
-            'User-Agent': 'aistudio-build'
-          }
-        }
-      });
-
-      const audioPart = {
-        inlineData: {
-          mimeType: audioMime,
-          data: cleanBase64
-        }
-      };
-
-      const response = await ai.models.generateContent({
-        model: 'gemini-3.5-transcribe',
-        contents: {
-          parts: [
-            audioPart,
-            { text: 'Transcribe this telecalling audio note accurately in English or original spoken language (e.g. Hindi/English mix). Provide the exact text spoken without commentary.' }
-          ]
-        }
-      });
-
-      const transcribedText = response.text || '';
-      adapterLogAudit(req, 'AUDIO_TRANSCRIBED', `Transcribed audio note with model gemini-3.5-transcribe`, req.user, getClientIp(req));
       res.json({
         text: transcribedText,
-        model: 'gemini-3.5-transcribe',
-        isSimulated: false
+        model: 'gemini-3.5-transcribe' // Hardcoded placeholder to keep UI compatible for now
       });
     } catch (err: any) {
       console.error('[Transcription Error]', err);
-      // Fallback gracefully on API errors
-      res.status(500).json({
+      // aiService will throw if unauthorized, quota exceeded, or provider error.
+      const status = err.message.includes('Unauthorized') ? 403 : 500;
+      res.status(status).json({
         error: err.message || 'Failed to transcribe audio',
-        code: 'TRANSCRIPTION_FAILED'
+        code: status === 403 ? 'FORBIDDEN' : 'TRANSCRIPTION_FAILED'
       });
     }
   });

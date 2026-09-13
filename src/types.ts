@@ -26,7 +26,8 @@ export type Action =
   | 'messages:create'
   | 'compliance:update'
   | 'compliance:manage'
-  | 'platform:manage';
+  | 'platform:manage'
+  | 'ai:use';
 
 export type UserRole =
   | 'telecaller'
