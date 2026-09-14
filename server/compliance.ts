@@ -129,13 +129,13 @@ export function evaluateCompliance(input: ComplianceEvaluationInput): Compliance
     return {
       allowed: false,
       statusCode: 403,
-      code: 'OPT_OUT',
+      code: 'LEAD_OPTED_OUT',
       reason: `Outreach blocked: Lead has explicitly opted out of communications.${optOutReason}`,
       details: {
         channel,
         leadId: lead.id,
         leadName: lead.name,
-        ruleViolated: 'OPT_OUT'
+        ruleViolated: 'LEAD_OPTED_OUT'
       }
     };
   }
@@ -208,13 +208,13 @@ export function evaluateCompliance(input: ComplianceEvaluationInput): Compliance
     return {
       allowed: false,
       statusCode: 429,
-      code: 'FATIGUE_CAPPED',
+      code: 'FATIGUE_CAP_EXCEEDED',
       reason: `Fatigue guardrail: Lead has reached maximum contact frequency cap.`,
       details: {
         channel,
         leadId: lead.id,
         leadName: lead.name,
-        ruleViolated: 'FATIGUE_CAPPED'
+        ruleViolated: 'FATIGUE_CAP_EXCEEDED'
       }
     };
   }

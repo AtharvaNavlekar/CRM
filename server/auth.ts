@@ -4,7 +4,7 @@ import bcryptjs from 'bcryptjs';
 import crypto from 'crypto';
 import { UserRole, RolePermission, User, ViewScope, Action } from '../src/types';
 import { db } from './db/client';
-import { users, rolePermissions } from './db/schema';
+import { users, rolePermissions, sessions } from './db/schema';
 import { eq } from 'drizzle-orm';
 function resolveJwtSecret(): string {
   if (process.env.JWT_SECRET && process.env.JWT_SECRET.trim().length > 0) {
@@ -197,22 +197,35 @@ export const authenticateToken: express.RequestHandler = async (req, res, next) 
       });
     }
 
+    if (decoded.sessionId) {
+      const sessionData = await db.select().from(sessions).where(eq(sessions.id, decoded.sessionId)).limit(1);
+      console.log("Token validation - sessionId:", decoded.sessionId, "sessionData:", sessionData);
+      if (!sessionData.length || sessionData[0].revokedAt) {
+        return res.status(401).json({
+          error: 'Session has been revoked.',
+          code: 'TOKEN_REVOKED'
+        });
+      }
+    } else {
+      console.log("Token validation - NO sessionId in decoded:", decoded);
+    }
+
     req.user = {
       ...user,
       token
     };
 
-    if (req.securityContext) {
-      req.securityContext.actorUserId = user.id;
-      req.securityContext.actorRole = user.role;
-      req.securityContext.actorTenantId = user.tenantId;
-      req.securityContext.actorTeamId = user.teamId;
-      req.securityContext.actorManagesTeamIds = user.managesTeamIds;
-      req.securityContext.isPlatformStaff = Boolean(
-        user.isPlatformStaff ||
-        ['platform_admin', 'platform_support', 'platform_security'].includes(user.role)
-      );
-    }
+    req.securityContext = req.securityContext || ({} as any);
+    req.securityContext!.sessionId = decoded.sessionId;
+    req.securityContext!.actorUserId = user.id;
+    req.securityContext!.actorRole = user.role;
+    req.securityContext!.actorTenantId = user.tenantId;
+    req.securityContext!.actorTeamId = user.teamId;
+    req.securityContext!.actorManagesTeamIds = user.managesTeamIds;
+    req.securityContext!.isPlatformStaff = Boolean(
+      user.isPlatformStaff ||
+      ['platform_admin', 'platform_support', 'platform_security'].includes(user.role)
+    );
 
     next();
   } catch (err: any) {

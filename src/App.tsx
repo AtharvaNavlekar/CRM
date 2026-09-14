@@ -329,7 +329,7 @@ const AppContent: React.FC = () => {
 
           {currentView === 'settings' && (
             <div className="p-4 flex-1 overflow-y-auto">
-              <SettingsView onDataReset={handleRefreshAll} />
+              <SettingsView />
             </div>
           )}
 

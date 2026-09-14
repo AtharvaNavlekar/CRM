@@ -6,7 +6,6 @@ import {
   Database,
   FileText,
   UserPlus,
-  RotateCcw,
   CheckCircle2,
   AlertTriangle,
   Download,
@@ -44,10 +43,6 @@ import { api } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 
-interface SettingsViewProps {
-  onDataReset: () => void;
-}
-
 const ALL_AVAILABLE_ACTIONS: { id: Action; label: string; short: string; description: string }[] = [
   { id: 'VIEW', label: 'View Leads', short: 'VIEW', description: 'Read lead records within user view scope' },
   { id: 'EDIT', label: 'Edit Leads', short: 'EDIT', description: 'Update lead stages, notes, and profile details' },
@@ -59,7 +54,7 @@ const ALL_AVAILABLE_ACTIONS: { id: Action; label: string; short: string; descrip
   { id: 'MANAGE_COMPLIANCE_RULES', label: 'Compliance Rules', short: 'COMPLIANCE', description: 'Configure calling frequency caps and quiet hours' },
 ];
 
-export const SettingsView: React.FC<SettingsViewProps> = ({ onDataReset }) => {
+export const SettingsView: React.FC = () => {
   const { currentUser, users, refreshUsers } = useAuth();
   const { theme, setTheme } = useTheme();
   const [activeTab, setActiveTab] = useState<'automation' | 'pipeline' | 'fields' | 'rbac' | 'backups' | 'audit'>('automation');
@@ -314,20 +309,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onDataReset }) => {
     }
   };
 
-  const handleResetDefaults = async () => {
-    if (!confirm('Reset TeleCRM 2.0 to default Indian SMB sample data?')) return;
-    try {
-      await api.resetData(currentUser?.name, currentUser?.role);
-      onDataReset();
-      fetchAuditLogs();
-      fetchBackups();
-      fetchSettings();
-      showNotification('Data reset to default Indian SMB sample state.');
-    } catch (e) {
-      showNotification('Reset failed', 'error');
-    }
-  };
-
   const filteredLogs = auditLogs.filter(
     (log) =>
       log.eventTypetoLowerCase().includes(auditFilter.toLowerCase()) ||
@@ -367,13 +348,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onDataReset }) => {
           </div>
         </div>
 
-        <button
-          onClick={handleResetDefaults}
-          className="px-3 py-1.5 rounded-xl text-xs font-semibold text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 border border-rose-200 dark:border-rose-900 transition-colors flex items-center space-x-1"
-        >
-          <RotateCcw className="w-3.5 h-3.5" />
-          <span>Reset Sample Indian Data</span>
-        </button>
       </div>
 
       {/* Tabs bar */}

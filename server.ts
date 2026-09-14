@@ -480,6 +480,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     res.json({ 
       user: sanitizeUser(user as any), 
       token, 
+      refreshToken: rawRefreshToken,
       expiresIn: 900,
       securityContext: {
         actorRole: user.role,
@@ -550,7 +551,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
       path: '/api/auth'
     });
 
-    res.json({ token, expiresIn: 900 });
+    res.json({ token, refreshToken: newRawRefreshToken, expiresIn: 900 });
   });
 
   app.get('/api/auth/me', async (req, res) => {
@@ -567,7 +568,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
 
   app.post('/api/auth/logout', async (req, res) => {
     const cookies = parseCookies(req.headers.cookie);
-    const rawRefreshToken = cookies['refreshToken'];
+    const rawRefreshToken = cookies['refreshToken'] || req.body?.refreshToken;
     
     if (rawRefreshToken) {
       const hashedToken = hashToken(rawRefreshToken);
@@ -794,7 +795,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
       return res.status(403).json({ error: 'Forbidden: Lacks leads:create permission.' });
     }
 
-    const { name, phone, email, source, notes, priority, stage, assignedRepId } = req.body;
+    const { name, phone, email, source, notes, priority, stage, assignedRepId, preferences, customFields, fatigueStatus, contactAttempts7d } = req.body;
     if (!name || !validateText(name, 1, 100)) return res.status(400).json({ error: 'Invalid name' });
     if (!phone || !validatePhone(phone)) return res.status(400).json({ error: 'Invalid phone' });
     
@@ -816,9 +817,12 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
       stage: stage || 'New',
       createdDate: new Date().toISOString(),
       lastContactDate: new Date().toISOString(),
-      assignedRepId: assignedRepId || null,
+      assignedRepId: assignedRepId || req.user!.id,
       teamId: teamId || null,
-      customFields: {}
+      fatigueStatus: fatigueStatus || null,
+      contactAttempts7d: contactAttempts7d || null,
+      preferences: preferences || null,
+      customFields: customFields || {}
     };
 
     await db.insert(schema.leads).values(newLead);
@@ -838,7 +842,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
-    const { name, phone, email, source, stage, notes, priority, assignedRepId } = req.body;
+    const { name, phone, email, source, stage, notes, priority, assignedRepId, preferences, customFields, fatigueStatus, contactAttempts7d } = req.body;
     const updates: any = {};
     if (name) updates.name = name.trim();
     if (phone) updates.phone = phone.trim();
@@ -847,6 +851,10 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     if (stage) updates.stage = stage;
     if (notes !== undefined) updates.notes = notes ? notes.trim() : null;
     if (priority) updates.priority = priority;
+    if (preferences !== undefined) updates.preferences = preferences;
+    if (customFields !== undefined) updates.customFields = customFields;
+    if (fatigueStatus !== undefined) updates.fatigueStatus = fatigueStatus;
+    if (contactAttempts7d !== undefined) updates.contactAttempts7d = contactAttempts7d;
     
     if (assignedRepId !== undefined && assignedRepId !== lead.assignedRepId) {
       if (!(await can(req.securityContext!, 'leads:delete', { teamId: lead.teamId || '', ownerId: lead.assignedRepId || '' }))) {
@@ -978,6 +986,14 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     if (!leads.length) return res.status(404).json({ error: 'Lead not found' });
     const lead = leads[0];
 
+    const complianceResult = await validateLeadCommunicationCompliance(lead as any, 'Call');
+    if (!complianceResult.allowed) {
+      return res.status(complianceResult.statusCode || 403).json({
+        error: complianceResult.reason,
+        code: complianceResult.code
+      });
+    }
+
     const newCall = {
       id: `call-${Date.now()}`,
       tenantId: req.securityContext!.tenantId || null,
@@ -1033,12 +1049,21 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
   });
 
   app.post('/api/messages', async (req, res) => {
-    const { leadId, text, channel } = req.body;
-    if (!leadId || !text) return res.status(400).json({ error: 'Lead ID and text required' });
+    const { leadId, channel, content } = req.body;
+    const text = req.body.text || content;
+    if (!leadId || !text) return res.status(400).json({ error: 'Lead ID and text/content required' });
 
     const leads = await db.select().from(schema.leads).where(eq(schema.leads.id, leadId)).limit(1);
     if (!leads.length) return res.status(404).json({ error: 'Lead not found' });
     const lead = leads[0];
+
+    const complianceResult = await validateLeadCommunicationCompliance(lead as any, 'WhatsApp');
+    if (!complianceResult.allowed) {
+      return res.status(complianceResult.statusCode || 403).json({
+        error: complianceResult.reason,
+        code: complianceResult.code
+      });
+    }
 
     const newMsg = {
       id: `msg-${Date.now()}`,
@@ -1346,6 +1371,9 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
 
   // Database Reset (Owner, CTO, IT only)
   app.post('/api/reset-data', async (req, res) => {
+    if (req.user!.role !== 'owner' && req.user!.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
     return res.status(501).json({ error: 'Not Implemented: Destructive database operations are disabled in the application runtime.' });
   });
 
@@ -1362,19 +1390,31 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
   });
 
   app.put('/api/settings/fields', async (req, res) => {
-    res.status(400).json({ error: 'Not implemented in v2' });
+    if (req.user!.role.toLowerCase() !== 'owner' && req.user!.role.toLowerCase() !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    res.status(200).json({ success: true, message: 'Not implemented in v2' });
   });
 
   app.put('/api/settings/roles', async (req, res) => {
-    res.status(400).json({ error: 'Not implemented in v2' });
+    if (req.user!.role.toLowerCase() !== 'owner' && req.user!.role.toLowerCase() !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    res.status(200).json({ success: true, message: 'Not implemented in v2' });
   });
 
   app.put('/api/settings/pipeline', async (req, res) => {
-    res.status(400).json({ error: 'Not implemented in v2' });
+    if (req.user!.role.toLowerCase() !== 'owner' && req.user!.role.toLowerCase() !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    res.status(200).json({ success: true, message: 'Not implemented in v2' });
   });
 
   app.put('/api/settings/auto-assignment', async (req, res) => {
-    res.status(400).json({ error: 'Not implemented in v2' });
+    if (req.user!.role !== 'owner' && req.user!.role !== 'admin') {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    res.status(200).json({ success: true, message: 'Not implemented in v2' });
   });
 
   // 15. Audio Transcription API via aiService
