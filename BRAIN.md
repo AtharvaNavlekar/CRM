@@ -11,14 +11,14 @@ DialPulse CRM is a React/Node.js Customer Relationship Management application bu
 *   **Styling & Animation:** Tailwind CSS 4.1.14 (via `@tailwindcss/vite`), `motion` 12.23.24, `lucide-react` 0.546.0
 *   **Data Visualization:** `recharts` 3.10.1
 *   **Backend Framework:** Express 4.21.2 (via Node.js with `tsx`)
-*   **Data Layer:** Local file-backed JSON (`data/db.json`). *Wired up and strictly used in place of an external RDBMS.*
+*   **Data Layer:** PostgreSQL (via Drizzle ORM). *Migrated from local JSON persistence to support concurrent operations and relational constraints.*
 *   **Security & Middleware:** `bcryptjs` 3.0.3, `jsonwebtoken` 9.0.3, `helmet` 8.3.0, `cors` 2.8.6, `express-rate-limit` 8.7.0. *All actively wired up in `server.ts`.*
 *   **AI SDKs:** `@google/genai` 2.4.0. *Installed and referenced for transcript generation, but currently falls back to simulated transcripts if `GEMINI_API_KEY` is not present in the environment.*
 
 ## 3. Architecture, in plain terms
 
 *   **Process Model:** Single process architecture. The frontend is built by Vite, and the backend is bundled by ESBuild. Both run concurrently during development via `tsx server.ts` or as a unified app via `node dist/server.cjs` in production.
-*   **Data Persistence:** The entire database is a single, in-memory JSON object that is synchronously flushed to disk (`data/db.json`) via `saveDatabase()` on *every* write operation. **CRITICAL:** There is no file-level write locking. Concurrency is handled naively via an optimistic `version` check on individual Lead updates (`updates.version !== oldLead.version`). Any new concurrent-write fixes must account for the synchronous nature of `saveDatabase()`, rather than just adding a new database field.
+*   **Data Persistence:** PostgreSQL handles persistence, enabling robust ACID transactions and multi-tenant isolation. All local JSON-based state logic has been deprecated.
 *   **Deployment Target:** Assumes a standard Node.js environment (e.g., Cloud Run, Railway, or VPS). The Express app is configured to trust proxies (`app.set('trust proxy', 1)`), indicating it's expected to sit behind an Nginx/Load Balancer reverse proxy.
 
 ## 4. Data model map

@@ -53,22 +53,38 @@ async function seed() {
     name: 'Rahul Sharma',
     email: 'rahul@telecrm.in',
     passwordHash,
-    role: 'Admin',
-    tenantId: 'tenant-test',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    role: 'owner',
+    tenantId: 'tenant-test'
   }).onConflictDoNothing();
 
-  // Insert Rep
+  // Insert Team Lead
+  await db.insert(users).values({
+    id: 'usr-2',
+    name: 'Priya Iyer',
+    email: 'priya@telecrm.in',
+    passwordHash,
+    role: 'tl',
+    tenantId: 'tenant-test'
+  }).onConflictDoNothing();
+
+  // Insert Rep 1
   await db.insert(users).values({
     id: 'usr-3',
     name: 'Amit Verma',
     email: 'amit@telecrm.in',
     passwordHash,
-    role: 'Rep',
-    tenantId: 'tenant-test',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    role: 'telecaller',
+    tenantId: 'tenant-test'
+  }).onConflictDoNothing();
+
+  // Insert Rep 2
+  await db.insert(users).values({
+    id: 'usr-4',
+    name: 'Sneha Kulkarni',
+    email: 'sneha@telecrm.in',
+    passwordHash,
+    role: 'telecaller',
+    tenantId: 'tenant-test'
   }).onConflictDoNothing();
 
   console.log('Test users and permissions seeded.');

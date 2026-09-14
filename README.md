@@ -33,14 +33,15 @@ A telecalling- and WhatsApp-first sales CRM prototype built to unify lead manage
 *   **Frontend:** React 19.0.1, Vite 6.2.3, ESBuild
 *   **Styling:** Tailwind CSS 4.1.14
 *   **Backend:** Node.js, Express 4.21.2
-*   **Data Layer:** Local file-backed JSON (`data/db.json`)
+*   **Data Layer:** PostgreSQL (via Drizzle ORM)
 
 For an in-depth architectural deep-dive, see the [BRAIN.md](BRAIN.md) document.
 
 ## Prerequisites
 
 *   **Node.js:** v18+ (required for native `fetch` support and Vite compatibility)
-*   **Package Manager:** Bun is the expected package manager (a `bun.lock` file is included in this repository), though npm/yarn can also be used.
+*   **Database:** PostgreSQL 18+
+*   **Package Manager:** npm
 
 ## Setup and Installation
 
@@ -52,7 +53,7 @@ For an in-depth architectural deep-dive, see the [BRAIN.md](BRAIN.md) document.
 
 2. **Install dependencies:**
    ```bash
-   bun install
+   npm install
    ```
 
 3. **Configure Environment Variables:**
@@ -65,10 +66,11 @@ For an in-depth architectural deep-dive, see the [BRAIN.md](BRAIN.md) document.
    *   `APP_URL`: The URL where this applet is hosted (used for self-referential links).
    *   `JWT_SECRET`: Secret key for signing session JWT tokens.
    *   `JWT_EXPIRY`: Token lifespan (e.g., `24h`).
+   *   `DATABASE_URL`: Connection string for PostgreSQL.
 
 4. **Start the development server:**
    ```bash
-   bun run dev
+   npm run dev
    ```
    This command starts the full stack (backend API and Vite frontend server concurrently) via `tsx`.
 
@@ -92,24 +94,19 @@ The following scripts are defined in `package.json`:
 *   `src/components/` - React frontend components (grouped by feature/domain)
 *   `src/context/` - Global React state management (e.g., ThemeContext)
 *   `src/lib/` - Shared frontend utilities
-*   `server/` - Node.js Express backend logic (`auth.ts`, `db.ts`, `compliance.ts`)
+*   `server/` - Node.js Express backend logic (`auth.ts`, `db/`, `compliance.ts`)
 *   `security-tests/` - Automated security and compliance verification scripts
 *   `tests/` - Application logic unit and integration tests
-*   `data/` - Contains the `db.json` file used for application state persistence (Note: this directory is git-ignored as it contains runtime data).
 
 ## Seed Data and Production Safety
 
-*   **Local State Only**: Runtime database files (`data/db.json`), backups, exports, and generated logs are local to your environment and must **never** be committed to Git.
 *   **Production Safety**: When `NODE_ENV=production`, the application boots in a secured, fail-closed state. No default users, demo leads, or test configurations are inserted into the database.
 *   **Bootstrap Admin**: To provision the first platform administrator in a production environment, run `npm run bootstrap-admin <email> <password> [name]`. Predictable passwords like `password123` are strictly forbidden.
-*   **Development Seeding**: Running the app locally (`npm run dev`) automatically injects development dummy data into `data/db.json` for rapid testing and UI mockups.
+*   **Development Seeding**: Seed scripts via `drizzle-kit` can be used to populate dummy data for testing.
 
 ## Current Status & Limitations
 
-This repository is a prototype generated via Google AI Studio. While the foundational features work, several limitations exist:
-*   Data persistence is handled via a naive, synchronous local JSON file, meaning it lacks genuine concurrency controls.
-*   Authentication, authorization, and compliance-related guardrails may require further hardening for a production environment. 
-
+This repository is a prototype generated via Google AI Studio. 
 Please refer to [BRAIN.md](BRAIN.md) for an honest, up-to-date assessment of the codebase's current state and implementation gaps.
 
 ## Contributing

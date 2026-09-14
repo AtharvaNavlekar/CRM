@@ -1371,7 +1371,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
 
   // Database Reset (Owner, CTO, IT only)
   app.post('/api/reset-data', async (req, res) => {
-    if (req.user!.role !== 'owner' && req.user!.role !== 'admin') {
+    if ((req.user!.role as string).toLowerCase() !== 'owner' && (req.user!.role as string).toLowerCase() !== 'admin') {
       return res.status(403).json({ error: 'Forbidden' });
     }
     return res.status(501).json({ error: 'Not Implemented: Destructive database operations are disabled in the application runtime.' });
@@ -1390,28 +1390,28 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
   });
 
   app.put('/api/settings/fields', async (req, res) => {
-    if (req.user!.role.toLowerCase() !== 'owner' && req.user!.role.toLowerCase() !== 'admin') {
+    if ((req.user!.role as string).toLowerCase() !== 'owner' && (req.user!.role as string).toLowerCase() !== 'admin') {
       return res.status(403).json({ error: 'Forbidden' });
     }
     res.status(200).json({ success: true, message: 'Not implemented in v2' });
   });
 
   app.put('/api/settings/roles', async (req, res) => {
-    if (req.user!.role.toLowerCase() !== 'owner' && req.user!.role.toLowerCase() !== 'admin') {
+    if ((req.user!.role as string).toLowerCase() !== 'owner' && (req.user!.role as string).toLowerCase() !== 'admin') {
       return res.status(403).json({ error: 'Forbidden' });
     }
     res.status(200).json({ success: true, message: 'Not implemented in v2' });
   });
 
   app.put('/api/settings/pipeline', async (req, res) => {
-    if (req.user!.role.toLowerCase() !== 'owner' && req.user!.role.toLowerCase() !== 'admin') {
+    if ((req.user!.role as string).toLowerCase() !== 'owner' && (req.user!.role as string).toLowerCase() !== 'admin') {
       return res.status(403).json({ error: 'Forbidden' });
     }
     res.status(200).json({ success: true, message: 'Not implemented in v2' });
   });
 
   app.put('/api/settings/auto-assignment', async (req, res) => {
-    if (req.user!.role !== 'owner' && req.user!.role !== 'admin') {
+    if ((req.user!.role as string).toLowerCase() !== 'owner' && (req.user!.role as string).toLowerCase() !== 'admin') {
       return res.status(403).json({ error: 'Forbidden' });
     }
     res.status(200).json({ success: true, message: 'Not implemented in v2' });
