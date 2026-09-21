@@ -89,7 +89,12 @@ export async function authorize(
   else if (normalizedRole === ('Rep' as any)) normalizedRole = 'telecaller';
 
   const perm = await getRolePermission(normalizedRole);
-  if (!perm || !perm.actions.includes(action)) return false;
+  const actionsList: string[] = perm ? ((perm.actions as string[]) || (perm as any).permissions || []) : [];
+  if (actionsList.includes('all')) {
+    // Wildcard permission granted
+  } else if (!actionsList.includes(action)) {
+    return false;
+  }
 
   // 1. PLATFORM Scope: Platform staff can administer the platform.
   // Note: Even platform staff do not have ambient cross-tenant data access;
@@ -187,6 +192,16 @@ export const authenticateToken: express.RequestHandler = async (req, res, next) 
       });
     }
 
+    if (decoded.sessionId) {
+      const sessionRecords = await db.select().from(sessions).where(eq(sessions.id, decoded.sessionId)).limit(1);
+      if (sessionRecords.length > 0 && sessionRecords[0].revokedAt) {
+        return res.status(401).json({
+          error: 'Session token has been revoked.',
+          code: 'TOKEN_REVOKED'
+        });
+      }
+    }
+
     const usersData = await db.select().from(users).where(eq(users.id, decoded.id)).limit(1);
     const user = usersData[0] as unknown as User;
 
@@ -197,35 +212,22 @@ export const authenticateToken: express.RequestHandler = async (req, res, next) 
       });
     }
 
-    if (decoded.sessionId) {
-      const sessionData = await db.select().from(sessions).where(eq(sessions.id, decoded.sessionId)).limit(1);
-      console.log("Token validation - sessionId:", decoded.sessionId, "sessionData:", sessionData);
-      if (!sessionData.length || sessionData[0].revokedAt) {
-        return res.status(401).json({
-          error: 'Session has been revoked.',
-          code: 'TOKEN_REVOKED'
-        });
-      }
-    } else {
-      console.log("Token validation - NO sessionId in decoded:", decoded);
-    }
-
     req.user = {
       ...user,
       token
     };
 
-    req.securityContext = req.securityContext || ({} as any);
-    req.securityContext!.sessionId = decoded.sessionId;
-    req.securityContext!.actorUserId = user.id;
-    req.securityContext!.actorRole = user.role;
-    req.securityContext!.actorTenantId = user.tenantId;
-    req.securityContext!.actorTeamId = user.teamId;
-    req.securityContext!.actorManagesTeamIds = user.managesTeamIds;
-    req.securityContext!.isPlatformStaff = Boolean(
-      user.isPlatformStaff ||
-      ['platform_admin', 'platform_support', 'platform_security'].includes(user.role)
-    );
+    if (req.securityContext) {
+      req.securityContext.actorUserId = user.id;
+      req.securityContext.actorRole = user.role;
+      req.securityContext.actorTenantId = user.tenantId;
+      req.securityContext.actorTeamId = user.teamId;
+      req.securityContext.actorManagesTeamIds = user.managesTeamIds;
+      req.securityContext.isPlatformStaff = Boolean(
+        user.isPlatformStaff ||
+        ['platform_admin', 'platform_support', 'platform_security'].includes(user.role)
+      );
+    }
 
     next();
   } catch (err: any) {

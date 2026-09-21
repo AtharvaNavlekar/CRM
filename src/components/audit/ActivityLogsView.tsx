@@ -76,17 +76,17 @@ export const ActivityLogsView: React.FC = () => {
       if (searchQuery.trim()) {
         const query = searchQuery.toLowerCase();
         const matchesQuery =
-          log.eventTypetoLowerCase().includes(query) ||
-          log.reason.toLowerCase().includes(query) ||
-          log.actorUserId.toLowerCase().includes(query) ||
-          log.actorRole.toLowerCase().includes(query) ||
-          log.ip.toLowerCase().includes(query);
+          (log.eventType || log.action || '').toLowerCase().includes(query) ||
+          (log.reason || '').toLowerCase().includes(query) ||
+          (log.actorUserId || '').toLowerCase().includes(query) ||
+          (log.actorRole || '').toLowerCase().includes(query) ||
+          (log.ip || '').toLowerCase().includes(query);
         if (!matchesQuery) return false;
       }
 
       // Category filter
       if (categoryFilter !== 'all') {
-        const action = log.eventTypetoUpperCase();
+        const action = (log.eventType || log.action || '').toUpperCase();
         if (categoryFilter === 'security') {
           if (!action.includes('DENIED') && !action.includes('SECURITY') && !action.includes('POLICY')) return false;
         } else if (categoryFilter === 'exports') {
@@ -128,9 +128,9 @@ export const ActivityLogsView: React.FC = () => {
   // Summary Metrics
   const metrics = useMemo(() => {
     const total = logs.length;
-    const denied = logs.filter((l) => l.action.includes('DENIED')).length;
-    const approvalGated = logs.filter((l) => l.requiredApproval || l.action.includes('EXPORT')).length;
-    const actors = new Set(logs.map((l) => l.userId)).size;
+    const denied = logs.filter((l) => (l.action || l.eventType || '').includes('DENIED')).length;
+    const approvalGated = logs.filter((l) => l.requiredApproval || (l.action || l.eventType || '').includes('EXPORT')).length;
+    const actors = new Set(logs.map((l) => l.actorUserId || (l as any).userId || '')).size;
     return { total, denied, approvalGated, actors };
   }, [logs]);
 
@@ -181,7 +181,8 @@ export const ActivityLogsView: React.FC = () => {
     setExpandedLogId((prev) => (prev === id ? null : id));
   };
 
-  const getActionBadge = (action: string, isApprovalGated?: boolean) => {
+  const getActionBadge = (actionName?: string | null, isApprovalGated?: boolean) => {
+    const action = (actionName || '').toUpperCase();
     if (action.includes('DENIED')) {
       return (
         <span className="inline-flex items-center space-x-1 px-2.5 py-1 rounded-full bg-red-100 dark:bg-red-950/80 text-red-800 dark:text-red-200 text-[11px] font-semibold">

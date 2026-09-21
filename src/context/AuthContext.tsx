@@ -194,7 +194,9 @@ export const usePolicy = () => {
     };
 
     const mappedAction = actionMap[action] || action;
-    return permissions.actions.includes(mappedAction as any);
+    const actionsList: string[] = (permissions.actions as string[]) || (permissions as any).permissions || [];
+    if (actionsList.includes('all')) return true;
+    return actionsList.includes(mappedAction) || actionsList.includes(action as any);
   }, [securityContext, permissions]);
 
   return { can, securityContext };

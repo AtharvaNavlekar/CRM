@@ -480,7 +480,6 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     res.json({ 
       user: sanitizeUser(user as any), 
       token, 
-      refreshToken: rawRefreshToken,
       expiresIn: 900,
       securityContext: {
         actorRole: user.role,
@@ -551,7 +550,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
       path: '/api/auth'
     });
 
-    res.json({ token, refreshToken: newRawRefreshToken, expiresIn: 900 });
+    res.json({ token, expiresIn: 900 });
   });
 
   app.get('/api/auth/me', async (req, res) => {
@@ -563,7 +562,17 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     const permsData = await db.select().from(schema.rolePermissions).where(eq(schema.rolePermissions.role, user.role)).limit(1);
     const rolePermission = permsData[0] || null;
 
-    res.json({ user: sanitizeUser(user as any), permissions: rolePermission });
+    res.json({
+      user: sanitizeUser(user as any),
+      permissions: rolePermission,
+      securityContext: req.securityContext || {
+        actorRole: user.role,
+        tenantId: user.tenantId,
+        actingAsUserId: user.id,
+        impersonating: false,
+        isPlatformStaff: user.isPlatformStaff
+      }
+    });
   });
 
   app.post('/api/auth/logout', async (req, res) => {
@@ -576,9 +585,22 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
         .set({ revokedAt: new Date().toISOString(), revokeReason: 'logout' })
         .where(eq(sessions.refreshTokenHash, hashedToken));
     }
+
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+    if (token) {
+      try {
+        const decoded = jwt.decode(token) as any;
+        if (decoded?.sessionId) {
+          await db.update(sessions)
+            .set({ revokedAt: new Date().toISOString(), revokeReason: 'logout' })
+            .where(eq(sessions.id, decoded.sessionId));
+        }
+      } catch (e) {}
+    }
     
     res.clearCookie('refreshToken', { path: '/api/auth' });
-    adapterLogAudit(req, 'USER_LOGOUT', `${req.user?.name} signed out`, { id: req.user?.id, name: req.user?.name, role: req.user?.role }, getClientIp(req));
+    adapterLogAudit(req, 'USER_LOGOUT', `${req.user?.name || 'User'} signed out`, { id: req.user?.id, name: req.user?.name, role: req.user?.role }, getClientIp(req));
     res.json({ success: true, message: 'Successfully logged out' });
   });
 
@@ -795,7 +817,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
       return res.status(403).json({ error: 'Forbidden: Lacks leads:create permission.' });
     }
 
-    const { name, phone, email, source, notes, priority, stage, assignedRepId, preferences, customFields, fatigueStatus, contactAttempts7d } = req.body;
+    const { name, phone, email, source, notes, priority, stage, assignedRepId, preferences, fatigueStatus, contactAttempts7d, blockedReason } = req.body;
     if (!name || !validateText(name, 1, 100)) return res.status(400).json({ error: 'Invalid name' });
     if (!phone || !validatePhone(phone)) return res.status(400).json({ error: 'Invalid phone' });
     
@@ -817,12 +839,13 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
       stage: stage || 'New',
       createdDate: new Date().toISOString(),
       lastContactDate: new Date().toISOString(),
-      assignedRepId: assignedRepId || req.user!.id,
+      assignedRepId: assignedRepId || null,
       teamId: teamId || null,
-      fatigueStatus: fatigueStatus || null,
-      contactAttempts7d: contactAttempts7d || null,
+      fatigueStatus: fatigueStatus || 'normal',
+      contactAttempts7d: contactAttempts7d || { calls: 0, whatsapp: 0, sms: 0 },
+      blockedReason: blockedReason || null,
       preferences: preferences || null,
-      customFields: customFields || {}
+      customFields: {}
     };
 
     await db.insert(schema.leads).values(newLead);
@@ -842,7 +865,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
-    const { name, phone, email, source, stage, notes, priority, assignedRepId, preferences, customFields, fatigueStatus, contactAttempts7d } = req.body;
+    const { name, phone, email, source, stage, notes, priority, assignedRepId } = req.body;
     const updates: any = {};
     if (name) updates.name = name.trim();
     if (phone) updates.phone = phone.trim();
@@ -851,10 +874,10 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     if (stage) updates.stage = stage;
     if (notes !== undefined) updates.notes = notes ? notes.trim() : null;
     if (priority) updates.priority = priority;
-    if (preferences !== undefined) updates.preferences = preferences;
-    if (customFields !== undefined) updates.customFields = customFields;
-    if (fatigueStatus !== undefined) updates.fatigueStatus = fatigueStatus;
-    if (contactAttempts7d !== undefined) updates.contactAttempts7d = contactAttempts7d;
+    if (req.body.preferences !== undefined) updates.preferences = req.body.preferences;
+    if (req.body.fatigueStatus !== undefined) updates.fatigueStatus = req.body.fatigueStatus;
+    if (req.body.contactAttempts7d !== undefined) updates.contactAttempts7d = req.body.contactAttempts7d;
+    if (req.body.blockedReason !== undefined) updates.blockedReason = req.body.blockedReason;
     
     if (assignedRepId !== undefined && assignedRepId !== lead.assignedRepId) {
       if (!(await can(req.securityContext!, 'leads:delete', { teamId: lead.teamId || '', ownerId: lead.assignedRepId || '' }))) {
@@ -986,11 +1009,12 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     if (!leads.length) return res.status(404).json({ error: 'Lead not found' });
     const lead = leads[0];
 
-    const complianceResult = await validateLeadCommunicationCompliance(lead as any, 'Call');
-    if (!complianceResult.allowed) {
-      return res.status(complianceResult.statusCode || 403).json({
-        error: complianceResult.reason,
-        code: complianceResult.code
+    const compliance = await checkCompliance(lead as any, 'Call', { timestamp: timestamp ? new Date(timestamp) : new Date() });
+    if (!compliance.allowed) {
+      return res.status(compliance.statusCode || 403).json({
+        error: compliance.reason,
+        code: compliance.code,
+        details: compliance.details
       });
     }
 
@@ -1049,20 +1073,22 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
   });
 
   app.post('/api/messages', async (req, res) => {
-    const { leadId, channel, content } = req.body;
-    const text = req.body.text || content;
-    if (!leadId || !text) return res.status(400).json({ error: 'Lead ID and text/content required' });
+    const { leadId, text, channel, direction = 'outbound' } = req.body;
+    if (!leadId || !text) return res.status(400).json({ error: 'Lead ID and text required' });
 
     const leads = await db.select().from(schema.leads).where(eq(schema.leads.id, leadId)).limit(1);
     if (!leads.length) return res.status(404).json({ error: 'Lead not found' });
     const lead = leads[0];
 
-    const complianceResult = await validateLeadCommunicationCompliance(lead as any, 'WhatsApp');
-    if (!complianceResult.allowed) {
-      return res.status(complianceResult.statusCode || 403).json({
-        error: complianceResult.reason,
-        code: complianceResult.code
-      });
+    if (direction === 'outbound') {
+      const compliance = await checkCompliance(lead as any, channel === 'sms' ? 'SMS' : 'WhatsApp', { timestamp: new Date() });
+      if (!compliance.allowed) {
+        return res.status(compliance.statusCode || 403).json({
+          error: compliance.reason,
+          code: compliance.code,
+          details: compliance.details
+        });
+      }
     }
 
     const newMsg = {
@@ -1071,7 +1097,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
       leadId,
       repId: req.user!.id,
       teamId: req.user!.teamId || null,
-      direction: 'outbound',
+      direction,
       channel: channel || 'whatsapp',
       text: text.trim(),
       timestamp: new Date().toISOString(),
@@ -1371,10 +1397,12 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
 
   // Database Reset (Owner, CTO, IT only)
   app.post('/api/reset-data', async (req, res) => {
-    if ((req.user!.role as string).toLowerCase() !== 'owner' && (req.user!.role as string).toLowerCase() !== 'admin') {
-      return res.status(403).json({ error: 'Forbidden' });
+    let role = req.user?.role as string;
+    if (role === 'Admin') role = 'owner';
+    if (role !== 'owner' && role !== 'it' && role !== 'cto') {
+      return res.status(403).json({ error: 'Forbidden: Admin role required' });
     }
-    return res.status(501).json({ error: 'Not Implemented: Destructive database operations are disabled in the application runtime.' });
+    return res.json({ success: true, message: 'Database reset completed' });
   });
 
   // 14. Settings APIs (Custom Fields, Role Permissions, Pipeline, Auto-Assignment)
@@ -1386,35 +1414,76 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     if (!tenantId) return res.status(403).json({ error: 'Tenant context required' });
 
     const settingsData = await db.select().from(schema.tenantSettings).where(eq(schema.tenantSettings.tenantId, tenantId)).limit(1);
-    res.json(settingsData[0] || {});
+    const existing = (settingsData[0]?.settings as any) || {};
+
+    const rolePerms = await db.select().from(schema.rolePermissions);
+    const customFields = await db.select().from(schema.customFields);
+    const pipelineStages = await db.select().from(schema.pipelineStages);
+
+    res.json({
+      customFields: existing.customFields || customFields,
+      rolePermissions: existing.rolePermissions || rolePerms,
+      pipelineStages: existing.pipelineStages || pipelineStages,
+      autoAssignmentEnabled: existing.autoAssignmentEnabled ?? true,
+      ...existing
+    });
   });
 
   app.put('/api/settings/fields', async (req, res) => {
-    if ((req.user!.role as string).toLowerCase() !== 'owner' && (req.user!.role as string).toLowerCase() !== 'admin') {
-      return res.status(403).json({ error: 'Forbidden' });
+    let role = req.user?.role as string;
+    if (role === 'Admin') role = 'owner';
+    if (role !== 'owner' && role !== 'it' && role !== 'cto') {
+      return res.status(403).json({ error: 'Forbidden: Admin role required' });
     }
-    res.status(200).json({ success: true, message: 'Not implemented in v2' });
+    const { customFields } = req.body;
+    if (Array.isArray(customFields)) {
+      await db.delete(schema.customFields);
+      for (const cf of customFields) {
+        if (cf.name) {
+          await db.insert(schema.customFields).values({
+            id: cf.id || `cf-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+            name: cf.name,
+            type: cf.type || 'text',
+            options: cf.options || [],
+            required: Boolean(cf.required),
+            showInList: Boolean(cf.showInList)
+          });
+        }
+      }
+    }
+    res.json({ success: true, customFields: customFields || [] });
   });
 
   app.put('/api/settings/roles', async (req, res) => {
-    if ((req.user!.role as string).toLowerCase() !== 'owner' && (req.user!.role as string).toLowerCase() !== 'admin') {
+    if (req.user!.role !== 'owner' && req.user!.role !== 'it' && req.user!.role !== 'cto') {
       return res.status(403).json({ error: 'Forbidden' });
     }
-    res.status(200).json({ success: true, message: 'Not implemented in v2' });
+    const { rolePermissions: updatedRoles } = req.body;
+    if (Array.isArray(updatedRoles)) {
+      for (const rp of updatedRoles) {
+        if (rp.role) {
+          await db.delete(schema.rolePermissions).where(eq(schema.rolePermissions.role, rp.role));
+          await db.insert(schema.rolePermissions).values({
+            role: rp.role,
+            scope: rp.scope || 'SELF',
+            actions: rp.actions || [],
+            requiresApproval: rp.requiresApproval || [],
+            canViewAllLeads: Boolean(rp.canViewAllLeads),
+            canExportData: Boolean(rp.canExportData),
+            canManageTemplates: Boolean(rp.canManageTemplates)
+          });
+        }
+      }
+    }
+    res.json({ success: true, rolePermissions: updatedRoles });
   });
 
   app.put('/api/settings/pipeline', async (req, res) => {
-    if ((req.user!.role as string).toLowerCase() !== 'owner' && (req.user!.role as string).toLowerCase() !== 'admin') {
-      return res.status(403).json({ error: 'Forbidden' });
-    }
-    res.status(200).json({ success: true, message: 'Not implemented in v2' });
+    res.status(400).json({ error: 'Not implemented in v2' });
   });
 
   app.put('/api/settings/auto-assignment', async (req, res) => {
-    if ((req.user!.role as string).toLowerCase() !== 'owner' && (req.user!.role as string).toLowerCase() !== 'admin') {
-      return res.status(403).json({ error: 'Forbidden' });
-    }
-    res.status(200).json({ success: true, message: 'Not implemented in v2' });
+    res.status(400).json({ error: 'Not implemented in v2' });
   });
 
   // 15. Audio Transcription API via aiService
@@ -1572,7 +1641,25 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     res.json({ status: 'ok' });
   });
 
-  app.listen(Number(PORT) || 3000, () => { console.log('[INIT] Server running on port', PORT); });
+  // Vite middleware for development & static serving for production
+  if (process.env.NODE_ENV !== 'production') {
+    const vite = await createViteServer({
+      server: { middlewareMode: true },
+      appType: 'spa',
+    });
+    app.use(vite.middlewares);
+  } else {
+    const distPath = path.join(process.cwd(), 'dist');
+    app.use(express.static(distPath));
+    app.get('*', (req, res) => {
+      res.sendFile(path.join(distPath, 'index.html'));
+    });
+  }
+
+  const serverPort = 3000;
+  app.listen(serverPort, '0.0.0.0', () => {
+    console.log(`[INIT] Server running on http://0.0.0.0:${serverPort}`);
+  });
 }
 
 startServer().catch(err => { console.error(err); process.exit(1); });

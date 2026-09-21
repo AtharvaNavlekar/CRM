@@ -192,8 +192,8 @@ export const WhatsAppView: React.FC<WhatsAppViewProps> = ({
 
   const filteredLeads = leads.filter(
     (l) =>
-      l.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      l.phone.includes(searchTerm) ||
+      (l.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (l.phone || '').includes(searchTerm) ||
       (l.industry && l.industry.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 

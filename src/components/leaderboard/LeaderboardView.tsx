@@ -47,8 +47,8 @@ export const LeaderboardView: React.FC = () => {
   // Filtered & Scaled Members
   const displayedMembers = useMemo(() => {
     return MOCK_LEADERBOARD.filter((m) =>
-      m.name.toLowerCase().includes(teammateSearch.toLowerCase()) ||
-      m.role.toLowerCase().includes(teammateSearch.toLowerCase())
+      (m.name || '').toLowerCase().includes(teammateSearch.toLowerCase()) ||
+      (m.role || '').toLowerCase().includes(teammateSearch.toLowerCase())
     ).map((m, idx) => {
       const calls = Math.round(m.calls * periodMultiplier);
       const mins = Math.round(m.durationMinutes * periodMultiplier);

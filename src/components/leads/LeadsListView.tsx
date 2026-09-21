@@ -116,10 +116,10 @@ export const LeadsListView: React.FC<LeadsListViewProps> = ({
       // Search
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
-        if (searchField === 'name' && !lead.name.toLowerCase().includes(q)) return false;
-        if (searchField === 'phone' && !lead.phone.includes(q)) return false;
-        if (searchField === 'email' && !lead.email.toLowerCase().includes(q)) return false;
-        if (searchField === 'company' && !lead.companyOrProject.toLowerCase().includes(q)) return false;
+        if (searchField === 'name' && !(lead.name || '').toLowerCase().includes(q)) return false;
+        if (searchField === 'phone' && !(lead.phone || '').includes(q)) return false;
+        if (searchField === 'email' && !(lead.email || '').toLowerCase().includes(q)) return false;
+        if (searchField === 'company' && !(lead.companyOrProject || '').toLowerCase().includes(q)) return false;
       }
 
       // Stage Filter (matches lead.stage or lead.status)

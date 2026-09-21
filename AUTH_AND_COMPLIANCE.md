@@ -59,7 +59,7 @@ The middleware intercepts every inbound request:
    - Unauthorized callers receive `HTTP 403 Forbidden (ROLE_NOT_AUTHORIZED)`.
 2. **Permission Guard (`requirePermission(permissionKey)`):**
 
-   - Dynamically resolves permissions from the database.
+   - Dynamically resolves permissions from `db.rolePermissions` stored in `db.json`.
    - Admin roles automatically bypass checks (`Admin` superuser).
    - Roles without explicit capability grants (e.g., `canExportData`, `canManageIntegrations`, `canDeleteRecords`) are denied by default with `HTTP 403 Forbidden`.
 3. **Privilege Escalation Protection (`POST /api/auth/switch-user`):**

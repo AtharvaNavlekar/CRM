@@ -37,6 +37,8 @@ export function telemetryMiddleware(req: express.Request, res: express.Response,
 
       if (status >= 500) {
         req.log.error('Request failed with server error', null, logContext);
+      } else if (status === 401 && (route.includes('auth/me') || route.includes('auth/refresh') || route.includes('auth/login'))) {
+        req.log.info('Unauthenticated auth check completed', logContext);
       } else if (status >= 400) {
         req.log.warn('Request failed with client error', logContext);
       } else {

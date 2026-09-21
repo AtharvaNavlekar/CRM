@@ -24,28 +24,28 @@ export const TEST_USERS = {
     name: 'Rahul Sharma',
     email: 'rahul@telecrm.in',
     password: 'password123',
-    role: 'owner'
+    role: 'Admin'
   },
   teamLead: {
     id: 'usr-2',
     name: 'Priya Iyer',
     email: 'priya@telecrm.in',
     password: 'password123',
-    role: 'tl'
+    role: 'Team Lead'
   },
   rep1: {
     id: 'usr-3',
     name: 'Amit Verma',
     email: 'amit@telecrm.in',
     password: 'password123',
-    role: 'telecaller'
+    role: 'Rep'
   },
   rep2: {
     id: 'usr-4',
     name: 'Sneha Kulkarni',
     email: 'sneha@telecrm.in',
     password: 'password123',
-    role: 'telecaller'
+    role: 'Rep'
   }
 };
 

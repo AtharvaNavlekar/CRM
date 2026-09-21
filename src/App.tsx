@@ -131,15 +131,15 @@ const AppContent: React.FC = () => {
       : ml.source === 'IndiaMART'
       ? 'IndiaMART'
       : 'Website') as any,
-    stage: ml.status.includes('Won')
+    stage: (ml.status || '').includes('Won')
       ? 'Won'
-      : ml.status.includes('Lost')
+      : (ml.status || '').includes('Lost')
       ? 'Lost'
-      : ml.status.includes('Quotation')
+      : (ml.status || '').includes('Quotation')
       ? 'Negotiation'
-      : ml.status.includes('Demo')
+      : (ml.status || '').includes('Demo')
       ? 'Follow-up'
-      : ml.status.includes('Relevant')
+      : (ml.status || '').includes('Relevant')
       ? 'Contacted'
       : 'New',
     assignedRepId: users.find((u) => u.name === ml.assignee)?.id || users[0]?.id || 'u1',
@@ -329,7 +329,7 @@ const AppContent: React.FC = () => {
 
           {currentView === 'settings' && (
             <div className="p-4 flex-1 overflow-y-auto">
-              <SettingsView />
+              <SettingsView onDataReset={handleRefreshAll} />
             </div>
           )}
 

@@ -52,7 +52,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   const filteredActivityRows = useMemo(() => {
     return MOCK_ACTIVITY_PERFORMANCE.filter((r) =>
-      r.assignee.toLowerCase().includes(activitySearch.toLowerCase())
+      (r.assignee || '').toLowerCase().includes(activitySearch.toLowerCase())
     ).map((r) => {
       const calls = Math.round(r.calls * activityMultiplier);
       const mins = Math.round(r.durationMinutes * activityMultiplier);
@@ -93,7 +93,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
   const filteredFollowUpRows = useMemo(() => {
     return MOCK_FOLLOW_UPS.filter((r) =>
-      r.assignee.toLowerCase().includes(followUpSearch.toLowerCase())
+      (r.assignee || '').toLowerCase().includes(followUpSearch.toLowerCase())
     ).map((r) => {
       const upcoming = Math.round(r.upcoming * followUpMultiplier);
       const late = Math.round(r.late * followUpMultiplier);
@@ -128,8 +128,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const visibleSavedFilters = useMemo(() => {
     if (!filterSearch.trim()) return savedFilters;
     return savedFilters.filter((f) =>
-      f.name.toLowerCase().includes(filterSearch.toLowerCase()) ||
-      f.description.toLowerCase().includes(filterSearch.toLowerCase())
+      (f.name || '').toLowerCase().includes(filterSearch.toLowerCase()) ||
+      (f.description || '').toLowerCase().includes(filterSearch.toLowerCase())
     );
   }, [savedFilters, filterSearch]);
 

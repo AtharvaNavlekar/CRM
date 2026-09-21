@@ -137,9 +137,50 @@ const LoginForm: React.FC<{ setView: (v: AuthView) => void }> = ({ setView }) =>
           </button>
         </div>
 
-        <div className="flex items-center space-x-4 py-2">
+        <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3 space-y-1.5">
+          <div className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider flex items-center justify-between">
+            <span>Quick Demo Accounts</span>
+            <span className="text-[10px] text-slate-400 font-normal">Pass: password123</span>
+          </div>
+          <div className="grid grid-cols-2 gap-1.5">
+            <button
+              type="button"
+              onClick={() => { setEmail('rahul@telecrm.in'); setPassword('password123'); }}
+              className="text-left px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-[#2E6E5C] text-xs transition-colors shadow-xs"
+            >
+              <div className="font-semibold text-slate-800 text-[11px]">Rahul Sharma</div>
+              <div className="text-[10px] text-[#2E6E5C] font-medium">Owner (All Scopes)</div>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setEmail('priya@telecrm.in'); setPassword('password123'); }}
+              className="text-left px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-[#2E6E5C] text-xs transition-colors shadow-xs"
+            >
+              <div className="font-semibold text-slate-800 text-[11px]">Priya Iyer</div>
+              <div className="text-[10px] text-blue-600 font-medium">Team Lead (Mumbai)</div>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setEmail('amit@telecrm.in'); setPassword('password123'); }}
+              className="text-left px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-[#2E6E5C] text-xs transition-colors shadow-xs"
+            >
+              <div className="font-semibold text-slate-800 text-[11px]">Amit Verma</div>
+              <div className="text-[10px] text-emerald-600 font-medium">Telecaller (Mumbai)</div>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setEmail('karan@telecrm.in'); setPassword('password123'); }}
+              className="text-left px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 hover:border-[#2E6E5C] text-xs transition-colors shadow-xs"
+            >
+              <div className="font-semibold text-slate-800 text-[11px]">Karan Patel</div>
+              <div className="text-[10px] text-cyan-600 font-medium">IT Admin</div>
+            </button>
+          </div>
+        </div>
+
+        <div className="flex items-center space-x-4 py-1">
           <div className="flex-1 h-px bg-slate-100"></div>
-          <span className="text-xs text-slate-400 font-medium uppercase">or</span>
+          <span className="text-xs text-slate-400 font-medium uppercase">or enter credentials</span>
           <div className="flex-1 h-px bg-slate-100"></div>
         </div>
 

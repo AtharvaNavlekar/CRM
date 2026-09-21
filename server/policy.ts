@@ -52,9 +52,13 @@ export async function can(
   else if (normalizedRole === 'Rep') normalizedRole = 'telecaller';
 
   const perm = await getRolePermission(normalizedRole);
-  const legacyAction = actionMap[action];
+  const legacyAction = actionMap[action] || action;
 
-  if (!perm || !perm.actions.includes(legacyAction)) {
+  const actionsList: string[] = perm ? ((perm.actions as string[]) || (perm as any).permissions || []) : [];
+
+  if (actionsList.includes('all')) {
+    // Role has wildcard / full permissions
+  } else if (!actionsList.includes(legacyAction) && !actionsList.includes(action)) {
     return false;
   }
 
