@@ -1,16 +1,16 @@
 import React from 'react';
-import { Star, Phone, MessageSquare, ChevronRight } from 'lucide-react';
-import { MockLead } from '../../data/mockSeedData';
+import { Star, Phone, MessageSquare } from 'lucide-react';
+import { Lead } from '../../types';
 import { AvatarBadge } from '../common/AvatarBadge';
 import { StatusPill } from '../common/StatusPill';
 
 interface LeadCardProps {
-  lead: MockLead;
+  lead: Lead;
   isSelected: boolean;
   onToggleSelect: (id: string) => void;
-  onInitiateCall?: (lead: MockLead) => void;
-  onOpenChat?: (lead: MockLead) => void;
-  onRatingChange?: (lead: MockLead, rating: number) => void;
+  onInitiateCall?: (lead: Lead) => void;
+  onOpenChat?: (lead: Lead) => void;
+  onRatingChange?: (lead: Lead, rating: number) => void;
 }
 
 /**
@@ -28,10 +28,15 @@ export const LeadCard: React.FC<LeadCardProps> = ({
   onOpenChat,
   onRatingChange
 }) => {
+  const val = Number(lead.value) || 0;
   const formattedValue =
-    lead.value >= 100000
-      ? `₹ ${(lead.value / 100000).toFixed(1)} L`
-      : `₹ ${lead.value.toLocaleString('en-IN')}`;
+    val >= 100000
+      ? `₹ ${(val / 100000).toFixed(1)} L`
+      : `₹ ${val.toLocaleString('en-IN')}`;
+
+  const assigneeName = lead.assignedRepName || (lead as any).assignee || 'Unassigned';
+  const currentRating = (lead.customFields?.rating as number) ?? (lead as any).rating ?? 0;
+  const companyOrProject = lead.industry || (lead as any).companyOrProject;
 
   return (
     <div
@@ -61,16 +66,16 @@ export const LeadCard: React.FC<LeadCardProps> = ({
           <p className="text-xs text-[#6F7976] dark:text-[#89938F] font-mono">
             {lead.phone}
           </p>
-          {lead.companyOrProject && (
+          {companyOrProject && (
             <p className="text-xs text-[#6F7976] dark:text-[#89938F] truncate mt-0.5">
-              {lead.companyOrProject}
+              {companyOrProject}
             </p>
           )}
         </div>
 
         {/* Status Pill */}
         <div className="shrink-0 ml-3">
-          <StatusPill status={lead.stage || lead.status} size="sm" />
+          <StatusPill status={lead.stage} size="sm" />
         </div>
       </button>
 
@@ -86,14 +91,14 @@ export const LeadCard: React.FC<LeadCardProps> = ({
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  onRatingChange?.(lead, lead.rating === star ? 0 : star);
+                  onRatingChange?.(lead, currentRating === star ? 0 : star);
                 }}
                 aria-label={`Set rating to ${star} stars`}
                 className="w-6 h-6 flex items-center justify-center rounded-full"
               >
                 <Star
                   className={`w-3.5 h-3.5 ${
-                    star <= lead.rating
+                    star <= currentRating
                       ? 'text-amber-500 fill-amber-500'
                       : 'text-[#BEC9C5] dark:text-[#6F7976]'
                   }`}
@@ -107,8 +112,8 @@ export const LeadCard: React.FC<LeadCardProps> = ({
 
           {/* Assignee */}
           <div className="flex items-center gap-1.5 truncate">
-            <AvatarBadge name={lead.assignee} size="sm" />
-            <span className="truncate text-xs font-medium">{lead.assignee}</span>
+            <AvatarBadge name={assigneeName} size="sm" />
+            <span className="truncate text-xs font-medium">{assigneeName}</span>
           </div>
         </div>
 
@@ -119,14 +124,14 @@ export const LeadCard: React.FC<LeadCardProps> = ({
       </div>
 
       {/* Compliance indicators (if any) */}
-      {(lead.fatigueStatus === 'capped' || lead.fatigueStatus === 'at_risk' || lead.preferences?.preferredChannel === 'WhatsApp' || lead.preferences?.isPaused30Days) && (
+      {(lead.fatigueStatus === 'capped' || lead.fatigueStatus === 'near_cap' || (lead.fatigueStatus as any) === 'at_risk' || lead.preferences?.preferredChannel === 'WhatsApp' || lead.preferences?.isPaused30Days) && (
         <div className="px-4 pb-2 flex flex-wrap gap-1.5">
           {lead.fatigueStatus === 'capped' && (
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#FFDAD6] text-[#410002]">
               🛑 Capped (3/3)
             </span>
           )}
-          {lead.fatigueStatus === 'at_risk' && (
+          {(lead.fatigueStatus === 'near_cap' || (lead.fatigueStatus as any) === 'at_risk') && (
             <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-900 dark:bg-amber-950/70 dark:text-amber-200">
               ⚠️ Near Cap (2/3)
             </span>

@@ -2,7 +2,7 @@ import React from 'react';
 import { Filter } from 'lucide-react';
 import { BottomSheet } from '../common/BottomSheet';
 import { MaterialDropdown } from '../common/MaterialDropdown';
-import { PIPELINE_STAGES, TEAM_MEMBERS } from '../../data/mockSeedData';
+import { PIPELINE_STAGES } from '../../constants/pipeline';
 
 interface MobileFilterSheetProps {
   isOpen: boolean;
@@ -15,6 +15,7 @@ interface MobileFilterSheetProps {
   dateFilter: string;
   // Available options
   availableSources: string[];
+  teamMembers?: { id: string; name: string; role?: string }[];
   // Setters
   onStageChange: (val: string) => void;
   onAssigneeChange: (val: string) => void;
@@ -41,6 +42,7 @@ export const MobileFilterSheet: React.FC<MobileFilterSheetProps> = ({
   complianceFilter,
   dateFilter,
   availableSources,
+  teamMembers = [],
   onStageChange,
   onAssigneeChange,
   onSourceChange,
@@ -90,7 +92,7 @@ export const MobileFilterSheet: React.FC<MobileFilterSheetProps> = ({
 
         {/* Assignee */}
         <div>
-          <label className="block text-xs font-medium dark:text-[#89938F] mb-2 uppercase tracking-wider">
+          <label className="block text-xs font-medium text-[#6F7976] dark:text-[#89938F] mb-2 uppercase tracking-wider">
             Assignee
           </label>
           <MaterialDropdown
@@ -100,14 +102,14 @@ export const MobileFilterSheet: React.FC<MobileFilterSheetProps> = ({
             variant="form"
             options={[
               { value: 'all', label: 'All Assignees' },
-              ...TEAM_MEMBERS.map((m) => ({ value: m.name, label: m.name })),
+              ...teamMembers.map((m) => ({ value: m.name, label: m.name })),
             ]}
           />
         </div>
 
         {/* Source */}
         <div>
-          <label className="block text-xs font-medium dark:text-[#89938F] mb-2 uppercase tracking-wider">
+          <label className="block text-xs font-medium text-[#6F7976] dark:text-[#89938F] mb-2 uppercase tracking-wider">
             Source
           </label>
           <MaterialDropdown
@@ -124,7 +126,7 @@ export const MobileFilterSheet: React.FC<MobileFilterSheetProps> = ({
 
         {/* Compliance */}
         <div>
-          <label className="block text-xs font-medium dark:text-[#89938F] mb-2 uppercase tracking-wider">
+          <label className="block text-xs font-medium text-[#6F7976] dark:text-[#89938F] mb-2 uppercase tracking-wider">
             Compliance
           </label>
           <MaterialDropdown
@@ -144,7 +146,7 @@ export const MobileFilterSheet: React.FC<MobileFilterSheetProps> = ({
 
         {/* Date Range */}
         <div>
-          <label className="block text-xs font-medium dark:text-[#89938F] mb-2 uppercase tracking-wider">
+          <label className="block text-xs font-medium text-[#6F7976] dark:text-[#89938F] mb-2 uppercase tracking-wider">
             Created
           </label>
           <MaterialDropdown

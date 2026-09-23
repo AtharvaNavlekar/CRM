@@ -42,7 +42,7 @@ import {
   DEFAULT_CHANNEL_ROUTING_RULES,
   DEFAULT_COMPLIANCE_WATCH,
   VERIFIED_CALL_STATS
-} from '../../data/mockSeedData';
+} from '../../constants/compliance';
 import { LeadPreferencePortalModal } from './LeadPreferencePortalModal';
 
 interface TrustComplianceViewProps {

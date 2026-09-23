@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Sidebar } from './components/layout/Sidebar';
 import { TopBar } from './components/layout/TopBar';
 import { BottomNavBar } from './components/layout/BottomNavBar';
@@ -19,11 +19,11 @@ import { SettingsView } from './components/settings/SettingsView';
 import { TrustComplianceView } from './components/compliance/TrustComplianceView';
 import { ActivityLogsView } from './components/audit/ActivityLogsView';
 import { LoginModal } from './components/auth/LoginModal';
-import { Plus, PhoneCall, Shield } from 'lucide-react';
-import { Lead, Call, LeadStage, CallOutcome } from './types';
+import { Plus } from 'lucide-react';
+import { Lead, Call, Message, LeadStage } from './types';
 import { useAuth, AuthProvider, AuthContext } from './context/AuthContext';
 import { ThemeProvider, ThemeContext } from './context/ThemeContext';
-import { MOCK_LEADS, MockLead } from './data/mockSeedData';
+import { api } from './services/api';
 import { useIsMobile } from './utils/useBreakpoint';
 import { useDevToolsDeterrence } from './utils/deterrence';
 import { useAutomationDetection } from './utils/automationDetection';
@@ -35,12 +35,8 @@ import { ImpersonationBanner } from './components/common/ImpersonationBanner';
 
 // ============================================================================
 // SECURITY & UX DETERRENCE FEATURE FLAGS
-// Easily disable either layer via these flags if accessibility/QA needs arise.
 // ============================================================================
-// Feature 1: Right-click & DevTools deterrence layer
 export const ENABLE_DEVTOOLS_DETERRENCE = true;
-
-// Feature 2: Client-side browser automation detection warning banner
 export const ENABLE_AUTOMATION_DETECTION = true;
 
 const AppContent: React.FC = () => {
@@ -50,14 +46,15 @@ const AppContent: React.FC = () => {
   const { isDevToolsOpen, dismissWarning: dismissDevToolsWarning } = useDevToolsDeterrence(ENABLE_DEVTOOLS_DETERRENCE);
   const { isAutomated: isAutomatedBrowser, detectionReasons, dismissWarning: dismissAutomationWarning } = useAutomationDetection(ENABLE_AUTOMATION_DETECTION);
 
-  // Navigation state: defaults to 'leads' or 'dashboard'
+  // Navigation state: defaults to 'leads'
   const [currentView, setCurrentView] = useState<string>('leads');
 
-  // Leads state initialized with realistic 124+ mock seed leads
-  const [leads, setLeads] = useState<MockLead[]>(MOCK_LEADS);
-
-  // Calls state for the call console
+  // Real CRM State from backend APIs
+  const [leads, setLeads] = useState<Lead[]>([]);
   const [calls, setCalls] = useState<Call[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [isLoadingData, setIsLoadingData] = useState<boolean>(true);
+  const [dataError, setDataError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Global Search state
@@ -72,99 +69,87 @@ const AppContent: React.FC = () => {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
 
+  // Real Data Fetcher
+  const loadCrmData = useCallback(async () => {
+    setIsLoadingData(true);
+    setDataError(null);
+    try {
+      const [fetchedLeads, fetchedCalls, fetchedMessages] = await Promise.all([
+        api.getLeads().catch(() => []),
+        api.getCalls().catch(() => []),
+        api.getMessages().catch(() => [])
+      ]);
+      setLeads(fetchedLeads);
+      setCalls(fetchedCalls);
+      setMessages(fetchedMessages || []);
+    } catch (err: any) {
+      console.error('Failed to load CRM data:', err);
+      setDataError(err?.message || 'Failed to fetch CRM records from database');
+    } finally {
+      setIsLoadingData(false);
+      setIsRefreshing(false);
+    }
+  }, []);
+
+  // Fetch when authenticated user is available
+  useEffect(() => {
+    if (currentUser) {
+      loadCrmData();
+    }
+  }, [currentUser, loadCrmData]);
+
   // Refresh handler
   const handleRefreshAll = () => {
     setIsRefreshing(true);
-    setTimeout(() => {
-      setIsRefreshing(false);
-    }, 600);
+    loadCrmData();
   };
 
-  // Handler: Single Lead update (e.g. inline star rating or stage)
-  const handleUpdateLead = (updated: MockLead) => {
+  // Handler: Single Lead update (persisted via API)
+  const handleUpdateLead = async (updated: Lead) => {
     setLeads((prev) => prev.map((l) => (l.id === updated.id ? updated : l)));
+    if (selectedLeadForDetail?.id === updated.id) {
+      setSelectedLeadForDetail(updated);
+    }
+    try {
+      await api.updateLead(updated.id, updated);
+    } catch (err) {
+      console.error('Failed to persist lead update:', err);
+    }
   };
 
-  // Handler: Bulk update leads
-  const handleBulkUpdate = (leadIds: string[], updates: Partial<MockLead>) => {
+  // Handler: Bulk update leads (persisted via API)
+  const handleBulkUpdate = async (leadIds: string[], updates: Partial<Lead>) => {
     const idSet = new Set(leadIds);
     setLeads((prev) =>
       prev.map((l) => (idSet.has(l.id) ? { ...l, ...updates } : l))
     );
+    try {
+      await api.bulkUpdateLeads(leadIds, updates);
+    } catch (err) {
+      console.error('Failed to persist bulk update:', err);
+    }
   };
 
   // Handler: Start Call simulation
-  const handleStartCall = (lead: MockLead | Lead) => {
-    // Adapt to Lead type
-    const adapted: Lead = {
-      id: lead.id,
-      name: lead.name,
-      phone: lead.phone,
-      source: (lead.source || 'Website') as any,
-      stage: 'New',
-      assignedRepId: users[0]?.id || 'u1',
-      assignedRepName: (lead as any).assignee || lead.name,
-      notes: (lead as any).notes || 'Initial telecalling inquiry',
-      createdDate: (lead as any).createdIso || (lead as any).createdDate || new Date().toISOString()
-    };
-    setActiveCallingLead(adapted);
+  const handleStartCall = (lead: Lead) => {
+    setActiveCallingLead(lead);
   };
 
   // Handler: Open WhatsApp Chat
-  const handleOpenWhatsApp = (lead: MockLead | Lead) => {
+  const handleOpenWhatsApp = (lead: Lead) => {
     setActiveChatLeadId(lead.id);
     setCurrentView('whatsapp');
   };
 
   // Handler: Select Lead for Detail Inspection Modal
-  const handleSelectLeadForDetail = (lead: MockLead) => {
-    const adapted: Lead = {
-      id: lead.id,
-      name: lead.name,
-      phone: lead.phone,
-      source: (lead.source || 'Website') as any,
-      stage: (lead.stage || (lead.status?.includes('Won') ? 'Won' : lead.status?.includes('Lost') ? 'Lost' : lead.status?.includes('Quotation') ? 'Negotiation' : 'New')) as any,
-      value: lead.value || 0,
-      assignedRepId: users.find((u) => u.name === lead.assignee)?.id || users[0]?.id || 'u1',
-      assignedRepName: lead.assignee || 'Aakash Verma',
-      notes: lead.companyOrProject ? `Project: ${lead.companyOrProject}` : 'Customer inquiry from CRM leads pool',
-      createdDate: lead.createdIso || new Date().toISOString()
-    };
-    setSelectedLeadForDetail(adapted);
+  const handleSelectLeadForDetail = (lead: Lead) => {
+    setSelectedLeadForDetail(lead);
   };
 
-  // Convert MockLeads to Kanban-compatible Leads when navigating to Kanban
-  const kanbanLeads: Lead[] = leads.map((ml) => ({
-    id: ml.id,
-    name: ml.name,
-    phone: ml.phone,
-    source: (ml.source === 'Manual'
-      ? 'Manual'
-      : ml.source === 'WhatsApp'
-      ? 'WhatsApp'
-      : ml.source === 'Facebook Ads'
-      ? 'Facebook'
-      : ml.source === 'Google Ads'
-      ? 'Google Ads'
-      : ml.source === 'IndiaMART'
-      ? 'IndiaMART'
-      : 'Website') as any,
-    stage: (ml.status || '').includes('Won')
-      ? 'Won'
-      : (ml.status || '').includes('Lost')
-      ? 'Lost'
-      : (ml.status || '').includes('Quotation')
-      ? 'Negotiation'
-      : (ml.status || '').includes('Demo')
-      ? 'Follow-up'
-      : (ml.status || '').includes('Relevant')
-      ? 'Contacted'
-      : 'New',
-    assignedRepId: users.find((u) => u.name === ml.assignee)?.id || users[0]?.id || 'u1',
-    assignedRepName: ml.assignee,
-    notes: `${ml.companyOrProject} - Rating: ${ml.rating} stars`,
-    createdDate: ml.createdIso
-  }));
+  // Count callbacks due from real data
+  const callbacksDueCount = leads.filter(
+    (l) => l.callbackReminder || l.stage === 'Follow-up'
+  ).length;
 
   if (isLoading) {
     return (
@@ -210,7 +195,7 @@ const AppContent: React.FC = () => {
         onViewChange={(view) => setCurrentView(view)}
         isOpenMobile={isMobileSidebarOpen}
         onCloseMobile={() => setIsMobileSidebarOpen(false)}
-        callbacksDueCount={4}
+        callbacksDueCount={callbacksDueCount}
         openTicketsCount={1}
       />
 
@@ -245,6 +230,11 @@ const AppContent: React.FC = () => {
           {currentView === 'leads' && (
             <LeadsListView
               leads={leads}
+              users={users}
+              isLoading={isLoadingData}
+              isRefreshing={isRefreshing}
+              error={dataError}
+              onRefresh={handleRefreshAll}
               onUpdateLead={handleUpdateLead}
               onBulkUpdate={handleBulkUpdate}
               onInitiateCall={handleStartCall}
@@ -260,6 +250,11 @@ const AppContent: React.FC = () => {
             <DashboardView
               leads={leads}
               calls={calls}
+              messages={messages}
+              isLoading={isLoadingData}
+              isRefreshing={isRefreshing}
+              error={dataError}
+              onRefresh={handleRefreshAll}
               onNavigateToLeadsFilter={(filterName) => {
                 setCurrentView('leads');
               }}
@@ -275,10 +270,10 @@ const AppContent: React.FC = () => {
             />
           )}
 
-          {/* SCREEN 3: Leaderboard (Two-Panel Ranks & Detail Stats) */}
+          {/* SCREEN 3: Leaderboard */}
           {currentView === 'leaderboard' && <LeaderboardView />}
 
-          {/* SCREEN 4: Home / Getting Started (Onboarding Hub) */}
+          {/* SCREEN 4: Home / Getting Started */}
           {currentView === 'home' && (
             <GettingStartedView
               onNavigateToLeads={() => setCurrentView('leads')}
@@ -291,12 +286,13 @@ const AppContent: React.FC = () => {
           {currentView === 'pipeline' && (
             <div className="p-4 flex-1 overflow-y-auto">
               <KanbanBoard
-                leads={kanbanLeads}
+                leads={leads}
                 users={users}
                 onUpdateStage={(leadId, stage) => {
                   setLeads((prev) =>
-                    prev.map((l) => (l.id === leadId ? { ...l, status: stage as any } : l))
+                    prev.map((l) => (l.id === leadId ? { ...l, stage } : l))
                   );
+                  api.updateLead(leadId, { stage }).catch((err) => console.error(err));
                 }}
                 onSelectLead={(lead) => setSelectedLeadForDetail(lead)}
                 onOpenDetail={(lead) => setSelectedLeadForDetail(lead)}
@@ -306,16 +302,15 @@ const AppContent: React.FC = () => {
                   const rep = users.find((u) => u.id === repId);
                   if (rep) {
                     setLeads((prev) =>
-                      prev.map((l) => (l.id === leadId ? { ...l, assignee: rep.name } : l))
+                      prev.map((l) => (l.id === leadId ? { ...l, assignedRepId: rep.id, assignedRepName: rep.name } : l))
                     );
+                    api.updateLead(leadId, { assignedRepId: rep.id, assignedRepName: rep.name }).catch((err) => console.error(err));
                   }
                 }}
                 onOpenAddLead={() => setIsAddLeadOpen(true)}
                 onOpenBulkImport={() => setIsBulkImportOpen(true)}
                 onBulkUpdate={(ids, updates) => {
-                  if (updates.stage) {
-                    handleBulkUpdate(ids, { status: updates.stage as any });
-                  }
+                  handleBulkUpdate(ids, updates);
                 }}
               />
             </div>
@@ -325,7 +320,7 @@ const AppContent: React.FC = () => {
             <div className="p-4 flex-1 overflow-y-auto">
               <CallsView
                 calls={calls}
-                leads={kanbanLeads}
+                leads={leads}
                 users={users}
                 onStartCall={handleStartCall}
                 onOpenWhatsApp={handleOpenWhatsApp}
@@ -337,7 +332,7 @@ const AppContent: React.FC = () => {
           {currentView === 'whatsapp' && (
             <div className="flex-1 overflow-hidden">
               <WhatsAppView
-                leads={kanbanLeads}
+                leads={leads}
                 selectedLeadId={activeChatLeadId}
                 onSelectLead={setActiveChatLeadId}
                 onStartCall={handleStartCall}
@@ -348,7 +343,7 @@ const AppContent: React.FC = () => {
 
           {currentView === 'support' && (
             <div className="p-4 flex-1 overflow-y-auto">
-              <SupportView leads={kanbanLeads} users={users} />
+              <SupportView leads={leads} users={users} />
             </div>
           )}
 
@@ -383,23 +378,7 @@ const AppContent: React.FC = () => {
         isOpen={isAddLeadOpen}
         onClose={() => setIsAddLeadOpen(false)}
         onLeadAdded={(newLead) => {
-          const ml: MockLead = {
-            id: newLead.id,
-            name: newLead.name,
-            phone: newLead.phone,
-            email: 'lead@inquiry.com',
-            status: 'Fresh Lead',
-            rating: 4,
-            assignee: newLead.assignedRepName || 'Aakash Verma',
-            assigneeRole: 'Telesales Specialist',
-            createdOn: 'Just now',
-            createdIso: new Date().toISOString(),
-            companyOrProject: newLead.notes || 'Inquiry Project',
-            value: 250000,
-            source: (newLead.source === 'Facebook' ? 'Facebook Ads' : newLead.source === 'Manual' ? 'Manual' : 'Website') as any,
-            industry: 'Real Estate'
-          };
-          setLeads((prev) => [ml, ...prev]);
+          setLeads((prev) => [newLead, ...prev]);
         }}
         users={users}
       />
@@ -408,23 +387,7 @@ const AppContent: React.FC = () => {
         isOpen={isBulkImportOpen}
         onClose={() => setIsBulkImportOpen(false)}
         onImportComplete={(imported) => {
-          const converted: MockLead[] = imported.map((nl) => ({
-            id: nl.id,
-            name: nl.name,
-            phone: nl.phone,
-            email: 'bulk.lead@inquiry.com',
-            status: 'Fresh Lead',
-            rating: 3,
-            assignee: nl.assignedRepName || 'Aakash Verma',
-            assigneeRole: 'Telesales Specialist',
-            createdOn: 'Just now',
-            createdIso: new Date().toISOString(),
-            companyOrProject: nl.notes || 'Bulk Import Lead',
-            value: 180000,
-            source: (nl.source === 'Facebook' ? 'Facebook Ads' : nl.source === 'Manual' ? 'Manual' : 'Website') as any,
-            industry: 'Real Estate'
-          }));
-          setLeads((prev) => [...converted, ...prev]);
+          setLeads((prev) => [...imported, ...prev]);
         }}
         users={users}
       />
@@ -435,23 +398,23 @@ const AppContent: React.FC = () => {
         onStartCall={handleStartCall}
         onOpenWhatsApp={handleOpenWhatsApp}
         onUpdateStage={(leadId, stage) => {
-          setLeads((prev) =>
-            prev.map((l) => (l.id === leadId ? { ...l, status: stage as any } : l))
-          );
+          handleUpdateLead({
+            ...(selectedLeadForDetail as Lead),
+            stage
+          });
         }}
         onAssignRep={(leadId, repId) => {
           const rep = users.find((u) => u.id === repId);
           if (rep) {
-            setLeads((prev) =>
-              prev.map((l) => (l.id === leadId ? { ...l, assignee: rep.name } : l))
-            );
+            handleUpdateLead({
+              ...(selectedLeadForDetail as Lead),
+              assignedRepId: rep.id,
+              assignedRepName: rep.name
+            });
           }
         }}
         onUpdateLead={(updated) => {
-          setSelectedLeadForDetail(updated);
-          setLeads((prev) =>
-            prev.map((l) => (l.id === updated.id ? { ...l, name: updated.name, phone: updated.phone } : l))
-          );
+          handleUpdateLead(updated);
         }}
         users={users}
       />
@@ -476,6 +439,19 @@ const AppContent: React.FC = () => {
             recordingSimulated: true
           };
           setCalls((prev) => [newCall, ...prev]);
+
+          if (activeCallingLead && callData.outcome) {
+            let nextStage: LeadStage = activeCallingLead.stage;
+            if (callData.outcome === 'Converted') nextStage = 'Won';
+            else if (callData.outcome === 'Not Interested') nextStage = 'Lost';
+            else if (callData.outcome === 'Call Back Later') nextStage = 'Follow-up';
+            else if (activeCallingLead.stage === 'New') nextStage = 'Contacted';
+
+            handleUpdateLead({
+              ...activeCallingLead,
+              stage: nextStage
+            });
+          }
         }}
       />
 
@@ -490,19 +466,19 @@ const AppContent: React.FC = () => {
 
       {/* Material Design 3 Extended Floating Action Button (FAB) — desktop only */}
       {!isMobile && (
-      <div className="fixed bottom-6 right-6 z-40 flex items-center space-x-3">
-        <button
-          id="m3-fab-add-lead"
-          type="button"
-          onClick={() => setIsAddLeadOpen(true)}
-          aria-label="Add new lead"
-          className="m3-elevation-3 hover:m3-elevation-4 active:m3-elevation-2 flex items-center space-x-2.5 px-5 py-4 rounded-[24px] bg-[#00695C] text-white hover:bg-[#005449] active:scale-[0.98] transition-all duration-200 min-h-[56px]"
-          title="Add New Lead"
-        >
-          <Plus className="w-6 h-6 stroke-[2.5]" />
-          <span className="text-sm font-medium tracking-wide pr-1">Add Lead</span>
-        </button>
-      </div>
+        <div className="fixed bottom-6 right-6 z-40 flex items-center space-x-3">
+          <button
+            id="m3-fab-add-lead"
+            type="button"
+            onClick={() => setIsAddLeadOpen(true)}
+            aria-label="Add new lead"
+            className="m3-elevation-3 hover:m3-elevation-4 active:m3-elevation-2 flex items-center space-x-2.5 px-5 py-4 rounded-[24px] bg-[#00695C] text-white hover:bg-[#005449] active:scale-[0.98] transition-all duration-200 min-h-[56px]"
+            title="Add New Lead"
+          >
+            <Plus className="w-6 h-6 stroke-[2.5]" />
+            <span className="text-sm font-medium tracking-wide pr-1">Add Lead</span>
+          </button>
+        </div>
       )}
     </div>
   );

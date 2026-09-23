@@ -1,14 +1,14 @@
 import React from 'react';
-import { MockLead } from '../../data/mockSeedData';
+import { Lead } from '../../types';
 import { LeadCard } from './LeadCard';
 
 interface LeadCardListProps {
-  leads: MockLead[];
+  leads: Lead[];
   selectedIds: Set<string>;
   onToggleSelect: (id: string) => void;
-  onUpdateLead: (updated: MockLead) => void;
-  onInitiateCall?: (lead: MockLead) => void;
-  onOpenChat?: (lead: MockLead) => void;
+  onUpdateLead: (updated: Lead) => void;
+  onInitiateCall?: (lead: Lead) => void;
+  onOpenChat?: (lead: Lead) => void;
 }
 
 /**
@@ -26,8 +26,14 @@ export const LeadCardList: React.FC<LeadCardListProps> = ({
   onInitiateCall,
   onOpenChat
 }) => {
-  const handleRatingChange = (lead: MockLead, newRating: number) => {
-    onUpdateLead({ ...lead, rating: newRating });
+  const handleRatingChange = (lead: Lead, newRating: number) => {
+    onUpdateLead({
+      ...lead,
+      customFields: {
+        ...(lead.customFields || {}),
+        rating: newRating
+      }
+    });
   };
 
   if (leads.length === 0) {
@@ -59,7 +65,6 @@ export const LeadCardList: React.FC<LeadCardListProps> = ({
           <button
             type="button"
             onClick={() => {
-              // Clear all by toggling each one off — parent handles this
               selectedIds.forEach((id) => onToggleSelect(id));
             }}
             className="text-xs font-medium text-[#00695C] dark:text-[#80D5C4] hover:underline px-2 py-1 min-h-[32px]"

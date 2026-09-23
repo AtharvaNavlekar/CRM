@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import {
-  MOCK_LEADERBOARD,
+  INITIAL_LEADERBOARD as MOCK_LEADERBOARD,
   LeaderboardMember,
   TEAM_TOTAL_STATS
-} from '../../data/mockSeedData';
+} from './leaderboardData';
 import { AvatarBadge } from '../common/AvatarBadge';
 import {
   Trophy,
