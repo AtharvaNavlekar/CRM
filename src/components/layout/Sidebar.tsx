@@ -1,21 +1,24 @@
 import React, { useState } from 'react';
 import {
-  Home,
+  Compass,
   Table,
-  LayoutDashboard,
-  Trophy,
   Kanban,
   PhoneCall,
   MessageSquare,
+  LayoutDashboard,
+  Trophy,
   LifeBuoy,
+  Activity,
+  ShieldCheck,
+  Shield,
   Settings,
   ChevronLeft,
   ChevronRight,
   Phone,
-  Shield,
-  Activity
+  X
 } from 'lucide-react';
 import { useAuth, usePolicy } from '../../context/AuthContext';
+import { StatusBadge } from '../ui/Badge';
 
 export type NavView =
   | 'home'
@@ -40,6 +43,22 @@ interface SidebarProps {
   openTicketsCount?: number;
 }
 
+interface NavItemConfig {
+  id: NavView;
+  label: string;
+  shortLabel: string;
+  icon: React.ComponentType<{ className?: string }>;
+  badgeText?: string | null;
+  badgeTone?: 'primary' | 'warning' | 'error' | 'success' | 'info' | 'neutral';
+  desc: string;
+}
+
+interface NavSection {
+  title: string;
+  pillar: string;
+  items: NavItemConfig[];
+}
+
 export const Sidebar: React.FC<SidebarProps> = ({
   currentView,
   onViewChange,
@@ -57,267 +76,286 @@ export const Sidebar: React.FC<SidebarProps> = ({
     onCloseMobile();
   };
 
-  const navItems = [
+  // Structured logically around DialPulse's 4 Operational Pillars
+  const sections: NavSection[] = [
     {
-      id: 'home' as NavView,
-      label: 'Getting Started',
-      shortLabel: 'Home',
-      icon: Home,
-      badge: 'New',
-      badgeColor: 'bg-[#CCE8E1] dark:bg-[#004F46] text-[#00201B] dark:text-[#A3F2E4]',
-      desc: 'Onboarding & Integrations'
+      title: 'Capture & Pipeline',
+      pillar: 'Pillar 1',
+      items: [
+        {
+          id: 'leads',
+          label: 'Leads Table',
+          shortLabel: 'Leads',
+          icon: Table,
+          badgeText: '124',
+          badgeTone: 'neutral',
+          desc: 'Manage leads & ownership'
+        },
+        {
+          id: 'pipeline',
+          label: 'Pipeline Board',
+          shortLabel: 'Pipeline',
+          icon: Kanban,
+          desc: 'Kanban sales workflow'
+        },
+        {
+          id: 'home',
+          label: 'Getting Started',
+          shortLabel: 'Start',
+          icon: Compass,
+          desc: 'Onboarding & quick setups'
+        }
+      ]
     },
     {
-      id: 'leads' as NavView,
-      label: 'Leads Table',
-      shortLabel: 'Leads',
-      icon: Table,
-      badge: '124',
-      badgeColor: 'bg-[#ECEFEC] dark:bg-[#272B2A] text-[#191C1B] dark:text-[#E1E3E0]',
-      desc: 'List, Filter & Bulk WACA'
+      title: 'Communicate',
+      pillar: 'Pillar 2',
+      items: [
+        {
+          id: 'calls',
+          label: 'Call Console',
+          shortLabel: 'Calls',
+          icon: PhoneCall,
+          badgeText: callbacksDueCount > 0 ? `${callbacksDueCount} due` : null,
+          badgeTone: callbacksDueCount > 0 ? 'warning' : undefined,
+          desc: 'Dialer & dispositions'
+        },
+        {
+          id: 'whatsapp',
+          label: 'WhatsApp WACA',
+          shortLabel: 'Chat',
+          icon: MessageSquare,
+          badgeText: 'Official API',
+          badgeTone: 'primary',
+          desc: 'Meta Cloud API inbox'
+        }
+      ]
     },
     {
-      id: 'dashboard' as NavView,
-      label: 'Dashboard',
-      shortLabel: 'Dash',
-      icon: LayoutDashboard,
-      badge: 'Live',
-      badgeColor: 'bg-[#00695C] text-white',
-      desc: '2x2 Operational Widgets'
+      title: 'Manage & Supervise',
+      pillar: 'Pillar 3',
+      items: [
+        {
+          id: 'dashboard',
+          label: 'Dashboard',
+          shortLabel: 'Dash',
+          icon: LayoutDashboard,
+          desc: 'Operational KPI telemetry'
+        },
+        {
+          id: 'leaderboard',
+          label: 'Leaderboard',
+          shortLabel: 'Ranks',
+          icon: Trophy,
+          desc: 'Rep rankings & quotas'
+        },
+        {
+          id: 'support',
+          label: 'Support Tickets',
+          shortLabel: 'Support',
+          icon: LifeBuoy,
+          badgeText: openTicketsCount > 0 ? `${openTicketsCount}` : null,
+          badgeTone: openTicketsCount > 0 ? 'error' : undefined,
+          desc: 'SLA escalations & help'
+        },
+        {
+          id: 'activity',
+          label: 'Activity Logs',
+          shortLabel: 'Audit',
+          icon: Activity,
+          desc: 'Security & mutation trail'
+        }
+      ]
     },
     {
-      id: 'leaderboard' as NavView,
-      label: 'Leaderboard',
-      shortLabel: 'Ranks',
-      icon: Trophy,
-      badge: '#1',
-      badgeColor: 'bg-amber-100 dark:bg-amber-950/80 text-amber-900 dark:text-amber-200',
-      desc: 'Team Quotas & Talk Time'
-    },
-    {
-      id: 'pipeline' as NavView,
-      label: 'Kanban Pipeline',
-      shortLabel: 'Kanban',
-      icon: Kanban,
-      badge: null,
-      badgeColor: '',
-      desc: 'Visual Stages'
-    },
-    {
-      id: 'compliance' as NavView,
-      label: 'Trust & Compliance',
-      shortLabel: 'Trust',
-      icon: Shield,
-      badge: 'Active',
-      badgeColor: 'bg-[#CCE8E1] text-[#00201B]',
-      desc: 'Verified ID & Fatigue Guard'
-    },
-    {
-      id: 'calls' as NavView,
-      label: 'Call Console',
-      shortLabel: 'Calls',
-      icon: PhoneCall,
-      badge: callbacksDueCount > 0 ? `${callbacksDueCount} due` : null,
-      badgeColor: 'bg-amber-500 text-white',
-      desc: 'Dialer & Dispositions'
-    },
-    {
-      id: 'whatsapp' as NavView,
-      label: 'WhatsApp WACA',
-      shortLabel: 'Chat',
-      icon: MessageSquare,
-      badge: 'Meta API',
-      badgeColor: 'bg-[#00695C] text-white',
-      desc: 'Official Cloud API'
-    },
-    {
-      id: 'support' as NavView,
-      label: 'Support Tickets',
-      shortLabel: 'Help',
-      icon: LifeBuoy,
-      badge: openTicketsCount > 0 ? `${openTicketsCount}` : null,
-      badgeColor: 'bg-[#BA1A1A] text-white',
-      desc: 'SLA Escalations'
-    },
-    {
-      id: 'activity' as NavView,
-      label: 'Activity Logs',
-      shortLabel: 'Audit',
-      icon: Activity,
-      badge: 'Audit',
-      badgeColor: 'bg-[#00695C] text-white',
-      desc: 'Security & Event Trail'
-    },
-    ...(currentUser?.isPlatformStaff ? [{
-      id: 'platform' as NavView,
-      label: 'Platform Ops',
-      shortLabel: 'Ops',
-      icon: Shield,
-      badge: 'Admin',
-      badgeColor: 'bg-indigo-600 text-white',
-      desc: 'Multi-Tenant Control'
-    }] : []),
-    ...(can('manage:policy') ? [{
-      id: 'settings' as NavView,
-      label: 'Admin Settings',
-      shortLabel: 'Config',
-      icon: Settings,
-      badge: null as string | null,
-      badgeColor: '',
-      desc: 'Permissions & Fields'
-    }] : [])
+      title: 'Comply & Protect',
+      pillar: 'Pillar 4',
+      items: [
+        {
+          id: 'compliance',
+          label: 'Trust & Compliance',
+          shortLabel: 'Trust',
+          icon: ShieldCheck,
+          badgeText: 'Active',
+          badgeTone: 'success',
+          desc: 'Fatigue guard & DND checks'
+        },
+        ...(currentUser?.isPlatformStaff
+          ? [
+              {
+                id: 'platform' as NavView,
+                label: 'Platform Ops',
+                shortLabel: 'Ops',
+                icon: Shield,
+                badgeText: 'Admin',
+                badgeTone: 'info' as const,
+                desc: 'Multi-tenant infrastructure'
+              }
+            ]
+          : []),
+        ...(can('manage:policy')
+          ? [
+              {
+                id: 'settings' as NavView,
+                label: 'Admin Settings',
+                shortLabel: 'Settings',
+                icon: Settings,
+                desc: 'RBAC policies & tenant config'
+              }
+            ]
+          : [])
+      ]
+    }
   ];
 
   return (
     <>
-      {/* Mobile Backdrop */}
+      {/* Mobile Backdrop Overlay */}
       {isOpenMobile && (
         <div
-          className="fixed inset-0 bg-black/40 z-40 lg:hidden backdrop-blur-xs transition-opacity duration-300"
+          className="fixed inset-0 bg-black/40 z-40 lg:hidden backdrop-blur-xs transition-opacity duration-200"
           onClick={onCloseMobile}
+          aria-hidden="true"
         />
       )}
 
-      {/* Main Material Design 3 Navigation Drawer / Rail */}
+      {/* Main Material 3 Application Navigation Sidebar */}
       <aside
         id="app-sidebar"
-        className={`fixed lg:static top-0 bottom-0 left-0 z-50 shrink-0 bg-[#F2F5F2] dark:bg-[#191C1B] text-[#191C1B] dark:text-[#E1E3E0] flex flex-col transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${
+        role="navigation"
+        aria-label="Main CRM Navigation"
+        className={`fixed lg:static top-0 bottom-0 left-0 z-50 shrink-0 bg-[#FFFFFF] dark:bg-[#111514] text-[#0F172A] dark:text-[#F1F5F9] flex flex-col transition-all duration-200 ease-out ${
           isOpenMobile ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         } ${
-          isCollapsed ? 'w-20' : 'w-72'
-        } border-r border-[#BEC9C5]/40 dark:border-[#3F4946]/40 shadow-none h-screen select-none`}
+          isCollapsed ? 'w-20' : 'w-64'
+        } border-r border-[#E2E8F0] dark:border-[#334155] shadow-xs lg:shadow-none h-screen select-none font-body`}
       >
-        {/* Brand Header (M3 Headline & Logo) */}
-        <div className="h-20 px-4 flex items-center justify-between border-b border-[#BEC9C5]/30 dark:border-[#3F4946]/30 bg-[#F8FAF8] dark:bg-[#111413]">
-          <div className="flex items-center space-x-3 min-w-0">
-            {/* Logo Icon with Material Design 3 Primary Tone */}
-            <div className="w-10 h-10 rounded-2xl bg-[#00695C] flex items-center justify-center text-white shadow-sm shrink-0">
-              <Phone className="w-5 h-5 text-white" />
+        {/* Brand & Organization Header */}
+        <div className="h-16 px-4 flex items-center justify-between border-b border-[#E2E8F0] dark:border-[#334155] bg-[#FFFFFF] dark:bg-[#111514] shrink-0">
+          <div className="flex items-center gap-3 min-w-0">
+            {/* Primary DialPulse Emblem */}
+            <div className="w-9 h-9 rounded-xl bg-[#00695C] dark:bg-[#80D5C4] flex items-center justify-center text-white dark:text-[#003830] shadow-xs shrink-0">
+              <Phone className="w-5 h-5 text-current" />
             </div>
 
             {!isCollapsed && (
               <div className="min-w-0">
-                <div className="flex items-center space-x-2">
-                  <span className="font-bold text-base tracking-tight text-[#191C1B] dark:text-[#E1E3E0] truncate m3-title-medium">
-                    DialPulse CRM
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-base font-heading tracking-tight text-[#0F172A] dark:text-[#F1F5F9] truncate">
+                    DialPulse
                   </span>
-                  <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-[#CCE8E1] dark:bg-[#004F46] text-[#00201B] dark:text-[#A3F2E4]">
-                    Pro
+                  <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-[#CCE8E1] dark:bg-[#004F46] text-[#00201B] dark:text-[#A3F2E4] uppercase">
+                    CRM
                   </span>
                 </div>
-                <p className="text-xs text-[#6F7976] dark:text-[#89938F] truncate m3-body-small">
+                <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8] truncate leading-tight">
                   Telecalling &amp; WhatsApp
                 </p>
               </div>
             )}
           </div>
 
+          {/* Mobile Close Button */}
           <button
             type="button"
             onClick={onCloseMobile}
             aria-label="Close navigation sidebar"
-            className="touch-target-48 rounded-full text-[#6F7976] hover:text-[#191C1B] dark:hover:text-[#E1E3E0] hover:bg-[#ECEFEC] dark:hover:bg-[#272B2A] lg:hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00695C]"
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-[#64748B] hover:text-[#0F172A] dark:text-[#94A3B8] dark:hover:text-[#F1F5F9] hover:bg-[#F1F5F4] dark:hover:bg-[#1E293B] lg:hidden"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
         </div>
 
-        {/* User Identity Banner (when expanded) */}
-        {!isCollapsed && (
-          <div className="mx-4 mt-4 px-3.5 py-3 rounded-2xl bg-[#ECEFEC] dark:bg-[#272B2A] border border-transparent flex items-center justify-between">
-            <div className="flex items-center space-x-3 min-w-0">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#00695C] animate-pulse shrink-0" aria-hidden="true"></span>
-              <div className="truncate">
-                <p className="text-xs font-medium text-[#191C1B] dark:text-[#E1E3E0] truncate m3-title-small">
-                  {currentUser?.name || 'Aakash Verma'}
-                </p>
-                <div className="flex items-center space-x-1 text-[11px] text-[#00695C] dark:text-[#80D5C4] font-medium">
-                  <Shield className="w-3 h-3" />
-                  <span className="capitalize">{currentUser?.role || 'User'}</span>
+        {/* Collapsible Pillar Navigation Modules */}
+        <div className="flex-1 px-3 py-3 overflow-y-auto space-y-4">
+          {sections.map((sec, secIdx) => (
+            <div key={sec.title} className="space-y-1">
+              {!isCollapsed ? (
+                <div className="px-2 pt-1 pb-1 flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#64748B] dark:text-[#94A3B8]">
+                    {sec.title}
+                  </span>
+                  <span className="text-[9px] font-mono text-[#94A3B8] dark:text-[#64748B]">
+                    {sec.pillar}
+                  </span>
                 </div>
+              ) : (
+                secIdx > 0 && (
+                  <div className="my-2 border-t border-[#E2E8F0] dark:border-[#334155]" />
+                )
+              )}
+
+              <div className="space-y-0.5">
+                {sec.items.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = currentView === item.id;
+
+                  return (
+                    <button
+                      key={item.id}
+                      id={`sidebar-nav-${item.id}`}
+                      type="button"
+                      onClick={() => handleSelect(item.id)}
+                      title={isCollapsed ? `${item.label} — ${item.desc}` : undefined}
+                      aria-current={isActive ? 'page' : undefined}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all group relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00695C] ${
+                        isActive
+                          ? 'bg-[#CCE8E1] text-[#00201B] font-semibold dark:bg-[#004F46] dark:text-[#A3F2E4]'
+                          : 'text-[#475569] dark:text-[#94A3B8] hover:bg-[#F1F5F4] dark:hover:bg-[#1E293B] hover:text-[#0F172A] dark:hover:text-[#F1F5F9]'
+                      } ${isCollapsed ? 'justify-center px-0' : ''}`}
+                    >
+                      {/* Active Indicator Bar */}
+                      {isActive && (
+                        <div
+                          className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-[#00695C] dark:bg-[#80D5C4] rounded-r-md"
+                          aria-hidden="true"
+                        />
+                      )}
+
+                      <Icon
+                        className={`w-4 h-4 shrink-0 transition-colors ${
+                          isActive
+                            ? 'text-[#00695C] dark:text-[#80D5C4]'
+                            : 'text-[#64748B] dark:text-[#94A3B8] group-hover:text-[#0F172A] dark:group-hover:text-[#F1F5F9]'
+                        }`}
+                      />
+
+                      {!isCollapsed && (
+                        <div className="flex-1 flex items-center justify-between min-w-0">
+                          <span className="truncate">{item.label}</span>
+                          {item.badgeText && (
+                            <StatusBadge
+                              status={item.badgeText}
+                              tone={item.badgeTone || 'neutral'}
+                              showDot={false}
+                              size="sm"
+                              className="ml-1.5"
+                            />
+                          )}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Navigation Items List with M3 Pill Active Indicator & 48dp Touch Targets */}
-        <div className="flex-1 px-3 py-4 space-y-1.5 overflow-y-auto" role="navigation" aria-label="Main Navigation">
-          {!isCollapsed && (
-            <div className="px-3 pb-2 text-[11px] font-medium uppercase tracking-wider text-[#6F7976] dark:text-[#89938F] m3-label-small">
-              Navigation
-            </div>
-          )}
-
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = currentView === item.id;
-
-            return (
-              <button
-                key={item.id}
-                id={`sidebar-nav-${item.id}`}
-                onClick={() => handleSelect(item.id)}
-                title={isCollapsed ? item.label : undefined}
-                aria-label={item.label}
-                aria-current={isActive ? 'page' : undefined}
-                className={`w-full text-left group px-3.5 py-3 rounded-full flex items-center transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00695C] min-h-[48px] ${
-                  isCollapsed ? 'justify-center px-0' : 'justify-between'
-                } ${
-                  isActive
-                    ? 'bg-[#CCE8E1] text-[#00201B] dark:bg-[#005046] dark:text-[#A3F2E4] font-medium shadow-none'
-                    : 'text-[#3F4946] dark:text-[#BEC9C5] hover:bg-[#E6EAE6] dark:hover:bg-[#272B2A] hover:text-[#191C1B] dark:hover:text-[#E1E3E0]'
-                }`}
-              >
-                <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'space-x-3.5'} min-w-0`}>
-                  <div className={`w-6 h-6 flex items-center justify-center shrink-0`}>
-                    <Icon
-                      className={`w-5 h-5 transition-colors ${
-                        isActive
-                          ? 'text-[#00201B] dark:text-[#A3F2E4]'
-                          : 'text-[#6F7976] group-hover:text-[#00695C] dark:group-hover:text-[#80D5C4]'
-                      }`}
-                    />
-                  </div>
-                  {!isCollapsed && (
-                    <div className="truncate min-w-0">
-                      <div className="text-sm tracking-tight m3-label-large">{item.label}</div>
-                      <div className="text-[11px] opacity-75 truncate m3-body-small">{item.desc}</div>
-                    </div>
-                  )}
-                </div>
-
-                {!isCollapsed && item.badge && (
-                  <span
-                    className={`text-[10px] font-medium px-2 py-0.5 rounded-full shrink-0 ${
-                      isActive
-                        ? 'bg-[#00695C] text-white'
-                        : item.badgeColor || 'bg-[#E0E4E0] text-[#191C1B]'
-                    }`}
-                  >
-                    {item.badge}
-                  </span>
-                )}
-              </button>
-            );
-          })}
+          ))}
         </div>
 
-        {/* Collapsible Mode Toggle at the Bottom (M3 Pill Icon Button) */}
-        <div className="p-3 border-t border-[#BEC9C5]/30 dark:border-[#3F4946]/30 bg-[#F8FAF8] dark:bg-[#111413] flex items-center justify-between">
+        {/* Sidebar Footer with Collapse Rail Toggle */}
+        <div className="p-3 border-t border-[#E2E8F0] dark:border-[#334155] bg-[#F8FAF9] dark:bg-[#111514] shrink-0">
           <button
             type="button"
-            id="btn-toggle-sidebar-collapse"
             onClick={() => setIsCollapsed(!isCollapsed)}
-            aria-label={isCollapsed ? 'Expand navigation sidebar' : 'Collapse navigation sidebar to icons'}
-            className="w-full flex items-center justify-center p-2.5 rounded-full text-[#6F7976] hover:text-[#191C1B] dark:hover:text-[#E1E3E0] hover:bg-[#ECEFEC] dark:hover:bg-[#272B2A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00695C] transition-colors text-xs font-medium space-x-2 min-h-[44px]"
-            title={isCollapsed ? 'Expand Sidebar' : 'Collapse to Rail'}
+            aria-label={isCollapsed ? 'Expand navigation sidebar' : 'Collapse navigation sidebar'}
+            className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-medium text-[#475569] dark:text-[#94A3B8] hover:bg-[#E2E8F0] dark:hover:bg-[#1E293B] hover:text-[#0F172A] dark:hover:text-[#F1F5F9] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00695C]"
           >
             {isCollapsed ? (
-              <ChevronRight className="w-5 h-5" />
+              <ChevronRight className="w-4 h-4" />
             ) : (
               <>
-                <ChevronLeft className="w-5 h-5" />
-                <span className="text-xs">Collapse Sidebar</span>
+                <ChevronLeft className="w-4 h-4" />
+                <span>Collapse Sidebar</span>
               </>
             )}
           </button>

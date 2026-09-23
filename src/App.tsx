@@ -17,6 +17,7 @@ import { WhatsAppView } from './components/whatsapp/WhatsAppView';
 import { SupportView } from './components/support/SupportView';
 import { SettingsView } from './components/settings/SettingsView';
 import { TrustComplianceView } from './components/compliance/TrustComplianceView';
+import { ActivityLogsView } from './components/audit/ActivityLogsView';
 import { LoginModal } from './components/auth/LoginModal';
 import { Plus, PhoneCall, Shield } from 'lucide-react';
 import { Lead, Call, LeadStage, CallOutcome } from './types';
@@ -115,6 +116,23 @@ const AppContent: React.FC = () => {
     setCurrentView('whatsapp');
   };
 
+  // Handler: Select Lead for Detail Inspection Modal
+  const handleSelectLeadForDetail = (lead: MockLead) => {
+    const adapted: Lead = {
+      id: lead.id,
+      name: lead.name,
+      phone: lead.phone,
+      source: (lead.source || 'Website') as any,
+      stage: (lead.stage || (lead.status?.includes('Won') ? 'Won' : lead.status?.includes('Lost') ? 'Lost' : lead.status?.includes('Quotation') ? 'Negotiation' : 'New')) as any,
+      value: lead.value || 0,
+      assignedRepId: users.find((u) => u.name === lead.assignee)?.id || users[0]?.id || 'u1',
+      assignedRepName: lead.assignee || 'Aakash Verma',
+      notes: lead.companyOrProject ? `Project: ${lead.companyOrProject}` : 'Customer inquiry from CRM leads pool',
+      createdDate: lead.createdIso || new Date().toISOString()
+    };
+    setSelectedLeadForDetail(adapted);
+  };
+
   // Convert MockLeads to Kanban-compatible Leads when navigating to Kanban
   const kanbanLeads: Lead[] = leads.map((ml) => ({
     id: ml.id,
@@ -179,7 +197,7 @@ const AppContent: React.FC = () => {
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#F8FAF8] dark:bg-[#111413] font-sans text-[#191C1B] dark:text-[#E1E3E0] antialiased selection:bg-[#00695C] selection:text-white">
+    <div className="flex h-screen w-screen overflow-hidden bg-[#F8FAF9] dark:bg-[#111514] font-body text-[#0F172A] dark:text-[#F1F5F9] antialiased selection:bg-[#00695C] selection:text-white">
       {/* DevTools Deterrence Full-Screen Warning Overlay */}
       <DevToolsWarningOverlay
         isOpen={isDevToolsOpen}
@@ -231,16 +249,29 @@ const AppContent: React.FC = () => {
               onBulkUpdate={handleBulkUpdate}
               onInitiateCall={handleStartCall}
               onOpenChat={handleOpenWhatsApp}
+              onSelectLead={handleSelectLeadForDetail}
+              onOpenAddLead={() => setIsAddLeadOpen(true)}
+              onOpenImport={() => setIsBulkImportOpen(true)}
             />
           )}
 
-          {/* SCREEN 2: Dashboard (Home/Reporting View - 2x2 Grid) */}
+          {/* SCREEN 2: Dashboard (Home/Reporting View) */}
           {currentView === 'dashboard' && (
             <DashboardView
               leads={leads}
+              calls={calls}
               onNavigateToLeadsFilter={(filterName) => {
                 setCurrentView('leads');
               }}
+              onNavigateToStage={(stage) => {
+                setCurrentView('leads');
+              }}
+              onNavigateToCalls={() => {
+                setCurrentView('calls');
+              }}
+              onOpenAddLead={() => setIsAddLeadOpen(true)}
+              onSelectLead={handleSelectLeadForDetail}
+              onStartCall={handleStartCall}
             />
           )}
 
@@ -324,6 +355,12 @@ const AppContent: React.FC = () => {
           {currentView === 'compliance' && (
             <div className="flex-1 overflow-hidden">
               <TrustComplianceView />
+            </div>
+          )}
+
+          {currentView === 'activity' && (
+            <div className="flex-1 overflow-hidden">
+              <ActivityLogsView />
             </div>
           )}
 

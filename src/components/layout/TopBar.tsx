@@ -1,23 +1,23 @@
 import React, { useState } from 'react';
 import {
   Menu,
-  Search,
-  Plus,
+  PhoneCall,
   Upload,
+  Plus,
+  RefreshCw,
   Sun,
   Moon,
-  Users,
   ChevronDown,
-  Shield,
-  PhoneCall,
-  RefreshCw,
   LogOut,
-  AlertCircle,
-  X
+  Building2,
+  ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { UserRole } from '../../types';
+import { SearchInput } from '../ui/SearchInput';
+import { Button } from '../ui/Button';
+import { StatusBadge } from '../ui/Badge';
 
 interface TopBarProps {
   onOpenMobileSidebar?: () => void;
@@ -44,167 +44,149 @@ export const TopBar: React.FC<TopBarProps> = ({
   const { theme, toggleTheme } = useTheme();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  const getRoleBadgeStyle = (role?: UserRole) => {
-    switch (role) {
-      case 'owner':
-        return 'bg-amber-100 text-amber-900 dark:bg-amber-950/80 dark:text-amber-200 border-amber-300/80 dark:border-amber-700/80';
-      case 'cto':
-        return 'bg-indigo-100 text-indigo-900 dark:bg-indigo-950/80 dark:text-indigo-200 border-indigo-300/80 dark:border-indigo-700/80';
-      case 'it':
-        return 'bg-cyan-100 text-cyan-900 dark:bg-cyan-950/80 dark:text-cyan-200 border-cyan-300/80 dark:border-cyan-700/80';
-      case 'tl_head':
-        return 'bg-purple-100 text-purple-900 dark:bg-purple-950/80 dark:text-purple-200 border-purple-300/80 dark:border-purple-700/80';
-      case 'tl':
-        return 'bg-sky-100 text-sky-900 dark:bg-sky-950/80 dark:text-sky-200 border-sky-300/80 dark:border-sky-700/80';
-      case 'telecaller':
-        return 'bg-[#CCE8E1] text-[#00201B] dark:bg-[#004F46] dark:text-[#A3F2E4] border-[#80D5C4]/60';
-      default:
-        return 'bg-[#ECEFEC] text-[#191C1B] dark:bg-[#272B2A] dark:text-[#E1E3E0] border-[#BEC9C5] dark:border-[#3F4946]';
-    }
-  };
-
   const getRoleDisplayName = (role?: UserRole) => {
     switch (role) {
-      case 'owner': return 'Owner';
-      case 'cto': return 'CTO';
-      case 'it': return 'IT Admin';
-      case 'tl_head': return 'TL Head';
-      case 'tl': return 'Team Lead';
-      case 'telecaller': return 'Telecaller';
-      default: return role || 'User';
+      case 'owner':
+        return 'Owner';
+      case 'cto':
+        return 'CTO';
+      case 'it':
+        return 'IT Admin';
+      case 'tl_head':
+        return 'TL Head';
+      case 'tl':
+        return 'Team Lead';
+      case 'telecaller':
+        return 'Telecaller';
+      default:
+        return role || 'User';
     }
   };
 
   const getRoleScopeDescription = (role?: UserRole) => {
     switch (role) {
       case 'telecaller':
-        return 'SELF scope (Only own assigned leads)';
+        return 'SELF scope (Only assigned leads)';
       case 'tl':
-        return 'TEAM scope (Entire team leads)';
+        return 'TEAM scope (Team leads & quotas)';
       case 'tl_head':
-        return 'ALL_TEAMS scope (Oversees Mumbai & Delhi)';
+        return 'ALL_TEAMS scope (Multi-city supervision)';
       case 'it':
-        return 'SYSTEM scope (User accounts & security)';
+        return 'SYSTEM scope (Security & user accounts)';
       case 'owner':
-        return 'COMPANY scope (Full company visibility)';
+        return 'COMPANY scope (Full tenant visibility)';
       case 'cto':
-        return 'COMPANY scope (Company data & tech governance)';
+        return 'COMPANY scope (Tech governance & data)';
       default:
-        return 'Role-based data access';
+        return 'Role-based access boundary';
     }
   };
 
   return (
-    <header className="h-20 bg-[#F8FAF8]/95 dark:bg-[#111413]/95 backdrop-blur-md border-b border-[#BEC9C5]/40 dark:border-[#3F4946]/40 px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 transition-colors">
-      {/* Left side: Navigation Toggle & Material 3 Search Bar */}
-      <div className="flex items-center space-x-3 flex-1 max-w-xl">
+    <header className="h-16 bg-[#FFFFFF]/95 dark:bg-[#111514]/95 backdrop-blur-md border-b border-[#E2E8F0] dark:border-[#334155] px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30 transition-colors font-body select-none">
+      {/* Left side: Mobile Toggle, Workspace Context & Global Search */}
+      <div className="flex items-center gap-3 flex-1 max-w-2xl min-w-0">
+        {/* Mobile menu trigger */}
         <button
           id="btn-open-sidebar"
           type="button"
           onClick={onOpenMobileSidebar}
           aria-label="Open navigation sidebar"
-          className="touch-target-48 rounded-full text-[#3F4946] dark:text-[#BEC9C5] hover:bg-[#ECEFEC] dark:hover:bg-[#272B2A] lg:hidden transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00695C]"
-          title="Open Navigation"
+          className="w-9 h-9 rounded-xl flex items-center justify-center text-[#475569] dark:text-[#94A3B8] hover:bg-[#F1F5F4] dark:hover:bg-[#1E293B] lg:hidden transition-colors"
         >
           <Menu className="w-5 h-5" />
         </button>
 
-        {/* Material Design 3 Search Bar (Pill Shape, 48px height) */}
-        <div className="relative w-full">
-          <Search className="w-5 h-5 text-[#6F7976] dark:text-[#89938F] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-          <input
+        {/* Workspace / Tenant Indicator */}
+        <div className="hidden xl:flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-[#F8FAF9] dark:bg-[#161A19] border border-[#E2E8F0] dark:border-[#334155] text-xs text-[#0F172A] dark:text-[#F1F5F9] shrink-0">
+          <Building2 className="w-3.5 h-3.5 text-[#00695C] dark:text-[#80D5C4]" />
+          <span className="font-semibold font-heading">DialPulse Realty</span>
+          <span className="text-[#94A3B8] dark:text-[#64748B]">·</span>
+          <span className="text-[#64748B] dark:text-[#94A3B8] text-[11px]">Production</span>
+        </div>
+
+        {/* Global Search Input */}
+        <div className="w-full max-w-md">
+          <SearchInput
             id="topbar-search-input"
-            type="text"
-            placeholder="Search leads by name, phone, or project..."
-            aria-label="Search leads by name, phone, or requirement"
             value={searchQuery}
-            onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full pl-12 pr-10 py-3 bg-[#ECEFEC] dark:bg-[#1D201F] hover:bg-[#E6EAE6] dark:hover:bg-[#272B2A] border border-transparent focus:border-[#00695C] rounded-full text-sm text-[#191C1B] dark:text-[#E1E3E0] placeholder-[#6F7976] dark:placeholder-[#89938F] focus:outline-none focus:ring-2 focus:ring-[#00695C]/25 transition-all shadow-none m3-body-medium min-h-[48px]"
+            onChange={onSearchChange}
+            placeholder="Search leads by name, phone, or project..."
+            shortcut="/"
+            inputSize="md"
           />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => onSearchChange('')}
-              aria-label="Clear search input"
-              className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full flex items-center justify-center text-[#6F7976] hover:text-[#191C1B] dark:hover:text-[#E1E3E0] hover:bg-[#DAE5E1] dark:hover:bg-[#3F4946] transition-colors focus-visible:outline-none"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
         </div>
       </div>
 
-      {/* Right side: M3 Actions, Theme Toggle, Profile Menu */}
-      <div className="flex items-center space-x-2 sm:space-x-3 ml-3">
-        {/* Quick Dial Button (M3 Tonal Button with Pill Shape) */}
-        <button
+      {/* Right side: Actions, Theme, User Menu */}
+      <div className="flex items-center gap-2 sm:gap-3 ml-3 shrink-0">
+        {/* Quick Call */}
+        <Button
           id="btn-quick-call"
-          type="button"
+          variant="tonal"
+          size="md"
           onClick={onQuickCall}
-          aria-label="Open quick call console"
-          className="hidden md:inline-flex items-center space-x-2 px-4 py-2.5 rounded-full text-sm font-medium bg-[#CCE8E1] dark:bg-[#005046] text-[#00201B] dark:text-[#A3F2E4] hover:bg-[#B7DFD6] dark:hover:bg-[#006558] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00695C] transition-all min-h-[44px]"
-          title="Open Call Console"
+          leftIcon={<PhoneCall className="w-4 h-4" />}
+          className="hidden md:inline-flex"
         >
-          <PhoneCall className="w-4 h-4 text-[#00695C] dark:text-[#80D5C4]" />
-          <span>Quick Call</span>
-        </button>
+          Quick Call
+        </Button>
 
-        {/* CSV Import (M3 Outlined Pill Button) */}
-        <button
+        {/* Import CSV */}
+        <Button
           id="btn-bulk-import"
-          type="button"
+          variant="secondary"
+          size="md"
           onClick={onOpenBulkImport}
-          aria-label="Open bulk CSV import"
-          className="hidden sm:inline-flex items-center space-x-2 px-4 py-2.5 rounded-full text-sm font-medium text-[#191C1B] dark:text-[#E1E3E0] bg-transparent border border-[#BEC9C5] dark:border-[#3F4946] hover:bg-[#ECEFEC] dark:hover:bg-[#1D201F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00695C] transition-all min-h-[44px]"
-          title="Import leads from CSV"
+          leftIcon={<Upload className="w-4 h-4 text-[#64748B] dark:text-[#94A3B8]" />}
+          className="hidden sm:inline-flex"
         >
-          <Upload className="w-4 h-4 text-[#6F7976] dark:text-[#89938F]" />
-          <span>Import CSV</span>
-        </button>
+          Import CSV
+        </Button>
 
-        {/* Add Lead Primary Button (M3 Filled Pill Button) */}
-        <button
+        {/* Add Lead Primary Button */}
+        <Button
           id="btn-add-lead-topbar"
-          type="button"
+          variant="primary"
+          size="md"
           onClick={onOpenAddLead}
-          aria-label="Add new sales lead"
-          className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-full text-sm font-medium bg-[#00695C] hover:bg-[#005247] text-white shadow-sm hover:shadow-md active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00695C] transition-all min-h-[44px]"
+          leftIcon={<Plus className="w-4 h-4" />}
         >
-          <Plus className="w-4 h-4" />
           <span className="hidden xs:inline">Add Lead</span>
-        </button>
+          <span className="xs:hidden">Add</span>
+        </Button>
 
-        {/* Refresh button (M3 Standard Icon Button with 48x48 touch target) */}
+        {/* Sync / Refresh Button */}
         <button
           type="button"
           onClick={onRefreshData}
           disabled={isRefreshing}
-          aria-label="Synchronize CRM data"
-          className={`touch-target-48 rounded-full text-[#3F4946] hover:text-[#191C1B] dark:text-[#BEC9C5] dark:hover:text-[#E1E3E0] hover:bg-[#ECEFEC] dark:hover:bg-[#1D201F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00695C] transition-colors ${
-            isRefreshing ? 'animate-spin text-[#00695C]' : ''
-          }`}
-          title="Sync real data"
+          aria-label="Synchronize data"
+          title="Synchronize data"
+          className="w-9 h-9 rounded-xl flex items-center justify-center text-[#475569] dark:text-[#94A3B8] hover:bg-[#F1F5F4] dark:hover:bg-[#1E293B] hover:text-[#0F172A] dark:hover:text-[#F1F5F9] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00695C]"
         >
-          <RefreshCw className="w-5 h-5" />
+          <RefreshCw
+            className={`w-4 h-4 ${isRefreshing ? 'animate-spin text-[#00695C] dark:text-[#80D5C4]' : ''}`}
+          />
         </button>
 
-        {/* Theme Toggle (M3 Tonal Icon Button) */}
+        {/* Theme Toggle */}
         <button
           id="btn-theme-toggle"
           type="button"
           onClick={toggleTheme}
           aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-          className="touch-target-48 rounded-full text-[#3F4946] dark:text-[#BEC9C5] hover:bg-[#ECEFEC] dark:hover:bg-[#1D201F] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00695C] transition-colors"
           title={theme === 'dark' ? 'Switch to Light Theme' : 'Switch to Dark Theme'}
+          className="w-9 h-9 rounded-xl flex items-center justify-center text-[#475569] dark:text-[#94A3B8] hover:bg-[#F1F5F4] dark:hover:bg-[#1E293B] hover:text-[#0F172A] dark:hover:text-[#F1F5F9] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00695C]"
         >
           {theme === 'dark' ? (
-            <Sun className="w-5 h-5 text-amber-400" />
+            <Sun className="w-4 h-4 text-amber-400" />
           ) : (
-            <Moon className="w-5 h-5 text-[#3F4946]" />
+            <Moon className="w-4 h-4 text-[#475569]" />
           )}
         </button>
 
-        {/* User / Role Switcher Menu (M3 Elevated Menu & Pill Target) */}
+        {/* User Account / Scope Menu */}
         <div className="relative">
           <button
             id="btn-user-role-dropdown"
@@ -213,81 +195,83 @@ export const TopBar: React.FC<TopBarProps> = ({
             aria-haspopup="menu"
             aria-expanded={showUserMenu}
             aria-label="User account and role menu"
-            className="flex items-center space-x-2.5 p-1.5 pl-2 pr-3 rounded-full hover:bg-[#ECEFEC] dark:hover:bg-[#1D201F] border border-[#BEC9C5]/50 dark:border-[#3F4946]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00695C] transition-colors min-h-[44px]"
+            className="flex items-center gap-2 p-1.5 pl-2 pr-2.5 rounded-xl hover:bg-[#F1F5F4] dark:hover:bg-[#1E293B] border border-[#E2E8F0] dark:border-[#334155] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00695C]"
           >
-            <div className="w-8 h-8 rounded-full bg-[#00695C] text-white font-medium text-xs flex items-center justify-center overflow-hidden ring-2 ring-white dark:ring-[#111413]">
+            <div className="w-7 h-7 rounded-lg bg-[#00695C] dark:bg-[#80D5C4] text-white dark:text-[#003830] font-bold text-xs flex items-center justify-center shrink-0">
               {currentUser?.avatar ? (
                 <img
                   src={currentUser.avatar}
                   alt={currentUser.name}
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover rounded-lg"
                   referrerPolicy="no-referrer"
                 />
               ) : (
                 <span>{currentUser?.name?.charAt(0) || 'U'}</span>
               )}
             </div>
-            <div className="hidden md:block text-left pr-1">
-              <div className="text-xs font-medium text-[#191C1B] dark:text-[#E1E3E0] leading-tight">
+
+            <div className="hidden md:block text-left">
+              <div className="text-xs font-semibold text-[#0F172A] dark:text-[#F1F5F9] leading-tight">
                 {currentUser?.name}
               </div>
-              <div className="text-[11px] text-[#6F7976] dark:text-[#89938F] flex items-center mt-0.5">
-                <span className={`px-2 py-0.5 rounded-full border text-[10px] font-medium ${getRoleBadgeStyle(currentUser?.role)}`}>
-                  {getRoleDisplayName(currentUser?.role)}
-                </span>
+              <div className="text-[10px] text-[#64748B] dark:text-[#94A3B8] leading-none mt-0.5">
+                {getRoleDisplayName(currentUser?.role)}
               </div>
             </div>
-            <ChevronDown className="w-4 h-4 text-[#6F7976] dark:text-[#89938F]" />
+
+            <ChevronDown className="w-3.5 h-3.5 text-[#94A3B8] dark:text-[#64748B]" />
           </button>
 
-          {/* User & Role Dropdown Menu - Styled with M3 rounded-[28px] Dialog/Sheet style */}
+          {/* User Account Dropdown Dialog */}
           {showUserMenu && (
             <div
-              className="absolute right-0 mt-3 w-80 bg-[#F8FAF8] dark:bg-[#1D201F] border border-[#BEC9C5]/60 dark:border-[#3F4946]/60 rounded-[28px] shadow-xl z-50 p-4 animate-in fade-in zoom-in-95 duration-150"
+              className="absolute right-0 mt-2 w-76 bg-[#FFFFFF] dark:bg-[#161A19] border border-[#E2E8F0] dark:border-[#334155] rounded-2xl shadow-xl z-50 p-4 animate-in fade-in duration-150 font-body"
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Header profile info */}
-              <div className="pb-3 mb-3 border-b border-[#BEC9C5]/40 dark:border-[#3F4946]/40">
-                <div className="flex items-center space-x-3">
-                  <div className="w-11 h-11 rounded-full bg-[#CCE8E1] text-[#00201B] dark:bg-[#005046] dark:text-[#A3F2E4] font-bold text-base flex items-center justify-center">
-                    {currentUser?.name?.charAt(0) || 'U'}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-[#191C1B] dark:text-[#E1E3E0] truncate">
-                      {currentUser?.name}
-                    </p>
-                    <p className="text-xs text-[#6F7976] dark:text-[#89938F] truncate">{currentUser?.email}</p>
-                  </div>
+              <div className="flex items-center gap-3 pb-3 border-b border-[#F1F5F4] dark:border-[#202726]">
+                <div className="w-10 h-10 rounded-xl bg-[#CCE8E1] text-[#00201B] dark:bg-[#004F46] dark:text-[#A3F2E4] font-bold text-sm flex items-center justify-center shrink-0">
+                  {currentUser?.name?.charAt(0) || 'U'}
                 </div>
-
-                <div className="mt-3 flex flex-col gap-1.5 bg-[#ECEFEC] dark:bg-[#272B2A] p-2.5 rounded-2xl">
-                  <div className="flex items-center justify-between">
-                    <span className={`px-2.5 py-0.5 rounded-full border text-[11px] font-medium ${getRoleBadgeStyle(currentUser?.role)}`}>
-                      {getRoleDisplayName(currentUser?.role)}
-                    </span>
-                    <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-white dark:bg-[#111413] text-[#3F4946] dark:text-[#BEC9C5]">
-                      {currentUser?.scope || 'COMPANY'} Scope
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-[#6F7976] dark:text-[#89938F]">
-                    {getRoleScopeDescription(currentUser?.role)}
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-[#0F172A] dark:text-[#F1F5F9] truncate">
+                    {currentUser?.name}
+                  </p>
+                  <p className="text-xs text-[#64748B] dark:text-[#94A3B8] truncate">
+                    {currentUser?.email}
                   </p>
                 </div>
               </div>
 
-              {/* Sign Out Button (M3 Text Button with pill outline) */}
-              <div className="pt-3 mt-3 border-t border-[#BEC9C5]/40 dark:border-[#3F4946]/40">
-                <button
-                  onClick={async () => {
-                    setShowUserMenu(false);
-                    await logout();
-                  }}
-                  className="w-full flex items-center justify-center space-x-2 py-2.5 px-4 rounded-full text-sm font-medium text-[#BA1A1A] dark:text-[#FFB4AB] hover:bg-[#FFDAD6] dark:hover:bg-[#93000A]/30 transition-colors min-h-[44px]"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>Sign Out</span>
-                </button>
+              {/* RBAC Scope Card */}
+              <div className="my-3 p-3 rounded-xl bg-[#F8FAF9] dark:bg-[#111514] border border-[#E2E8F0] dark:border-[#334155] space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <StatusBadge
+                    status={getRoleDisplayName(currentUser?.role)}
+                    tone="primary"
+                    size="sm"
+                  />
+                  <span className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded bg-[#E2E8F0] dark:bg-[#1E293B] text-[#475569] dark:text-[#94A3B8]">
+                    {currentUser?.scope || 'COMPANY'} Scope
+                  </span>
+                </div>
+                <p className="text-xs text-[#64748B] dark:text-[#94A3B8] flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#00695C] dark:text-[#80D5C4] shrink-0" />
+                  <span>{getRoleScopeDescription(currentUser?.role)}</span>
+                </p>
               </div>
+
+              {/* Sign out */}
+              <button
+                type="button"
+                onClick={async () => {
+                  setShowUserMenu(false);
+                  await logout();
+                }}
+                className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-semibold text-[#BA1A1A] dark:text-[#FFB4AB] hover:bg-[#FFDAD6]/40 dark:hover:bg-[#410002]/30 transition-colors"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign Out</span>
+              </button>
             </div>
           )}
         </div>

@@ -23,7 +23,9 @@ import {
   Send,
   Sparkles,
   CheckCircle2,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Eye,
+  Plus
 } from 'lucide-react';
 import { MockLead, TEAM_MEMBERS, PIPELINE_STAGES } from '../../data/mockSeedData';
 import { AvatarBadge } from '../common/AvatarBadge';
@@ -39,6 +41,9 @@ interface LeadsListViewProps {
   onBulkUpdate: (leadIds: string[], updates: Partial<MockLead>) => void;
   onInitiateCall?: (lead: MockLead) => void;
   onOpenChat?: (lead: MockLead) => void;
+  onSelectLead?: (lead: MockLead) => void;
+  onOpenAddLead?: () => void;
+  onOpenImport?: () => void;
 }
 
 type SortField = 'name' | 'rating' | 'createdIso' | 'value' | 'status' | 'stage' | 'assignee' | 'source';
@@ -49,7 +54,10 @@ export const LeadsListView: React.FC<LeadsListViewProps> = ({
   onUpdateLead,
   onBulkUpdate,
   onInitiateCall,
-  onOpenChat
+  onOpenChat,
+  onSelectLead,
+  onOpenAddLead,
+  onOpenImport
 }) => {
   // Search & Field Picker
   const [searchField, setSearchField] = useState<'name' | 'phone' | 'email' | 'company'>('name');
@@ -279,6 +287,41 @@ export const LeadsListView: React.FC<LeadsListViewProps> = ({
     setCurrentPage(1);
   };
 
+  const handleExportCsv = () => {
+    setIsMoreMenuOpen(false);
+    const headers = ['ID', 'Name', 'Phone', 'Email', 'Company', 'Stage', 'Assignee', 'Source', 'Value', 'Rating', 'Created'];
+    const rows = filteredLeads.map((l) => [
+      l.id,
+      `"${(l.name || '').replace(/"/g, '""')}"`,
+      `"${l.phone || ''}"`,
+      `"${l.email || ''}"`,
+      `"${(l.companyOrProject || '').replace(/"/g, '""')}"`,
+      `"${l.stage || l.status || ''}"`,
+      `"${l.assignee || ''}"`,
+      `"${l.source || ''}"`,
+      l.value || 0,
+      l.rating || 0,
+      `"${l.createdOn || ''}"`
+    ]);
+    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `dialpulse_leads_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleOpenImportModal = () => {
+    setIsMoreMenuOpen(false);
+    if (onOpenImport) {
+      onOpenImport();
+    }
+  };
+
   return (
     <div className="flex-1 flex flex-col h-full bg-[#F8FAF8] dark:bg-[#111413] overflow-hidden">
       {/* Top Toolbar */}
@@ -387,10 +430,7 @@ export const LeadsListView: React.FC<LeadsListViewProps> = ({
                 <div className="absolute right-0 top-12 w-52 bg-[#F8FAF8] dark:bg-[#1D201F] border border-[#BEC9C5]/60 dark:border-[#3F4946]/60 rounded-[20px] shadow-xl p-2 z-30 space-y-1">
                   <button
                     type="button"
-                    onClick={() => {
-                      setIsMoreMenuOpen(false);
-                      alert(`Exported ${filteredLeads.length} leads as CSV!`);
-                    }}
+                    onClick={handleExportCsv}
                     className="w-full text-left px-3.5 py-2.5 text-xs font-medium text-[#191C1B] dark:text-[#E1E3E0] hover:bg-[#ECEFEC] dark:hover:bg-[#272B2A] rounded-full flex items-center space-x-2.5 min-h-[40px]"
                   >
                     <Download className="w-4 h-4 text-[#6F7976]" />
@@ -398,10 +438,7 @@ export const LeadsListView: React.FC<LeadsListViewProps> = ({
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setIsMoreMenuOpen(false);
-                      alert('Import Wizard opened.');
-                    }}
+                    onClick={handleOpenImportModal}
                     className="w-full text-left px-3.5 py-2.5 text-xs font-medium text-[#191C1B] dark:text-[#E1E3E0] hover:bg-[#ECEFEC] dark:hover:bg-[#272B2A] rounded-full flex items-center space-x-2.5 min-h-[40px]"
                   >
                     <Upload className="w-4 h-4 text-[#6F7976]" />
@@ -963,6 +1000,17 @@ export const LeadsListView: React.FC<LeadsListViewProps> = ({
 
                         return (
                           <div className="flex items-center justify-end space-x-1">
+                            {onSelectLead && (
+                              <button
+                                type="button"
+                                onClick={() => onSelectLead(lead)}
+                                aria-label={`View details of ${lead.name}`}
+                                className="w-10 h-10 rounded-full inline-flex items-center justify-center transition-colors hover:bg-[#CCE8E1] dark:hover:bg-[#004F46] text-[#00695C] dark:text-[#80D5C4]"
+                                title={`Inspect ${lead.name} details`}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                            )}
                             <button
                               type="button"
                               disabled={isCallBlocked}

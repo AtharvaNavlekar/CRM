@@ -69,7 +69,7 @@ import { enqueueJob } from './server/jobs/queue';
 import { jobRepository } from './server/repositories/jobRepository';
 import { logger } from './server/infrastructure/logger';
 import { telemetryMiddleware } from './server/middleware/telemetry';
-import { globalErrorHandler } from './server/middleware/errorHandler';
+import { globalErrorHandler, AppError } from './server/middleware/errorHandler';
 
 
 // Middleware to prevent platform staff from accessing raw data without an impersonation session
@@ -627,6 +627,22 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     res.json({ success: true });
   });
 
+  // Switch user (Privilege Escalation Protected: Owner / CTO only)
+  app.post('/api/auth/switch-user', async (req, res) => {
+    let role = req.user?.role as string;
+    if (role === 'Admin') role = 'owner';
+    if (role !== 'owner' && role !== 'cto') {
+      return res.status(403).json({ error: 'Forbidden: Admin authorization required', code: 'FORBIDDEN' });
+    }
+    const { userId } = req.body;
+    if (!userId) return res.status(400).json({ error: 'User ID is required' });
+    const targetUsers = await db.select().from(schema.users).where(eq(schema.users.id, userId)).limit(1);
+    if (!targetUsers.length) return res.status(404).json({ error: 'User not found' });
+    const targetUser = targetUsers[0];
+    const sessionId = req.securityContext?.sessionId || crypto.randomUUID();
+    const token = signAccessToken({ id: targetUser.id, email: targetUser.email, role: targetUser.role as any, tenantId: targetUser.tenantId, isPlatformStaff: targetUser.isPlatformStaff }, sessionId);
+    res.json({ user: sanitizeUser(targetUser as any), token });
+  });
 
   app.get('/api/teams', async (req, res) => {
     res.json(TEAMS);
@@ -1445,8 +1461,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
             name: cf.name,
             type: cf.type || 'text',
             options: cf.options || [],
-            required: Boolean(cf.required),
-            showInList: Boolean(cf.showInList)
+            required: Boolean(cf.required)
           });
         }
       }
@@ -1466,7 +1481,7 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
           await db.insert(schema.rolePermissions).values({
             role: rp.role,
             scope: rp.scope || 'SELF',
-            actions: rp.actions || [],
+            actions: rp.actions || (rp as any).permissions || [],
             requiresApproval: rp.requiresApproval || [],
             canViewAllLeads: Boolean(rp.canViewAllLeads),
             canExportData: Boolean(rp.canExportData),
@@ -1641,6 +1656,14 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     res.json({ status: 'ok' });
   });
 
+  // 404 handler for API routes
+  app.all('/api/*', (req, res, next) => {
+    next(new AppError('NOT_FOUND', 404, `Route ${req.method} ${req.path} not found`));
+  });
+
+  // Global Error Handler
+  app.use(globalErrorHandler);
+
   // Vite middleware for development & static serving for production
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
@@ -1656,7 +1679,11 @@ function parseCookies(cookieHeader?: string): Record<string, string> {
     });
   }
 
-  const serverPort = 3000;
+  let serverPort = 3000;
+  const portArgIdx = process.argv.indexOf('--port');
+  if (portArgIdx !== -1 && process.argv[portArgIdx + 1]) {
+    serverPort = parseInt(process.argv[portArgIdx + 1], 10) || serverPort;
+  }
   app.listen(serverPort, '0.0.0.0', () => {
     console.log(`[INIT] Server running on http://0.0.0.0:${serverPort}`);
   });

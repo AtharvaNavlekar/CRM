@@ -165,24 +165,24 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
         tabIndex={-1}
       >
         {/* Top Header */}
-        <div className="px-6 py-4 bg-[#1F3A5F] text-white flex items-center justify-between">
+        <div className="px-6 py-4 bg-[#00695C] text-white flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-xl bg-[#2E6E5C] flex items-center justify-center text-white font-bold text-base shadow-md">
+            <div className="w-10 h-10 rounded-xl bg-[#CCE8E1] text-[#00201B] flex items-center justify-center font-bold text-base shadow-md font-heading">
               {lead.name.charAt(0)}
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h2 id="modal-lead-detail-title" className="text-base font-bold text-white">{lead.name}</h2>
-                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-white/20 text-white">
+                <h2 id="modal-lead-detail-title" className="text-base font-bold text-white font-heading">{lead.name}</h2>
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-white/20 text-white font-body">
                   {lead.source}
                 </span>
                 {lead.industry && (
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-teal-500/20 text-teal-200 border border-teal-400/30">
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-md bg-[#CCE8E1]/20 text-[#CCE8E1] border border-[#CCE8E1]/30 font-body">
                     {lead.industry}
                   </span>
                 )}
               </div>
-              <p className="text-xs text-slate-300 font-mono mt-0.5">{lead.phone}</p>
+              <p className="text-xs text-white/80 font-mono mt-0.5">{lead.phone}</p>
             </div>
           </div>
 
@@ -191,7 +191,7 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
               type="button"
               onClick={() => onStartCall(lead)}
               aria-label={`Start call with ${lead.name}`}
-              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-[#2E6E5C] hover:bg-[#255b4c] text-white flex items-center space-x-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white transition-colors shadow-xs"
+              className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-white text-[#00695C] hover:bg-white/90 flex items-center space-x-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white transition-colors shadow-xs"
             >
               <Phone className="w-3.5 h-3.5" />
               <span>Call Now</span>
@@ -200,7 +200,7 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
               type="button"
               onClick={() => onOpenWhatsApp(lead)}
               aria-label={`Open WhatsApp chat with ${lead.name}`}
-              className="px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white flex items-center space-x-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white transition-colors shadow-xs"
+              className="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-[#25D366] hover:bg-[#1EBE5D] text-white flex items-center space-x-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white transition-colors shadow-xs"
             >
               <MessageSquare className="w-3.5 h-3.5" />
               <span>WhatsApp</span>
@@ -209,7 +209,7 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
               type="button"
               onClick={onClose}
               aria-label="Close lead detail dialog"
-              className="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 ml-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white transition-colors"
+              className="p-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/10 ml-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white transition-colors"
             >
               <X className="w-5 h-5" />
             </button>
@@ -254,8 +254,8 @@ export const LeadDetailModal: React.FC<LeadDetailModalProps> = ({
                     onClick={() => onUpdateStage(lead.id, st)}
                     className={`py-2 px-1 rounded-xl text-[11px] font-bold border transition-all text-center ${
                       isActive
-                        ? 'bg-[#1F3A5F] text-white border-[#1F3A5F] shadow-sm'
-                        : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-teal-500'
+                        ? 'bg-[#00695C] text-white border-[#00695C] shadow-sm'
+                        : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-[#00695C]'
                     }`}
                   >
                     {st}

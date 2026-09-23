@@ -1,15 +1,14 @@
 import fs from 'fs';
 import path from 'path';
 
-const DATA_DIR = path.join(process.cwd(), 'data');
-const DB_FILE = path.join(DATA_DIR, 'db.json');
 const SERVER_DIR = path.join(process.cwd(), 'server');
+const DATA_DIR = path.join(process.cwd(), 'data');
 
 async function runProductionSafetyTests() {
   console.log('--- Running Production Safety Tests ---');
 
   // 1. Ensure `password123` is not hardcoded anywhere in server runtime code
-  // We will scan all .ts files in server/ (excluding seed directory)
+  // Scan all .ts files in server/ (excluding seed directory)
   const files = fs.readdirSync(SERVER_DIR);
   let password123Found = false;
 
@@ -29,50 +28,36 @@ async function runProductionSafetyTests() {
     process.exit(1);
   }
 
-  // 2. Test NODE_ENV=production database loading
-  console.log('\nSimulating NODE_ENV=production DB initialization...');
-  
-  // Backup existing DB if any
-  let hasBackup = false;
-  const backupPath = DB_FILE + '.bak';
-  if (fs.existsSync(DB_FILE)) {
-    fs.renameSync(DB_FILE, backupPath);
-    hasBackup = true;
+  // 2. Ensure NO runtime db.json exists or is used
+  const runtimeDbJson = path.join(DATA_DIR, 'db.json');
+  if (fs.existsSync(runtimeDbJson)) {
+    console.error('❌ FAIL: Runtime data/db.json found in repository. DialPulse CRM requires PostgreSQL.');
+    process.exit(1);
+  } else {
+    console.log('✅ PASS: No runtime data/db.json file found. Local JSON database is eradicated.');
   }
 
+  // 3. Test mandatory DATABASE_URL enforcement
+  console.log('\nVerifying mandatory DATABASE_URL enforcement on PostgreSQL client...');
+  const originalEnvUrl = process.env.DATABASE_URL;
+  delete process.env.DATABASE_URL;
+
   try {
-    // Force NODE_ENV to production
-    process.env.NODE_ENV = 'production';
-    
-    // Dynamically import db to trigger initialization
-    const { getDb } = await import(`../server/db.ts?cacheBuster=${Date.now()}`);
-    const db = await getDb();
-
-    if (db.users.length === 0) {
-      console.log('✅ PASS: NODE_ENV=production does NOT automatically seed demo users.');
-    } else {
-      console.error(`❌ FAIL: NODE_ENV=production automatically seeded ${db.users.length} users!`);
-      process.exit(1);
-    }
-
-    if (db.leads.length === 0) {
-      console.log('✅ PASS: NODE_ENV=production does NOT automatically seed demo leads.');
-    } else {
-      console.error(`❌ FAIL: NODE_ENV=production automatically seeded ${db.leads.length} leads!`);
-      process.exit(1);
-    }
-
-  } catch (error) {
-    console.error('Error during production DB init test:', error);
+    // Attempting to initialize DB client without DATABASE_URL must fail
+    await import(`../server/db/client.ts?cacheBuster=${Date.now()}`);
+    console.error('❌ FAIL: Database client silently started without DATABASE_URL! Fallback detected.');
     process.exit(1);
-  } finally {
-    // Restore DB
-    if (fs.existsSync(DB_FILE)) fs.unlinkSync(DB_FILE);
-    if (hasBackup) {
-      fs.renameSync(backupPath, DB_FILE);
+  } catch (error: any) {
+    if (error.message && error.message.includes('DATABASE_URL')) {
+      console.log('✅ PASS: Missing DATABASE_URL throws clear mandatory error as expected.');
+    } else {
+      console.error('❌ FAIL: Unexpected error thrown:', error);
+      process.exit(1);
     }
-    // Restore env
-    process.env.NODE_ENV = 'development';
+  } finally {
+    if (originalEnvUrl) {
+      process.env.DATABASE_URL = originalEnvUrl;
+    }
   }
 
   console.log('\n--- Production Safety Tests Completed ---');

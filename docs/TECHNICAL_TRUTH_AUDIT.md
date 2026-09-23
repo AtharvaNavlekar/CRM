@@ -21,9 +21,9 @@ This audit establishes the **ground technical truth** of the DialPulse CRM codeb
 
 | Domain | Documented Claim | Source Code Reality | Status |
 | :--- | :--- | :--- | :--- |
-| **Data Layer** | Single JSON file (`data/db.json`) flushed synchronously via `saveDatabase()`. | Drizzle ORM over PostgreSQL (`postgres.js`) with an in-memory fallback mock (`createMockDb()`). `data/db.json` is completely absent from the codebase. | `[DOCUMENTATION CLAIM]` / `[HISTORICAL / STALE]` |
+| **Data Layer** | Single JSON file (`data/db.json`) flushed synchronously via `saveDatabase()`. | DialPulse CRM runs strictly on PostgreSQL + Drizzle (`postgres.js`). Database access is centralized in `server/db/client.ts`. `DATABASE_URL` is mandatory; missing configuration fails fast. In-memory `createMockDb()` fallback and local JSON persistence were completely rejected and removed. | `[VERIFIED IN CODE]` / `[CORRECTED ARCHITECTURE]` |
 | **Concurrency** | Optimistic concurrency via `updates.version !== oldLead.version`. | No version check exists in `server.ts` or `lead.repository.ts`. Updates overwrite blindly. | `[DOCUMENTATION CLAIM]` |
-| **RBAC / Authz** | Dynamic permissions loaded from `db.rolePermissions` in `db.json`. | Evaluated via `server/policy.ts` (`can()`) and `server/auth.ts` (`authorize()`). **CRITICAL DEFECT**: Seed `DEFAULT_ROLE_PERMISSIONS` provides a `permissions` array, but `can()` checks `perm.actions.includes()`, resulting in unhandled `TypeError: Cannot read properties of undefined (reading 'includes')` which crashes Express. | `[DISCREPANCY / BUG]` |
+| **RBAC / Authz** | Dynamic permissions loaded from `db.rolePermissions` in `db.json`. | Evaluated via `server/policy.ts` (`can()`) and `server/auth.ts` (`authorize()`). The role-permission schema contract mismatch was corrected to align default seed records (`DEFAULT_ROLE_PERMISSIONS` in `server/seed/defaultRolePermissions.ts`) with the authorization engine using `actions: Action[]` instead of `permissions`. | `[VERIFIED IN CODE]` / `[CORRECTED CONTRACT]` |
 | **Background Jobs** | Heavy operations (Import, Export, Bulk Update) processed via BullMQ / Redis. | BullMQ queue (`crmQueue`) in `server/jobs/queue.ts` and worker in `server/jobs/worker.ts`. However, without `REDIS_URL`, worker shuts down immediately and jobs remain in `QUEUED` state forever with no in-memory processor. | `[VERIFIED IN CODE]` / `[DEGRADED MODE]` |
 | **Telecom / Calling** | Telecalling CRM with real-time call tracking and recordings. | Purely metadata logging in `POST /api/calls`. No WebRTC, SIP, or telephony integration (Twilio/Exotel). Recordings are simulated flags. | `[SIMULATED / STUB]` |
 | **AI Integration** | Audio transcription powered by Gemini AI model `gemini-3.5-transcribe`. | Server integrates `@google/genai`. Model name `gemini-3.5-transcribe` is a non-existent placeholder. In the absence of `GEMINI_API_KEY`, returns a simulated string after 1500ms delay. | `[SIMULATED / STUB]` |
@@ -38,7 +38,8 @@ This audit establishes the **ground technical truth** of the DialPulse CRM codeb
 - **Runtime Entrypoint:** `server.ts` (1,557 lines) — Monolithic Express server handling authentication, tenant scoping, rate limiting, and all domain API routes.
 - **Server Subsystems (`server/`):**
   - `db/schema.ts` (348 lines): 18 PostgreSQL tables declared using Drizzle ORM (`pgTable`).
-  - `db/client.ts` (233 lines): PostgreSQL client initialization via `postgres.js` with `createMockDb()` fallback.
+  - `db/client.ts`: PostgreSQL client initialization via `postgres.js` and Drizzle ORM. `DATABASE_URL` is mandatory; fails fast with clear critical error if unset. No in-memory or JSON fallback.
+  - `seed/defaultRolePermissions.ts`: Canonical role permissions conforming strictly to `{ role, scope, actions: Action[], requiresApproval, canViewAllLeads, canExportData, canManageTemplates }`.
   - `db.ts` (194 lines): Legacy aggregation helpers (`calculateReports()`, `DEFAULT_FREQUENCY_RULES`).
   - `policy.ts` (141 lines): Central authorization engine with `can()` and dual-execution `actionMap`.
   - `auth.ts` (237 lines): JWT token issuance, verification, password hashing, and legacy `authorize()`.
@@ -107,27 +108,18 @@ This audit establishes the **ground technical truth** of the DialPulse CRM codeb
 
 ### 2. Database Client Dual-Execution `[VERIFIED IN CODE]`
 In `server/db/client.ts` (lines 220–232):
-```typescript
-if (process.env.DATABASE_URL) {
-  try {
-    const queryClient = postgres(process.env.DATABASE_URL, { prepare: false });
-    dbInstance = drizzle(queryClient, { schema });
-  } catch (err) {
-    dbInstance = createMockDb();
-  }
-} else {
-  dbInstance = createMockDb();
-}
-```
-- When `DATABASE_URL` is unset, the system instantiates `createMockDb()`.
-- `createMockDb()` holds arrays in an in-memory object (`tables: Record<string, any[]>`).
-- **Consequences of In-Memory Mock:**
-  - Data is lost on server restart.
-  - Independent processes (e.g., test scripts or the background worker `worker.ts`) do **NOT** share state with `server.ts`. Each process has its own isolated in-memory tables.
+### 2. The PostgreSQL-Only Runtime Architecture `[VERIFIED IN CODE]`
+- The JSON persistence migration introduced in commit `9837b8ad` was formally **rejected and reverted**.
+- DialPulse CRM runs strictly on PostgreSQL + Drizzle ORM (`postgres.js`).
+- Database client initialization is centralized in `server/db/client.ts`.
+- `DATABASE_URL` is **mandatory**. If `DATABASE_URL` is missing from the environment, startup immediately terminates with:
+  `[DATABASE CRITICAL ERROR] DATABASE_URL environment variable is mandatory. DialPulse CRM requires PostgreSQL persistence and does not permit in-memory or mock database fallbacks.`
+- In-memory mock database fallbacks (`createMockDb()`) and process-local table storage have been eradicated.
+- All persistent runtime state (sessions, tokens, refresh token rotation, leads, audit logs, compliance policies, background jobs) requires PostgreSQL.
 
 ### 3. The `db.json` Myth vs Code Reality `[HISTORICAL / STALE]`
 - `README.md` (lines 36, 98, 102), `BRAIN.md` (lines 14, 21), and `credentials.md` (line 35) claim the application state is persisted in `data/db.json` via `saveDatabase()`.
-- **Reality:** No `db.json` exists in the repository. No function named `saveDatabase()` exists in `server.ts` or `server/`. The repository includes `scripts/migrate-json-to-postgres.ts`, confirming that the JSON storage layer was superseded by PostgreSQL/Drizzle.
+- **Reality:** No `data/db.json` runtime persistence exists in the repository. No function named `saveDatabase()` exists in `server.ts` or `server/`. Historical references to `data/db.json` are obsolete legacy claims. `scripts/migrate-json-to-postgres.ts` exists only as a historical one-way migration utility.
 
 ### 4. Concurrency & Optimistic Locking `[DISCREPANCY / BUG]`
 - `BRAIN.md` line 21 asserts: *"Concurrency is handled naively via an optimistic `version` check on individual Lead updates (`updates.version !== oldLead.version`)."*
@@ -428,10 +420,10 @@ Implemented in `server/compliance.ts` and `server/services/complianceService.ts`
 ## 14. Phase 13 — Prioritized Vulnerability & Remediation Backlog
 
 ### Priority 0: Critical Fixes (Crash & Security Blockers)
-1. **Fix Role Permissions Schema & Seed Mismatch (`server/db/client.ts` & `server/policy.ts`)**
-   - Align `DEFAULT_ROLE_PERMISSIONS` in `server/db/client.ts` to include `actions: string[]` and `scope: string` matching `server/db/schema.ts` and `src/types.ts`.
-   - Add defensive fallback in `server/policy.ts`: `perm.actions ? perm.actions.includes(...) : (perm as any).permissions?.includes(...)`.
-   - This single fix will immediately prevent server crashes during authorization checks and allow `npm test` to succeed.
+1. **Fix Role Permissions Schema & Seed Mismatch (`server/seed/defaultRolePermissions.ts` & `server/policy.ts`) — [RESOLVED]**
+   - Corrected `DEFAULT_ROLE_PERMISSIONS` to strictly use `actions: Action[]` and `scope` matching `server/db/schema.ts` and `src/types.ts`.
+   - Maintained defensive backward compatibility in `server/policy.ts`: `const actionsList: string[] = perm ? ((perm.actions as string[]) || (perm as any).permissions || []) : [];`.
+   - Restored `server/db/client.ts` to PostgreSQL-only with mandatory `DATABASE_URL` check.
 2. **Fix `X-Forwarded-For` Rate Limiting Bypass (`server.ts`)**
    - Do not use raw client-supplied `X-Forwarded-For` headers without verifying trusted upstream proxy subnets.
 
